@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="30c4609b-c0f3-47c2-96b2-44333599f4dd" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FavoritesManager">
+    <favorites_list name="dcase_2020_task_2" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectId" id="1ZLpUs7YbXsYOxrGVqx7BbcwKzO" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Intrument_tagging" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
+  </component>
+  <component name="RunManager">
+    <configuration name="mcm_dataset" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="dcase_2020_task_2" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="OMP_NUM_THREADS" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/dcase_2020_task_2/data_sets" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dcase_2020_task_2/data_sets/mcm_dataset.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.mcm_dataset" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="30c4609b-c0f3-47c2-96b2-44333599f4dd" name="Default Changelist" comment="" />
+      <created>1584628247565</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1584628247565</updated>
+      <workItem from="1584628276554" duration="416000" />
+      <workItem from="1584628750333" duration="12003000" />
+      <workItem from="1584641483829" duration="87000" />
+      <workItem from="1584641900040" duration="6767000" />
+      <workItem from="1584649733866" duration="4687000" />
+      <workItem from="1584655232955" duration="2786000" />
+      <workItem from="1584697347982" duration="7290000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="418" y="182" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1584641561314">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state x="418" y="182" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584641561314" />
+    <state x="693" y="273" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1584710054191">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state x="693" y="273" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584710054191" />
+    <state x="697" y="253" width="515" height="549" key="EnvironmentVariablesDialog" timestamp="1584640280238">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state x="697" y="253" width="515" height="549" key="EnvironmentVariablesDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584640280238" />
+    <state x="2284" y="474" width="424" height="491" key="FileChooserDialogImpl" timestamp="1584629978620">
+      <screen x="1920" y="0" width="1920" height="1200" />
+    </state>
+    <state x="2284" y="474" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584629978620" />
+    <state width="1874" height="174" key="GridCell.Tab.0.bottom" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.0.bottom/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state width="1874" height="174" key="GridCell.Tab.0.center" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.0.center/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state width="1874" height="174" key="GridCell.Tab.0.left" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.0.left/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state width="1874" height="174" key="GridCell.Tab.0.right" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.0.right/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state width="1874" height="174" key="GridCell.Tab.1.bottom" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.1.bottom/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state width="1874" height="174" key="GridCell.Tab.1.center" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.1.center/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state width="1874" height="174" key="GridCell.Tab.1.left" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.1.left/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state width="1874" height="174" key="GridCell.Tab.1.right" timestamp="1584709972934">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state width="1874" height="174" key="GridCell.Tab.1.right/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584709972934" />
+    <state x="449" y="159" width="1022" height="737" key="SettingsEditor" timestamp="1584628926988">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state x="449" y="159" width="1022" height="737" key="SettingsEditor/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584628926988" />
+    <state x="616" y="351" key="com.intellij.ide.util.TipDialog" timestamp="1584697356692">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state x="616" y="351" key="com.intellij.ide.util.TipDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584697356692" />
+    <state x="2578" y="53" width="1536" height="748" maximized="true" key="dock-window-1" timestamp="1584710032199">
+      <screen x="1920" y="0" width="1920" height="1200" />
+    </state>
+    <state x="2578" y="53" width="1536" height="748" maximized="true" key="dock-window-1/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584710032199" />
+    <state x="623" y="244" width="672" height="678" key="search.everywhere.popup" timestamp="1584635196518">
+      <screen x="0" y="27" width="1920" height="994" />
+    </state>
+    <state x="623" y="244" width="672" height="678" key="search.everywhere.popup/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584635196518" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$USER_HOME$/miniconda3/envs/dcase_2020_task_2/lib/python3.7/site-packages/torchaudio/functional.py</url>
+          <line>42</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/dcase_2020_task_2/data_sets/mcm_dataset.py</url>
+          <line>72</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="len(indices) / self.num_sampels_per_file" language="Python" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/dcase_2020_task_2$mcm_dataset.coverage" NAME="mcm_dataset Coverage Results" MODIFIED="1584709402422" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase_2020_task_2/data_sets" />
+  </component>
+</project>

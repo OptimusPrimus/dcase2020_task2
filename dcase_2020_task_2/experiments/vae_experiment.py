@@ -1,0 +1,145 @@
+from experiments import BaseExperiment
+from experiments.parser import create_objects_from_config
+import pytorch_lightning as pl
+import torch
+from sacred import Experiment
+from configs.default_config import configuration
+import copy
+from utils.logger import Logger
+import os
+
+class VAEExperiment(pl.LightningModule, BaseExperiment):
+
+    def __init__(self, configuration_dict, _run):
+        super().__init__()
+
+        self.configuration_dict = copy.deepcopy(configuration_dict)
+        self.objects = create_objects_from_config(configuration_dict)
+
+        if not os.path.exists(self.configuration_dict['log_path']):
+            os.mkdir(self.configuration_dict['log_path'])
+
+        self.trainer = self.objects['trainer']
+
+        if self.objects.get('deterministic'):
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+
+        self.auto_encoder_model = self.objects['auto_encoder_model']
+        self.prior = self.objects['prior']
+        self.reconstruction = self.objects['reconstruction']
+        self.factor = self.objects.get('factor')
+
+        # TODO: add logger
+        self.logger = Logger(_run, self, self.configuration_dict, self.objects)
+        self.epoch = -1
+        self.step = 0
+
+        self.result = None
+
+    def forward(self, batch):
+        batch['epoch'] = self.epoch
+        batch['dataset_size'] = len(self.objects['training_data_loader'].dataset)
+        batch = self.auto_encoder_model(batch)
+
+        reconstruction_loss = self.reconstruction.loss(batch)
+        prior_loss = self.prior.loss(batch)
+        loss = reconstruction_loss + prior_loss
+
+        if self.factor:
+            auxiliary_loss = self.factor.auxiliary_loss(batch)
+            loss += auxiliary_loss
+        batch['loss'] = loss
+
+        return batch
+
+    def training_step(self, batch, batch_num, optimizer_idx=0):
+
+        if batch_num == 0 and optimizer_idx == 0:
+            self.epoch += 1
+
+        if optimizer_idx == 0:
+            batch = self(batch)
+            self.logger.log_training_step(batch, self.step)
+            self.step += 1
+            return {
+                'loss': batch['loss'],
+                'tqdm': {'loss': batch['loss']},
+            }
+        elif optimizer_idx == 1:
+            # no need to compute reconstruction loss, ...  - only need latent representation
+            batch = self.auto_encoder_model(batch)
+            loss = self.factor.training_loss(batch)
+            self.logger.__log_metric__('training_factor_loss', loss.item(), self.step)
+            return {'loss': loss}
+        else:
+            raise ValueError('Too many optimizers.')
+
+    def validation_step(self, batch, batch_num):
+        self(batch)
+        return {
+            'loss': batch['loss'],
+            'prior_loss': batch['prior_loss'],
+            'reconstruction_loss': batch['reconstruction_loss'],
+            'auxiliary_loss': batch.get('auxiliary_lreoss', torch.tensor(0.0)),
+            'c': batch.get('c', 0.0)
+        }
+
+    def validation_end(self, outputs):
+        self.logger.log_validation(outputs, self.step, self.epoch)
+        return {}
+
+    def test_step(self, batch, batch_num):
+        self(batch)
+        return {
+            'loss': batch['loss'],
+            'prior_loss': batch['prior_loss'],
+            'reconstruction_loss': batch['reconstruction_loss'],
+            'auxiliary_loss': batch.get('auxiliary_loss', torch.tensor(0.0)),
+            'c': batch.get('c', torch.tensor(0.0))
+        }
+
+    def test_end(self, outputs):
+        self.result = self.logger.log_testing(outputs)
+        self.logger.close()
+        return {}
+
+    def configure_optimizers(self):
+        optimizers = [self.objects['optimizer']]
+        lr_schedulers = [self.objects['lr_scheduler']]
+
+        factor_optimizer = self.objects.get('factor_optimizer')
+        factor_lr_scheduler = self.objects.get('factor_lr_scheduler')
+
+        if factor_optimizer:
+            optimizers.append(factor_optimizer)
+            lr_schedulers.append(factor_lr_scheduler)
+
+        return optimizers, lr_schedulers
+
+    @pl.data_loader
+    def train_dataloader(self):
+        return self.objects['training_data_loader']
+
+    @pl.data_loader
+    def val_dataloader(self):
+        return self.objects['training_data_loader']
+
+    @pl.data_loader
+    def test_dataloader(self):
+        return self.objects['testing_data_loader']
+
+    def run(self):
+        self.trainer.fit(self)
+        self.trainer.test(self)
+        return self.result
+
+
+ex = Experiment('better_priors')
+cfg = ex.config(configuration)
+
+
+@ex.automain
+def run(_config, _run):
+    experiment = VAEExperiment(_config, _run)
+    return experiment.run()
