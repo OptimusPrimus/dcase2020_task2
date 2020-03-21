@@ -12,7 +12,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
 
     def __init__(
             self,
-            data_root=os.path.join(os.path.expanduser('~'), 'shared', 'DCASE_Task_2'),
+            data_root=os.path.join(os.path.expanduser('~'), 'shared', 'DCASE2020_Task2'),
             mode='training',
             context=5,
             machine_type=0
