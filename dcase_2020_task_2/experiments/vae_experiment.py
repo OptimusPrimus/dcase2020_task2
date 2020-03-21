@@ -84,7 +84,8 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
             'predictions': batch['predictions'],
             'machine_types': batch['machine_types'],
             'machine_ids': batch['machine_ids'],
-            'part_numbers': batch['part_numbers']
+            'part_numbers': batch['part_numbers'],
+            'file_ids': batch['file_ids']
         }
 
     def validation_end(self, outputs):
@@ -98,7 +99,8 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
             'predictions': batch['predictions'],
             'machine_types': batch['machine_types'],
             'machine_ids': batch['machine_ids'],
-            'part_numbers': batch['part_numbers']
+            'part_numbers': batch['part_numbers'],
+            'file_ids': batch['file_ids']
         }
 
     def test_end(self, outputs):
@@ -124,7 +126,7 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
             self.objects['training_data_set'],
             batch_size=self.objects['batch_size'],
             shuffle=True,
-            num_workers=4
+            num_workers=0
         )
         return dl
 
@@ -133,7 +135,7 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
             self.objects['validation_data_set'],
             batch_size=self.objects['batch_size'],
             shuffle=False,
-            num_workers=4
+            num_workers=0
         )
         return dl
 
@@ -142,7 +144,7 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
             self.objects['validation_data_set'],
             batch_size=self.objects['batch_size'],
             shuffle=False,
-            num_workers=4
+            num_workers=0
         )
         return dl
 

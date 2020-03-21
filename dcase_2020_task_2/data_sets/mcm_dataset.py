@@ -80,7 +80,8 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             'targets': sample['target'],
             'machine_types': sample['machine_type'],
             'machine_ids': sample['machine_id'],
-            'part_numbers': sample['part_number']
+            'part_numbers': sample['part_number'],
+            'file_ids': item
         }
 
     def __len__(self):

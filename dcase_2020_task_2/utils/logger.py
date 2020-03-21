@@ -42,24 +42,25 @@ class Logger:
 
         targets = []
         predictions = []
-        part_numbers = []
+        file_ids = []
         for o in outputs:
             targets.append(o['targets'].detach().cpu().numpy())
             predictions.append(o['predictions'].detach().cpu().numpy())
-            part_numbers.append(o['part_numbers'].detach().cpu().numpy())
+            file_ids.append(o['file_ids'].detach().cpu().numpy())
 
         targets = np.concatenate(targets)
         predictions = np.concatenate(predictions)
-        part_numbers = np.concatenate(part_numbers)
+        file_ids = np.concatenate(file_ids)
 
         ground_truth = []
         scores_mean = []
         scores_max = []
 
-        for part in np.unique(part_numbers):
-            ground_truth.append(targets[part_numbers == part][0])
-            scores_mean.append(predictions[part_numbers == part].mean())
-            scores_max.append(predictions[part_numbers == part].max())
+        for file_id in np.unique(file_ids):
+            selected = file_ids == file_id
+            ground_truth.append(targets[selected][0])
+            scores_mean.append(predictions[selected].mean())
+            scores_max.append(predictions[selected].max())
 
         ground_truth = np.array(ground_truth)
         scores_mean = np.array(scores_mean)
