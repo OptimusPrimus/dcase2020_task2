@@ -16,7 +16,7 @@ def load_model(
         config_dictionary = pickle.load(config_dictionary_file)
         configuration_dict = copy.deepcopy(config_dictionary)
 
-    model = experiments.VAEExperiment(configuration_dict)
+    model = experiments.BaselineExperiment(configuration_dict)
     model_path = os.path.join(path, '_ckpt_epoch_{}.ckpt'.format(checkpoint_num))
     checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)
     model.load_state_dict(checkpoint['state_dict'])

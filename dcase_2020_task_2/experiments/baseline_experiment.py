@@ -3,14 +3,14 @@ from experiments.parser import create_objects_from_config
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from configs.default_config import configuration
+from configs.baseline_config import configuration
 import copy
 from utils.logger import Logger
 import os
 import torch.utils.data
 
 
-class VAEExperiment(pl.LightningModule, BaseExperiment):
+class BaselineExperiment(pl.LightningModule, BaseExperiment):
 
     def __init__(self, configuration_dict, _run):
         super().__init__()
@@ -160,5 +160,5 @@ cfg = ex.config(configuration)
 
 @ex.automain
 def run(_config, _run):
-    experiment = VAEExperiment(_config, _run)
+    experiment = BaselineExperiment(_config, _run)
     return experiment.run()

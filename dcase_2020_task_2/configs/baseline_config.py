@@ -20,7 +20,7 @@ def configuration():
     machine_type = 0
     batch_size = 512
 
-    epochs = 100
+    epochs = 1
 
     ########################
     # detailed configuration

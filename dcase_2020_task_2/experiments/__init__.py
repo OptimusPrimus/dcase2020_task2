@@ -1,2 +1,2 @@
 from experiments.base_experiment import BaseExperiment
-from experiments.vae_experiment import VAEExperiment
+from experiments.baseline_experiment import BaselineExperiment
