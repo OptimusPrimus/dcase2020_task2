@@ -1,4 +1,4 @@
-name: better_priors
+name: dcase2020_task2
 channels:
   - conda-forge
   - defaults
