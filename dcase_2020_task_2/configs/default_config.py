@@ -17,10 +17,10 @@ def configuration():
     use_factor_loss = False
 
     data_set_class = 'data_sets.MCMDataset'
-    machine_type = 4
+    machine_type = 0
     batch_size = 512
 
-    epochs = 200
+    epochs = 100
 
     ########################
     # detailed configuration
@@ -147,7 +147,7 @@ def configuration():
         ],
         'kwargs': {
             'lr': 1e-3,
-            'betas': (1.0, 0.999),
+            'betas': (0.9, 0.999),
             'amsgrad': False,
             'weight_decay': 0.0,
         }
