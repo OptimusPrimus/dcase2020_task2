@@ -154,7 +154,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
         return self.result
 
 
-ex = Experiment('dcase_task2_baseline')
+ex = Experiment('dcase2020_task2_baseline')
 cfg = ex.config(configuration)
 
 
