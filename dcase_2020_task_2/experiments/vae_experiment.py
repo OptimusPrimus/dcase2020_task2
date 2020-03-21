@@ -7,6 +7,8 @@ from configs.default_config import configuration
 import copy
 from utils.logger import Logger
 import os
+import torch.utils.data
+
 
 class VAEExperiment(pl.LightningModule, BaseExperiment):
 
@@ -30,16 +32,16 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
         self.reconstruction = self.objects['reconstruction']
         self.factor = self.objects.get('factor')
 
-        # TODO: add logger
-        self.logger = Logger(_run, self, self.configuration_dict, self.objects)
+        self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
         self.epoch = -1
         self.step = 0
 
         self.result = None
 
     def forward(self, batch):
+
         batch['epoch'] = self.epoch
-        batch['dataset_size'] = len(self.objects['training_data_loader'].dataset)
+
         batch = self.auto_encoder_model(batch)
 
         reconstruction_loss = self.reconstruction.loss(batch)
@@ -60,7 +62,7 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
 
         if optimizer_idx == 0:
             batch = self(batch)
-            self.logger.log_training_step(batch, self.step)
+            self.logger_.log_training_step(batch, self.step)
             self.step += 1
             return {
                 'loss': batch['loss'],
@@ -70,7 +72,7 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
             # no need to compute reconstruction loss, ...  - only need latent representation
             batch = self.auto_encoder_model(batch)
             loss = self.factor.training_loss(batch)
-            self.logger.__log_metric__('training_factor_loss', loss.item(), self.step)
+            self.logger_.__log_metric__('training_factor_loss', loss.item(), self.step)
             return {'loss': loss}
         else:
             raise ValueError('Too many optimizers.')
@@ -78,30 +80,30 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
     def validation_step(self, batch, batch_num):
         self(batch)
         return {
-            'loss': batch['loss'],
-            'prior_loss': batch['prior_loss'],
-            'reconstruction_loss': batch['reconstruction_loss'],
-            'auxiliary_loss': batch.get('auxiliary_lreoss', torch.tensor(0.0)),
-            'c': batch.get('c', 0.0)
+            'targets': batch['targets'],
+            'predictions': batch['predictions'],
+            'machine_types': batch['machine_types'],
+            'machine_ids': batch['machine_ids'],
+            'part_numbers': batch['part_numbers']
         }
 
     def validation_end(self, outputs):
-        self.logger.log_validation(outputs, self.step, self.epoch)
+        self.logger_.log_validation(outputs, self.step, self.epoch)
         return {}
 
     def test_step(self, batch, batch_num):
         self(batch)
         return {
-            'loss': batch['loss'],
-            'prior_loss': batch['prior_loss'],
-            'reconstruction_loss': batch['reconstruction_loss'],
-            'auxiliary_loss': batch.get('auxiliary_loss', torch.tensor(0.0)),
-            'c': batch.get('c', torch.tensor(0.0))
+            'targets': batch['targets'],
+            'predictions': batch['predictions'],
+            'machine_types': batch['machine_types'],
+            'machine_ids': batch['machine_ids'],
+            'part_numbers': batch['part_numbers']
         }
 
     def test_end(self, outputs):
-        self.result = self.logger.log_testing(outputs)
-        self.logger.close()
+        # self.result = self.logger.log_testing(outputs)
+        # self.logger.close()
         return {}
 
     def configure_optimizers(self):
@@ -117,17 +119,32 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
 
         return optimizers, lr_schedulers
 
-    @pl.data_loader
     def train_dataloader(self):
-        return self.objects['training_data_loader']
+        dl = torch.utils.data.DataLoader(
+            self.objects['training_data_set'],
+            batch_size=self.objects['batch_size'],
+            shuffle=True,
+            num_workers=0
+        )
+        return dl
 
-    @pl.data_loader
     def val_dataloader(self):
-        return self.objects['training_data_loader']
+        dl = torch.utils.data.DataLoader(
+            self.objects['validation_data_set'],
+            batch_size=self.objects['batch_size'],
+            shuffle=False,
+            num_workers=0
+        )
+        return dl
 
-    @pl.data_loader
     def test_dataloader(self):
-        return self.objects['testing_data_loader']
+        dl = torch.utils.data.DataLoader(
+            self.objects['validation_data_set'],
+            batch_size=self.objects['batch_size'],
+            shuffle=False,
+            num_workers=4
+        )
+        return dl
 
     def run(self):
         self.trainer.fit(self)
@@ -135,7 +152,7 @@ class VAEExperiment(pl.LightningModule, BaseExperiment):
         return self.result
 
 
-ex = Experiment('better_priors')
+ex = Experiment('dcase_task2_baseline')
 cfg = ex.config(configuration)
 
 

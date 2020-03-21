@@ -1,6 +1,5 @@
 import torch.nn
 from models import ClassifierBase
-from models.layers import Convolution2dLayer,Deconvolution2dLayer,FullyConnectedLayer
 from torch import nn
 from torch.nn import functional as F
 import numpy as np

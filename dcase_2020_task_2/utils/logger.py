@@ -3,11 +3,10 @@ import os
 import pickle
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.animation import FuncAnimation
-import evaluation
 import PIL
+from sklearn import metrics
 
 PIL.PILLOW_VERSION = PIL.__version__
 import torchvision
@@ -22,10 +21,9 @@ class Logger:
         self.objects = objects
 
         self.log_dir = self.configuration_dict['log_path']
-        self.testing_data_set = self.objects['testing_data_set']
+        self.testing_data_set = self.objects['validation_data_set']
 
         # self.writer = SummaryWriter(log_dir=self.log_dir)
-
         file = os.path.join(config['log_path'], 'conf.py')
         with open(file, 'wb') as config_dictionary_file:
             pickle.dump(config, config_dictionary_file)
@@ -39,135 +37,50 @@ class Logger:
 
     def log_validation(self, outputs, step, epoch):
 
-        num_examples = 32
-        factors = self.testing_data_set.sample_factors(num_examples, np.random.RandomState(seed=0))
-        observations = self.testing_data_set.sample_observations(factors)
+        if epoch == -1:
+            return None
 
-        batch = {
-            'observations': observations.cuda(),
-            'epoch': 0
-        }
+        targets = []
+        predictions = []
+        part_numbers = []
+        for o in outputs:
+            targets.append(o['targets'].detach().cpu().numpy())
+            predictions.append(o['predictions'].detach().cpu().numpy())
+            part_numbers.append(o['part_numbers'].detach().cpu().numpy())
 
-        batch = self.experiment_module(batch)
+        targets = np.concatenate(targets)
+        predictions = np.concatenate(predictions)
+        part_numbers = np.concatenate(part_numbers)
 
-        images = torch.empty((64, *batch['observations'].shape[1:]))
-        images[::2] = batch['observations']
-        images[1::2] = batch['visualizations']
-        image = torchvision.utils.make_grid(images, padding=5, pad_value=1)
+        ground_truth = []
+        scores_mean = []
+        scores_max = []
 
-        if epoch >= 0:
-            self.__log_image__(
-                image,
-                'reconstruction_{:04d}.png'.format(epoch)
-            )
+        for part in np.unique(part_numbers):
+            ground_truth.append(targets[part_numbers == part][0])
+            scores_mean.append(predictions[part_numbers == part].mean())
+            scores_max.append(predictions[part_numbers == part].max())
+
+        ground_truth = np.array(ground_truth)
+        scores_mean = np.array(scores_mean)
+        scores_max = np.array(scores_max)
+
+        auroc_mean = metrics.roc_auc_score(ground_truth, scores_mean)
+        pauroc_mean = metrics.roc_auc_score(ground_truth, scores_mean, max_fpr=0.1)
+
+        auroc_max = metrics.roc_auc_score(ground_truth, scores_max)
+        pauroc_max = metrics.roc_auc_score(ground_truth, scores_max, max_fpr=0.1)
+
+        self.__log_metric__('validation_auroc_mean', auroc_mean, step)
+        self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
+
+        self.__log_metric__('validation_auroc_max', auroc_max, step)
+        self.__log_metric__('validation_pauroc_max', pauroc_max, step)
+
+        return auroc_mean, pauroc_mean
 
     def log_testing(self, outputs):
-
-        # save model
-        self.__log_model__()
-
-        # compute scores
-        def representation_function(x):
-            x = {
-                'observations': x.cuda(),
-                'epoch': 0
-            }
-            return self.experiment_module(x)['mus'].detach().cpu().numpy()
-
-        beat_vae_score = float(evaluation.beta_vae(
-            self.testing_data_set,
-            representation_function,
-            random_state=np.random.RandomState(0),
-            batch_size=64,
-            num_train=10_000,
-            num_eval=10_000
-        )['score'])
-
-        factor_vae_score = float(evaluation.factor_vae(
-            self.testing_data_set,
-            representation_function,
-            random_state=np.random.RandomState(0),
-            batch_size=64,
-            num_train=10_000,
-            num_eval=5_000,
-            num_variance_estimate=10_000,
-            valid_dimension_threshold=0.05
-        )['score'])
-
-        mig_score = float(evaluation.mig(
-            self.testing_data_set,
-            representation_function,
-            random_state=np.random.RandomState(0),
-            num_train=10_000,
-            batch_size=64
-        )['score'])
-
-        self.__log_metric__('beat_vae_score', beat_vae_score, 0)
-        self.__log_metric__('factor_vae_score', factor_vae_score, 0)
-        self.__log_metric__('mig_score', mig_score, 0)
-
-        # create animation
-        num_steps = 100
-        num_samples = 1000
-        factors = self.testing_data_set.sample_factors(num_samples, np.random.RandomState(seed=0))
-        observations = self.testing_data_set.sample_observations(factors)
-        batch = {
-            'observations': observations.cuda(),
-            'epoch': self.experiment_module.epoch
-        }
-        batch = self.experiment_module(batch)
-
-        num_dims = batch['codes'].shape[1]
-        num_rows = int(np.sqrt(num_dims))
-
-        min = batch['codes'].min(dim=0)[0]
-        max = batch['codes'].max(dim=0)[0]
-        mean = batch['codes'].mean(dim=0)
-        step_size = (max - min) / num_steps
-
-        images = torch.empty((num_dims, num_steps, *batch['observations'][0].shape))
-
-        for i in range(num_dims):
-            for j in range(num_steps):
-                mod = mean.clone().detach()
-                mod[i] = min[i] + step_size[i] * j
-                batch_ = {
-                    'codes': mod.unsqueeze(0)
-                }
-                batch_ = self.experiment_module.auto_encoder_model.decode(batch_)
-                images[i, j] = batch_['visualizations']
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        frames = []
-
-        for j in range(num_steps):
-            frames.append(
-                torchvision.utils.make_grid(images[:, j], padding=5, pad_value=1, nrow=num_rows, normalize=True)
-            )
-
-        image = ax.imshow(frames[0].transpose(0, -1))
-
-        def init():
-            image.set_data(frames[0].transpose(0, -1))
-            return image,
-
-        def animate(i):
-            image.set_data(frames[i].transpose(0, -1))
-            return image,
-
-        self.__log_video__(
-            FuncAnimation(fig, animate, init_func=init, frames=num_steps, interval=100, blit=True),
-            'animation.mp4'
-        )
-
-        return {
-            'beta_vae_score': beat_vae_score,
-            'factor_vae_score': factor_vae_score,
-            'mig_score': mig_score
-        }
+        pass
 
     def __log_metric__(self, name, value, step):
         self._run.log_scalar(name, value, step)
@@ -180,6 +93,20 @@ class Logger:
                 file_name
             )
         )
+
+    @staticmethod
+    def auroc(normal_scores, abnormal_scores):
+        if len(normal_scores) == 0 or len(abnormal_scores) == 0:
+            return 0
+        return np.mean(np.where((abnormal_scores[None, :] - normal_scores[:, None]) > 0, 1, 0))
+
+    @staticmethod
+    def pauroc(normal_scores, abnormal_scores, p=0.1):
+        if len(normal_scores) == 0 or len(abnormal_scores) == 0:
+            return 0
+        num_samp = int(len(normal_scores) * p)
+        normal_scores = np.sort(normal_scores)[:num_samp]
+        return np.mean(np.where((abnormal_scores[:, None] - normal_scores[None, :]) > 0, 1, 0))
 
     def __log_video__(self, animation, file_name):
         Writer = matplotlib.animation.writers['ffmpeg']

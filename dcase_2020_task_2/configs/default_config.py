@@ -11,13 +11,14 @@ def configuration():
     #####################
     # quick configuration, uses default parameters of more detailed configuration
     #####################
-    prior_class = 'priors.StandardNormalPrior'
-    latent_size = 10
+    prior_class = 'priors.NoPrior'
+    latent_size = 8
 
     use_factor_loss = False
 
-    data_set_class = 'data_sets.SimpleDots'
-    batch_size = 64
+    data_set_class = 'data_sets.MCMDataset'
+    machine_type = 4
+    batch_size = 512
 
     epochs = 200
 
@@ -93,35 +94,26 @@ def configuration():
             }
         }
 
-
-    if data_set_class == 'data_sets.SimpleDots':
-
-        circle_radius = 8
-        image_size = (64, 64)
-        num_images = 64 * 64
+    if data_set_class == 'data_sets.MCMDataset':
 
         training_data_set = {
             'class': data_set_class,
             'kwargs': {
-                'circle_radius': circle_radius,
-                'image_size': image_size,
-                'num_images': num_images
+                'mode': 'training',
+                'machine_type': machine_type
             }
         }
 
-        testing_data_set = {
+        validation_data_set = {
             'class': data_set_class,
             'kwargs': {
-                'circle_radius': circle_radius,
-                'image_size': image_size,
-                'num_images': num_images
+                'mode': 'validation',
+                'machine_type': machine_type
             }
         }
 
-    # TODO: include other datasets
-
     reconstruction = {
-        'class': 'reconstructions.BinaryCrossEntropy',
+        'class': 'reconstructions.MSE',
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@training_data_set.observation_shape'
@@ -129,7 +121,7 @@ def configuration():
     }
 
     auto_encoder_model = {
-        'class': 'models.VanillaCNN',
+        'class': 'models.FCBaseLine',
         'args': [
             '@training_data_set.observation_shape',
             '@reconstruction',
@@ -149,39 +141,15 @@ def configuration():
     }
 
     optimizer = {
-        'class': 'torch.optim.AdamW',
+        'class': 'torch.optim.Adam',
         'args': [
             '@auto_encoder_model.parameters()'
         ],
         'kwargs': {
-            'lr': 5e-4,
-            'betas': (0.9, 0.999),
-            'amsgrad': True,
-            'weight_decay': 0.01,
-        }
-    }
-
-    training_data_loader = {
-        'class': 'torch.utils.data.DataLoader',
-        'args': [
-            '@training_data_set'
-        ],
-        'kwargs': {
-            'batch_size': batch_size,
-            'shuffle': True,
-            'num_workers': 0
-        }
-    }
-
-    testing_data_loader = {
-        'class': 'torch.utils.data.DataLoader',
-        'args': [
-            '@testing_data_set'
-        ],
-        'kwargs': {
-            'batch_size': 64,
-            'shuffle': False,
-            'num_workers': 0
+            'lr': 1e-3,
+            'betas': (1.0, 0.999),
+            'amsgrad': False,
+            'weight_decay': 0.0,
         }
     }
 

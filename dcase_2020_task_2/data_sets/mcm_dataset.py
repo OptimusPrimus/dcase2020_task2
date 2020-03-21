@@ -1,9 +1,11 @@
 import os
 import torch.utils.data
-import torchaudio
 import glob
 import tqdm
 import data_sets
+import librosa
+import sys
+import numpy as np
 
 
 class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
@@ -13,9 +15,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             data_root=os.path.join(os.path.expanduser('~'), 'shared', 'DCASE_Task_2'),
             mode='training',
             context=5,
-            transformations=[
-                torchaudio.transforms.MelScale(n_mels=128, sample_rate=16000, f_min=0, f_max=None)
-            ]
+            machine_type=0
     ):
 
         assert mode in ['training', 'validation', 'testing']
@@ -23,19 +23,19 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         self.mode = mode
         self.data_root = data_root
         self.context = context
-        self.transformations = transformations
+        self.machine_type = self.inverse_class_map[machine_type]
 
         if mode == 'training':
-            files = glob.glob(os.path.join(data_root, 'dev_data', '*', 'train', '*.wav'))
+            files = glob.glob(os.path.join(data_root, 'dev_data', self.machine_type, 'train', '*.wav'))
         elif mode == 'validation':
-            files = glob.glob(os.path.join(data_root, 'dev_data', '*', 'test', '*.wav'))
+            files = glob.glob(os.path.join(data_root, 'dev_data', self.machine_type, 'test', '*.wav'))
         elif mode == 'testing':
             raise NotImplementedError
         else:
             raise AttributeError
 
         self.data = self.__load_data__(sorted(files))
-        self.num_sampels_per_file = self.data[-1]['observation'].shape[2] // self.context
+        self.num_sampels_per_file = self.data[0]['observation'].shape[2] - self.context + 1
 
     @property
     def class_map(self):
@@ -63,14 +63,9 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
     def observation_shape(self) -> tuple:
         return (1, 128, self.context)
 
-    def get_subset(self, machine_types):
-        if type(machine_types) is int:
-            machine_types = [machine_types]
-        indices = []
-        for i, sample in enumerate(self.data):
-            if sample['machine_type'] in machine_types:
-                indices += list(range(i*self.num_sampels_per_file, (i+1)*self.num_sampels_per_file))
-        return torch.utils.data.Subset(self, indices)
+    def normalize_observations(self, x):
+        x['normalized_observations'] = x['observations']
+        return x
 
     def __getitem__(self, item):
         # get offset in audio file
@@ -81,7 +76,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         sample = self.data[item]
         # create data object
         return {
-            'observations': sample['observation'][:, :, offset * self.context: (offset + 1) * self.context],
+            'observations': sample['observation'][:, :, offset: offset + self.context],
             'targets': sample['target'],
             'machine_types': sample['machine_type'],
             'machine_ids': sample['machine_id'],
@@ -93,21 +88,29 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
 
     def __load_data__(self, files):
         data = []
-        for f, md in tqdm.tqdm(zip(files, [self.__get_meta_data__(f) for f in files]), total=len(files)):
+        for f in tqdm.tqdm(files):
+            md = self.__get_meta_data__(f)
             md['observation'] = self.__load_preprocess_file__(f)
             data.append(md)
         return data
 
-    def __load_preprocess_file__(self, file):
-        x = torchaudio.load(file)[0]
-        # stft
-        x = torch.stft(x, 1024, hop_length=512, window=torch.hann_window(1024), center=False)
-        # power spectrogram
-        x = x.pow(2).sum(-1)
-        # to mel scale
-        for t in self.transformations:
-            x = t(x)
-        return x
+    @staticmethod
+    def __load_preprocess_file__(file):
+
+        x, sr = librosa.load(file, sr=None)
+
+        mel_spectrogram = librosa.feature.melspectrogram(
+            y=x,
+            sr=sr,
+            n_fft=1024,
+            hop_length=512,
+            n_mels=128,
+            power=2.0
+        )
+
+        log_mel_spectrogram = 20.0 / 2.0 * np.log10(mel_spectrogram + sys.float_info.epsilon)
+
+        return log_mel_spectrogram[None]
 
     def __get_meta_data__(self, file_path):
 
@@ -132,4 +135,3 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             'machine_id': id,
             'part_number': part
         }
-
