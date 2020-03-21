@@ -1,5 +1,5 @@
 cd ..
-cd dcase_2020_task_2
+cd dcase2020_task2
 
 conda activate better_priors
 
