@@ -104,9 +104,9 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
         }
 
     def test_end(self, outputs):
-        # self.result = self.logger.log_testing(outputs)
-        # self.logger.close()
-        return {}
+        self.result = self.logger_.log_testing(outputs)
+        self.logger_.close()
+        return self.result
 
     def configure_optimizers(self):
         optimizers = [self.objects['optimizer']]

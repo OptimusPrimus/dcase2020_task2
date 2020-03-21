@@ -1,3 +1,4 @@
+cd ..
 cd dcase_2020_task_2
 
 conda activate better_priors

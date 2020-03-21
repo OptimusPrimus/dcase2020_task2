@@ -72,16 +72,20 @@ class Logger:
         auroc_max = metrics.roc_auc_score(ground_truth, scores_max)
         pauroc_max = metrics.roc_auc_score(ground_truth, scores_max, max_fpr=0.1)
 
-        self.__log_metric__('validation_auroc_mean', auroc_mean, step)
-        self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
+        if epoch != -2:
+            self.__log_metric__('validation_auroc_mean', auroc_mean, step)
+            self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
 
-        self.__log_metric__('validation_auroc_max', auroc_max, step)
-        self.__log_metric__('validation_pauroc_max', pauroc_max, step)
+            self.__log_metric__('validation_auroc_max', auroc_max, step)
+            self.__log_metric__('validation_pauroc_max', pauroc_max, step)
 
-        return auroc_mean, pauroc_mean
+        return {
+            'auroc_mean': auroc_mean,
+            'pauroc_mean': pauroc_mean
+        }
 
     def log_testing(self, outputs):
-        pass
+        return self.log_validation(outputs, 0, -2)
 
     def __log_metric__(self, name, value, step):
         self._run.log_scalar(name, value, step)
