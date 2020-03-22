@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="30c4609b-c0f3-47c2-96b2-44333599f4dd" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/experiment_logs/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dcase2020_task2/experiments/baseline_experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/experiments/baseline_experiment.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,7 +159,7 @@
       <workItem from="1584716246594" duration="8103000" />
       <workItem from="1584750336565" duration="866000" />
       <workItem from="1584794912080" duration="26986000" />
-      <workItem from="1584830240798" duration="6725000" />
+      <workItem from="1584830240798" duration="6940000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <created>1584710561144</created>
@@ -259,7 +259,14 @@
       <option name="project" value="LOCAL" />
       <updated>1584836053059</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="initial">
+      <created>1584837325618</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1584837325618</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -279,11 +286,11 @@
       <screen x="0" y="27" width="1920" height="994" />
     </state>
     <state x="693" y="273" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584732111045" />
-    <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2" timestamp="1584836052997">
+    <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2" timestamp="1584837325513">
       <screen x="1920" y="0" width="1920" height="1200" />
     </state>
     <state x="522" y="68" width="865" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584833055248" />
-    <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584836052997" />
+    <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584837325513" />
     <state x="697" y="253" width="515" height="549" key="EnvironmentVariablesDialog" timestamp="1584729806293">
       <screen x="0" y="27" width="1920" height="994" />
     </state>
@@ -332,11 +339,11 @@
       <screen x="0" y="27" width="1920" height="994" />
     </state>
     <state x="449" y="159" width="1022" height="737" key="SettingsEditor/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584731415230" />
-    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1584836054208">
+    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1584837326662">
       <screen x="1920" y="0" width="1920" height="1200" />
     </state>
     <state x="555" y="260" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584833056403" />
-    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584836054208" />
+    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584837326662" />
     <state x="616" y="351" key="com.intellij.ide.util.TipDialog" timestamp="1584830244787">
       <screen x="0" y="27" width="1920" height="994" />
     </state>
