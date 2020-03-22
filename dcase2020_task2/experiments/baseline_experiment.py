@@ -77,7 +77,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
         else:
             raise ValueError('Too many optimizers.')
 
-    def validation_step(self, batch, batch_num, *args):
+    def validation_step(self, batch, batch_num):
         self(batch)
         return {
             'targets': batch['targets'],
