@@ -3,14 +3,14 @@ from experiments.parser import create_objects_from_config
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from configs.baseline_config import configuration
+from configs.simple_sampling_config import configuration
 import copy
 from utils.logger import Logger
 import os
 import torch.utils.data
 
 
-class BaselineExperiment(pl.LightningModule, BaseExperiment):
+class SimpleSamplingExperiment(pl.LightningModule, BaseExperiment):
 
     def __init__(self, configuration_dict, _run):
         super().__init__()
@@ -31,50 +31,62 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
         self.prior = self.objects['prior']
         self.reconstruction = self.objects['reconstruction']
 
+        self.inf_complement_training_iterator = iter(
+            self.get_infinite_data_loader(
+                torch.utils.data.DataLoader(
+                    self.objects['training_data_set'].get_complement_dataset(),
+                    batch_size=self.objects['batch_size'],
+                    shuffle=True,
+                    num_workers=self.objects['num_workers']
+                )
+            )
+        )
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
         self.epoch = -1
         self.step = 0
-
         self.result = None
 
-    def forward(self, batch):
+    @staticmethod
+    def get_infinite_data_loader(dl):
+        while True:
+            for x in iter(dl):
+                yield x
 
-        batch['epoch'] = self.epoch
+    def forward(self, batch_normal):
 
-        batch = self.auto_encoder_model(batch)
+        batch_normal['epoch'] = self.epoch
 
-        reconstruction_loss = self.reconstruction.loss(batch)
-        prior_loss = self.prior.loss(batch)
-        loss = reconstruction_loss + prior_loss
+        batch_abnormal = next(self.inf_complement_training_iterator)
 
-        if self.factor:
-            auxiliary_loss = self.factor.auxiliary_loss(batch)
-            loss += auxiliary_loss
-        batch['loss'] = loss
+        for key in batch_abnormal:
+            if type(batch_abnormal[key]) is torch.Tensor:
+                batch_abnormal[key] = batch_abnormal[key].to(batch_normal['observations'].device)
 
-        return batch
+        batch_abnormal['epoch'] = self.epoch
+
+        batch_normal = self.auto_encoder_model(batch_normal)
+        batch_abnormal = self.auto_encoder_model(batch_abnormal)
+
+        reconstruction_loss = self.reconstruction.loss(batch_normal, batch_abnormal=batch_abnormal)
+        prior_loss = self.prior.loss(batch_normal)
+        batch_normal['loss'] = reconstruction_loss + prior_loss
+
+        return batch_normal
 
     def training_step(self, batch, batch_num, optimizer_idx=0):
 
         if batch_num == 0 and optimizer_idx == 0:
             self.epoch += 1
 
-        if optimizer_idx == 0:
-            batch = self(batch)
-            self.logger_.log_training_step(batch, self.step)
-            self.step += 1
-            return {
-                'loss': batch['loss'],
-                'tqdm': {'loss': batch['loss']},
-            }
-        elif optimizer_idx == 1:
-            # no need to compute reconstruction loss, ...  - only need latent representation
-            batch = self.auto_encoder_model(batch)
-            loss = self.factor.training_loss(batch)
-            self.logger_.__log_metric__('training_factor_loss', loss.item(), self.step)
-            return {'loss': loss}
-        else:
-            raise ValueError('Too many optimizers.')
+        batch = self(batch)
+
+        self.logger_.log_training_step(batch, self.step)
+        self.step += 1
+
+        return {
+            'loss': batch['loss'],
+            'tqdm': {'loss': batch['loss']},
+        }
 
     def validation_step(self, batch, batch_num):
         self(batch)
@@ -153,11 +165,11 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
         return self.result
 
 
-ex = Experiment('dcase2020_task2_baseline')
+ex = Experiment('dcase2020_task2_simple_sampling')
 cfg = ex.config(configuration)
 
 
 @ex.automain
 def run(_config, _run):
-    experiment = BaselineExperiment(_config, _run)
+    experiment = SimpleSamplingExperiment(_config, _run)
     return experiment.run()

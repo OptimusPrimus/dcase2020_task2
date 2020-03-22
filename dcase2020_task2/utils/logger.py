@@ -32,8 +32,9 @@ class Logger:
         self.__log_metric__('training_loss', batch['loss'].item(), step)
         self.__log_metric__('training_prior_loss', batch['prior_loss'].item(), step)
         self.__log_metric__('training_reconstruction_loss', batch['reconstruction_loss'].item(), step)
-        self.__log_metric__('training_auxiliary_loss', batch.get('auxiliary_loss', torch.tensor(0.0)).item(), step),
         self.__log_metric__('c', batch.get('c', 0.0), step)
+        self.__log_metric__('tpr', batch.get('tpr', 0.0), step)
+        self.__log_metric__('fpr', batch.get('fpr', 0.0), step)
 
     def log_validation(self, outputs, step, epoch):
 
@@ -45,7 +46,7 @@ class Logger:
         file_ids = []
         for o in outputs:
             targets.append(o['targets'].detach().cpu().numpy())
-            predictions.append(o['predictions'].detach().cpu().numpy())
+            predictions.append(o['scores'].detach().cpu().numpy())
             file_ids.append(o['file_ids'].detach().cpu().numpy())
 
         targets = np.concatenate(targets)

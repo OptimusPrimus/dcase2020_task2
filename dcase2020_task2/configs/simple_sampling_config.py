@@ -12,11 +12,8 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
     prior_class = 'priors.NoPrior'
-    latent_size = 8
+    latent_size = 40
 
-    use_factor_loss = False
-
-    data_set_class = 'data_sets.MCMDataset'
     machine_type = 0
     batch_size = 512
 
@@ -95,23 +92,29 @@ def configuration():
             }
         }
 
-    if data_set_class == 'data_sets.MCMDataset':
-
-        training_data_set = {
-            'class': data_set_class,
-            'kwargs': {
-                'mode': 'training',
-                'machine_type': machine_type
-            }
+    training_data_set = {
+        'class': 'data_sets.MCMDataset',
+        'kwargs': {
+            'mode': 'training',
+            'machine_type': machine_type,
+            'context': 11,
+            'num_mel': 40,
+            'n_fft': 512,
+            'hop_size': 256
         }
+    }
 
-        validation_data_set = {
-            'class': data_set_class,
-            'kwargs': {
-                'mode': 'validation',
-                'machine_type': machine_type
-            }
+    validation_data_set = {
+        'class': 'data_sets.MCMDataset',
+        'kwargs': {
+            'mode': 'validation',
+            'machine_type': machine_type,
+            'context': 11,
+            'num_mel': 40,
+            'n_fft': 512,
+            'hop_size': 256
         }
+    }
 
     reconstruction = {
         'class': 'reconstructions.MSE',
@@ -149,7 +152,7 @@ def configuration():
             'lr': 1e-3,
             'betas': (0.9, 0.999),
             'amsgrad': False,
-            'weight_decay': 0.0,
+            'weight_decay': 1e-4,
         }
     }
 
@@ -163,43 +166,3 @@ def configuration():
             'gpus': [0],
         }
     }
-
-    if use_factor_loss:
-        factor = {
-            'class': 'auxiliary_losses.FactorVAE',
-            'args': [
-                {
-                    'class': 'models.Critic',
-                    'args': [
-                        '@prior.latent_size',
-                    ],
-                    'ref': 'factor_model'
-                }
-            ],
-            'kwargs': {
-                'weight': 1.0
-            }
-        }
-
-        factor_optimizer = {
-            'class': 'torch.optim.AdamW',
-            'args': [
-                '@factor_model.parameters()'
-            ],
-            'kwargs': {
-                'lr': 5e-4,
-                'betas': (0.9, 0.999),
-                'amsgrad': True,
-                'weight_decay': 0.01,
-            }
-        }
-
-        factor_lr_scheduler = {
-            'class': 'torch.optim.lr_scheduler.StepLR',
-            'args': [
-                '@factor_optimizer',
-            ],
-            'kwargs': {
-                'step_size': 200
-            }
-        }

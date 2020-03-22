@@ -1,11 +1,7 @@
 import torch.nn
 from models import VAEBase
-from torch import nn
-from torch.nn import functional as F
 import numpy as np
 import torch
-from torch.autograd import Variable
-import torch.nn.init as init
 
 
 class FCBaseLine(torch.nn.Module, VAEBase):
@@ -14,18 +10,15 @@ class FCBaseLine(torch.nn.Module, VAEBase):
             self,
             input_shape,
             reconstruction_loss,
-            prior,
-            normalize_fun
+            prior
     ):
         super().__init__()
 
         self.input_shape = input_shape
         self.prior = prior
         self.reconstruction = reconstruction_loss
-        self.normalize_fun = normalize_fun
 
         self.encoder = torch.nn.Sequential(
-            torch.nn.BatchNorm1d(np.prod(input_shape)),
             torch.nn.Linear(np.prod(input_shape), 128, bias=False),
             torch.nn.BatchNorm1d(128),
             torch.nn.ReLU(True),
@@ -60,14 +53,13 @@ class FCBaseLine(torch.nn.Module, VAEBase):
         )
 
     def forward(self, batch):
-        batch = self.normalize_fun(batch)
         batch = self.encode(batch)
         batch = self.prior(batch)
         batch = self.decode(batch)
         return batch
 
     def encode(self, batch):
-        x = batch['normalized_observations']
+        x = batch['observations']
         x = x.view(x.shape[0], -1)
         batch['pre_codes'] = self.encoder(x)
         return batch
