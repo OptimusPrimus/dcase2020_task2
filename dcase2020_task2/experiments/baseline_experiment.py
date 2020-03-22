@@ -126,7 +126,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
             self.objects['training_data_set'],
             batch_size=self.objects['batch_size'],
             shuffle=True,
-            num_workers=0
+            num_workers=self.objects['num_workers']
         )
         return dl
 
@@ -135,7 +135,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
             self.objects['validation_data_set'],
             batch_size=self.objects['batch_size'],
             shuffle=False,
-            num_workers=0
+            num_workers=self.objects['num_workers']
         )
         return dl
 
@@ -144,7 +144,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
             self.objects['validation_data_set'],
             batch_size=self.objects['batch_size'],
             shuffle=False,
-            num_workers=0
+            num_workers=self.objects['num_workers']
         )
         return dl
 

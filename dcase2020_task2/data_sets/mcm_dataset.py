@@ -12,7 +12,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
 
     def __init__(
             self,
-            data_root=os.path.join(os.path.expanduser('~'), 'shared', 'DCASE2020_Task2'),
+            data_root=os.path.join(os.path.expanduser('~'), 'shared', 'dcase2020_task2'),
             mode='training',
             context=5,
             machine_type=0
@@ -33,6 +33,8 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             raise NotImplementedError
         else:
             raise AttributeError
+
+        assert len(files) > 0
 
         self.data = self.__load_data__(sorted(files))
         self.num_sampels_per_file = self.data[0]['observation'].shape[2] - self.context + 1
