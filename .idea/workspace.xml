@@ -2,24 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="30c4609b-c0f3-47c2-96b2-44333599f4dd" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/dcase2020_task2/configs/sampling_config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dcase2020_task2/experiments/sampling_experiment.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dcase2020_task2/models/fc_sampling.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dcase2020_task2/priors/simple_kl_prior.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/mse_loss.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/np_loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dcase2020_task2/configs/baseline_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/configs/baseline_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dcase2020_task2/configs/sampling_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/configs/sampling_config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dcase2020_task2/configs/simple_sampling_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/configs/simple_sampling_config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/data_sets/mcm_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/data_sets/mcm_dataset.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dcase2020_task2/experiments/simple_sampling_experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/experiments/simple_sampling_experiment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/models/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/models/fc_baseline.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/models/fc_baseline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/priors/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/priors/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/reconstructions/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/reconstructions/mse.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/reconstructions/reconstruction_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/reconstruction_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dcase2020_task2/reconstructions/mse_loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/mse_loss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dcase2020_task2/reconstructions/np_loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/np_loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dcase2020_task2/utils/logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/utils/logger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/baseline.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/baseline.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -221,7 +212,7 @@
       <workItem from="1584875088723" duration="25410000" />
       <workItem from="1584910338635" duration="897000" />
       <workItem from="1584963965373" duration="7391000" />
-      <workItem from="1584981929997" duration="16452000" />
+      <workItem from="1584981929997" duration="22131000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <created>1584710561144</created>
@@ -356,7 +347,14 @@
       <option name="project" value="LOCAL" />
       <updated>1584908619473</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="initial">
+      <created>1585000849057</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1585000849057</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -377,9 +375,10 @@
       <screen x="0" y="27" width="1920" height="994" />
     </state>
     <state x="693" y="273" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584897578975" />
-    <state x="522" y="68" width="1100" height="919" key="CommitChangelistDialog2" timestamp="1584908619341">
-      <screen x="0" y="27" width="1920" height="994" />
+    <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2" timestamp="1585000848959">
+      <screen x="1920" y="0" width="1920" height="1200" />
     </state>
+    <state x="2442" y="49" key="CommitChangelistDialog2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585000848959" />
     <state x="522" y="68" width="865" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584908619341" />
     <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584841951704" />
     <state x="697" y="253" width="515" height="549" key="EnvironmentVariablesDialog" timestamp="1584729806293">
@@ -390,28 +389,32 @@
       <screen x="1920" y="0" width="1920" height="1200" />
     </state>
     <state x="2284" y="474" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584710614189" />
-    <state width="1874" height="340" key="GridCell.Tab.0.bottom" timestamp="1584993315157">
+    <state width="1874" height="192" key="GridCell.Tab.0.bottom" timestamp="1585005452993">
       <screen x="0" y="147" width="1920" height="994" />
     </state>
-    <state width="1874" height="340" key="GridCell.Tab.0.bottom/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1584993315157" />
+    <state width="1874" height="192" key="GridCell.Tab.0.bottom/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585005452993" />
+    <state width="1874" height="192" key="GridCell.Tab.0.bottom/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585002552917" />
     <state width="1874" height="229" key="GridCell.Tab.0.bottom/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584972645186" />
     <state width="1874" height="390" key="GridCell.Tab.0.bottom/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584839623618" />
-    <state width="1874" height="340" key="GridCell.Tab.0.center" timestamp="1584993315157">
+    <state width="1874" height="192" key="GridCell.Tab.0.center" timestamp="1585005452993">
       <screen x="0" y="147" width="1920" height="994" />
     </state>
-    <state width="1874" height="340" key="GridCell.Tab.0.center/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1584993315157" />
+    <state width="1874" height="192" key="GridCell.Tab.0.center/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585005452993" />
+    <state width="1874" height="192" key="GridCell.Tab.0.center/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585002552917" />
     <state width="1874" height="229" key="GridCell.Tab.0.center/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584972645185" />
     <state width="1874" height="390" key="GridCell.Tab.0.center/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584839623618" />
-    <state width="1874" height="340" key="GridCell.Tab.0.left" timestamp="1584993315157">
+    <state width="1874" height="192" key="GridCell.Tab.0.left" timestamp="1585005452993">
       <screen x="0" y="147" width="1920" height="994" />
     </state>
-    <state width="1874" height="340" key="GridCell.Tab.0.left/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1584993315157" />
+    <state width="1874" height="192" key="GridCell.Tab.0.left/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585005452993" />
+    <state width="1874" height="192" key="GridCell.Tab.0.left/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585002552916" />
     <state width="1874" height="229" key="GridCell.Tab.0.left/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584972645185" />
     <state width="1874" height="390" key="GridCell.Tab.0.left/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584839623618" />
-    <state width="1874" height="340" key="GridCell.Tab.0.right" timestamp="1584993315157">
+    <state width="1874" height="192" key="GridCell.Tab.0.right" timestamp="1585005452993">
       <screen x="0" y="147" width="1920" height="994" />
     </state>
-    <state width="1874" height="340" key="GridCell.Tab.0.right/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1584993315157" />
+    <state width="1874" height="192" key="GridCell.Tab.0.right/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585005452993" />
+    <state width="1874" height="192" key="GridCell.Tab.0.right/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585002552917" />
     <state width="1874" height="229" key="GridCell.Tab.0.right/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584972645186" />
     <state width="1874" height="390" key="GridCell.Tab.0.right/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584839623618" />
     <state width="1874" height="40" key="GridCell.Tab.1.bottom" timestamp="1584992939045">
@@ -446,9 +449,10 @@
       <screen x="0" y="27" width="1920" height="994" />
     </state>
     <state x="449" y="159" width="1022" height="737" key="SettingsEditor/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584731415230" />
-    <state x="555" y="260" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1584908620832">
-      <screen x="0" y="27" width="1920" height="994" />
+    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1585000850452">
+      <screen x="1920" y="0" width="1920" height="1200" />
     </state>
+    <state x="2475" y="281" key="Vcs.Push.Dialog.v2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585000850452" />
     <state x="555" y="260" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584908620832" />
     <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584841953196" />
     <state width="960" height="497" key="XDebugger.FullValuePopup" timestamp="1584991846499">
@@ -465,10 +469,10 @@
       <screen x="1920" y="0" width="1920" height="1200" />
     </state>
     <state x="2648" y="520" width="464" height="167" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1584984144722" />
-    <state x="2556" y="345" width="1449" height="726" key="dock-window-1" timestamp="1584999738517">
+    <state x="2173" y="0" width="1467" height="730" maximized="true" key="dock-window-1" timestamp="1585004110432">
       <screen x="1920" y="0" width="1920" height="1200" />
     </state>
-    <state x="1962" y="0" width="1449" height="726" maximized="true" key="dock-window-1/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1584982097153" />
+    <state x="2173" y="0" width="1467" height="730" maximized="true" key="dock-window-1/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585004110432" />
     <state x="2556" y="345" width="1449" height="726" key="dock-window-1/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584999738517" />
     <state x="1855" y="0" width="1459" height="868" maximized="true" key="dock-window-1/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584965603143" />
     <state x="1920" y="0" width="1536" height="950" maximized="true" key="dock-window-2" timestamp="1584716278714">
@@ -503,7 +507,7 @@
     <SUITE FILE_PATH="coverage/dcase_2020_task_2$baseline_experiment.coverage" NAME="baseline_experiment Coverage Results" MODIFIED="1584907896874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase2020_task2" />
     <SUITE FILE_PATH="coverage/dcase_2020_task_2$sampling_experiment.coverage" NAME="sampling_experiment Coverage Results" MODIFIED="1584991869386" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase2020_task2" />
     <SUITE FILE_PATH="coverage/dcase_2020_task_2$fc_baseline.coverage" NAME="fc_baseline Coverage Results" MODIFIED="1584898449633" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase2020_task2/models" />
-    <SUITE FILE_PATH="coverage/dcase_2020_task_2$simple_sampling_experiment.coverage" NAME="simple_sampling_experiment Coverage Results" MODIFIED="1584993315149" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase2020_task2" />
+    <SUITE FILE_PATH="coverage/dcase_2020_task_2$simple_sampling_experiment.coverage" NAME="simple_sampling_experiment Coverage Results" MODIFIED="1585002552891" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase2020_task2" />
     <SUITE FILE_PATH="coverage/dcase_2020_task_2$vae_experiment.coverage" NAME="vae_experiment Coverage Results" MODIFIED="1584823749410" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase_2020_task_2" />
     <SUITE FILE_PATH="coverage/dcase_2020_task_2$mcm_dataset.coverage" NAME="mcm_dataset Coverage Results" MODIFIED="1584709402422" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dcase_2020_task_2/data_sets" />
   </component>

@@ -86,8 +86,10 @@ class Logger:
             self.__log_metric__('validation_pauroc_max', pauroc_max, step)
 
         return {
-            'auroc_mean': auroc_mean,
-            'pauroc_mean': pauroc_mean
+            'auroc_mean': int(auroc_mean),
+            'pauroc_mean': int(pauroc_mean),
+            'auroc_max': int(auroc_max),
+            'pauroc_max': int(pauroc_max),
         }
 
     def log_testing(self, outputs):

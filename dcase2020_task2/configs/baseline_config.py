@@ -22,6 +22,12 @@ def configuration():
     learning_rate = 1e-3
     weight_decay = 0
 
+    context = 5
+    num_mel = 128
+    n_fft = 1024
+    hop_size = 512
+
+
     ########################
     # detailed configuration
     ########################
@@ -38,7 +44,11 @@ def configuration():
         'class': 'data_sets.MCMDataset',
         'kwargs': {
             'mode': 'training',
-            'machine_type': machine_type
+            'machine_type': machine_type,
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size
         }
     }
 
@@ -46,7 +56,11 @@ def configuration():
         'class': 'data_sets.MCMDataset',
         'kwargs': {
             'mode': 'validation',
-            'machine_type': machine_type
+            'machine_type': machine_type,
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size
         }
     }
 

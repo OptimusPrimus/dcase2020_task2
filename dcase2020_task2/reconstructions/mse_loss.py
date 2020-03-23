@@ -9,7 +9,7 @@ class MSE(ReconstructionBase):
 
         self.p = p
 
-    def loss(self, batch):
+    def loss(self, batch, *args, **kwargs):
         bce = F.mse_loss(batch['reconstructions'], batch['observations'], reduction='sum')
         batch['reconstruction_loss'] = self.weight * bce / (batch['observations'].shape[0])
         return batch['reconstruction_loss']

@@ -16,13 +16,18 @@ def configuration():
     machine_type = 0
     batch_size = 512
 
-    epochs = 100
-    num_workers = 0
+    epochs = 500
+    num_workers = 4
 
     learning_rate = 1e-4
     weight_decay = 1e-5
 
     rho = 0.2
+
+    context = 11
+    num_mel = 40
+    n_fft = 512
+    hop_size = 256
 
     ########################
     # detailed configuration
@@ -36,11 +41,16 @@ def configuration():
         }
     }
 
+
     training_data_set = {
         'class': 'data_sets.MCMDataset',
         'kwargs': {
             'mode': 'training',
-            'machine_type': machine_type
+            'machine_type': machine_type,
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size
         }
     }
 
@@ -48,7 +58,11 @@ def configuration():
         'class': 'data_sets.MCMDataset',
         'kwargs': {
             'mode': 'validation',
-            'machine_type': machine_type
+            'machine_type': machine_type,
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size
         }
     }
 

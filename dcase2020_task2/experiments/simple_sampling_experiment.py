@@ -3,12 +3,11 @@ from experiments.parser import create_objects_from_config
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from configs.sampling_config import configuration
+from configs.simple_sampling_config import configuration
 import copy
 from utils.logger import Logger
 import os
 import torch.utils.data
-import numpy as np
 
 
 class SimpleSamplingExperiment(pl.LightningModule, BaseExperiment):
@@ -131,7 +130,6 @@ class SimpleSamplingExperiment(pl.LightningModule, BaseExperiment):
 
         return optimizers, lr_schedulers
 
-
     def train_dataloader(self):
         dl = torch.utils.data.DataLoader(
             self.objects['training_data_set'],
@@ -140,7 +138,6 @@ class SimpleSamplingExperiment(pl.LightningModule, BaseExperiment):
             num_workers=self.objects['num_workers']
         )
         return dl
-
 
     def val_dataloader(self):
         dl = torch.utils.data.DataLoader(
@@ -151,7 +148,6 @@ class SimpleSamplingExperiment(pl.LightningModule, BaseExperiment):
         )
         return dl
 
-
     def test_dataloader(self):
         dl = torch.utils.data.DataLoader(
             self.objects['validation_data_set'],
@@ -160,7 +156,6 @@ class SimpleSamplingExperiment(pl.LightningModule, BaseExperiment):
             num_workers=self.objects['num_workers']
         )
         return dl
-
 
     def run(self):
         self.trainer.fit(self)

@@ -7,7 +7,7 @@ class NP(ReconstructionBase):
         super().__init__(weight=weight)
         self.rho = rho
 
-    def loss(self, batch_normal, batch_abnormal):
+    def loss(self, batch_normal, batch_abnormal, *args, **kwargs):
         normal_scores = batch_normal['scores']
         abnormal_scores = batch_abnormal['scores']
         with torch.no_grad():

@@ -22,11 +22,26 @@ def configuration():
     learning_rate = 1e-3
     weight_decay = 0
 
-    rho = 0.2
+    rho = 0.1
+
+    feature_context = 'short'
+    reconstruction_class = 'reconstructions.NP'
+    model_class = 'models.BaselineFCAE'
 
     ########################
     # detailed configuration
     ########################
+
+    if feature_context == 'short':
+        context = 5
+        num_mel = 128
+        n_fft = 1024
+        hop_size = 512
+    elif feature_context == 'long':
+        context = 11
+        num_mel = 40
+        n_fft = 512
+        hop_size = 256
 
     prior = {
         'class': 'priors.NoPrior',
@@ -40,7 +55,11 @@ def configuration():
         'class': 'data_sets.MCMDataset',
         'kwargs': {
             'mode': 'training',
-            'machine_type': machine_type
+            'machine_type': machine_type,
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size
         }
     }
 
@@ -48,12 +67,16 @@ def configuration():
         'class': 'data_sets.MCMDataset',
         'kwargs': {
             'mode': 'validation',
-            'machine_type': machine_type
+            'machine_type': machine_type,
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size
         }
     }
 
     reconstruction = {
-        'class': 'reconstructions.NP',
+        'class': reconstruction_class,
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@training_data_set.observation_shape',
@@ -62,7 +85,7 @@ def configuration():
     }
 
     auto_encoder_model = {
-        'class': 'models.BaselineFCAE',
+        'class': model_class,
         'args': [
             '@training_data_set.observation_shape',
             '@reconstruction',
