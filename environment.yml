@@ -1,4 +1,4 @@
-name: dcase_2020_task_2
+name: dcase2020_task2
 channels:
   - pytorch
   - defaults
