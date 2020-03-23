@@ -11,107 +11,44 @@ def configuration():
     #####################
     # quick configuration, uses default parameters of more detailed configuration
     #####################
-    prior_class = 'priors.NoPrior'
     latent_size = 8
 
-    use_factor_loss = False
-
-    data_set_class = 'data_sets.MCMDataset'
     machine_type = 0
     batch_size = 512
 
     epochs = 100
     num_workers = 4
 
+    learning_rate = 1e-3
+    weight_decay = 0
+
     ########################
     # detailed configuration
     ########################
 
-    # set default values for different priors
-    if prior_class == 'priors.NoPrior':
-        prior = {
-            'class': prior_class,
-            'kwargs': {
-                'latent_size': latent_size,
-                'weight': 1.0
-            }
+    prior = {
+        'class': 'priors.NoPrior',
+        'kwargs': {
+            'latent_size': latent_size,
+            'weight': 1.0
         }
-    elif prior_class == 'priors.StandardNormalPrior':
-        prior = {
-            'class': prior_class,
-            'kwargs': {
-                'latent_size': latent_size,
-                'weight': 1.0,
-                'c_max': 0.0,
-                'c_stop_epoch': epochs
-            }
-        }
-    elif prior_class == 'priors.SimplexPrior' or prior_class == 'priors.OrthogonalPrior':
-        prior = {
-            'class': prior_class,
-            'kwargs': {
-                'min_anneal': 0.0,
-                'max_anneal': 1.0,
-                'anneal_stop_epoch': epochs,
-                'latent_size': latent_size,
-                'weight': 1.0,
-                'c_max': 0.0,
-                'c_stop_epoch': epochs
-            }
-        }
-    elif prior_class == 'priors.BetaTCVaePrior':
-        # TODO: add default parameters
-        prior = {
-            'class': prior_class,
-            'args': [
-                '@training_data_set.size'
-            ],
-            'kwargs': {
-                'min_anneal': 0.0,
-                'max_anneal': 1.0,
-                'anneal_stop_epoch': epochs,
-                'latent_size': latent_size,
-                'weight': 1.0,
-                'c_max': 0.0,
-                'c_stop_epoch': epochs
-            }
-        }
-    elif prior_class == 'priors.DIPVaePrior':
-        # TODO: add default parameters
-        prior = {
-            'class': prior_class,
-            'args': [
-                '@training_data_set.size'
-            ],
-            'kwargs': {
-                'min_anneal': 0.0,
-                'max_anneal': 1.0,
-                'anneal_stop_epoch': epochs,
-                'latent_size': latent_size,
-                'weight': 1.0,
-                'c_max': 0.0,
-                'c_stop_epoch': epochs,
-                'dip_first': False,
-            }
-        }
+    }
 
-    if data_set_class == 'data_sets.MCMDataset':
-
-        training_data_set = {
-            'class': data_set_class,
-            'kwargs': {
-                'mode': 'training',
-                'machine_type': machine_type
-            }
+    training_data_set = {
+        'class': 'data_sets.MCMDataset',
+        'kwargs': {
+            'mode': 'training',
+            'machine_type': machine_type
         }
+    }
 
-        validation_data_set = {
-            'class': data_set_class,
-            'kwargs': {
-                'mode': 'validation',
-                'machine_type': machine_type
-            }
+    validation_data_set = {
+        'class': 'data_sets.MCMDataset',
+        'kwargs': {
+            'mode': 'validation',
+            'machine_type': machine_type
         }
+    }
 
     reconstruction = {
         'class': 'reconstructions.MSE',
@@ -122,7 +59,7 @@ def configuration():
     }
 
     auto_encoder_model = {
-        'class': 'models.FCBaseLine',
+        'class': 'models.BaselineFCAE',
         'args': [
             '@training_data_set.observation_shape',
             '@reconstruction',
@@ -146,10 +83,10 @@ def configuration():
             '@auto_encoder_model.parameters()'
         ],
         'kwargs': {
-            'lr': 1e-3,
+            'lr': learning_rate,
             'betas': (0.9, 0.999),
             'amsgrad': False,
-            'weight_decay': 0.0,
+            'weight_decay': weight_decay,
         }
     }
 
@@ -163,43 +100,3 @@ def configuration():
             'gpus': [0],
         }
     }
-
-    if use_factor_loss:
-        factor = {
-            'class': 'auxiliary_losses.FactorVAE',
-            'args': [
-                {
-                    'class': 'models.Critic',
-                    'args': [
-                        '@prior.latent_size',
-                    ],
-                    'ref': 'factor_model'
-                }
-            ],
-            'kwargs': {
-                'weight': 1.0
-            }
-        }
-
-        factor_optimizer = {
-            'class': 'torch.optim.AdamW',
-            'args': [
-                '@factor_model.parameters()'
-            ],
-            'kwargs': {
-                'lr': 5e-4,
-                'betas': (0.9, 0.999),
-                'amsgrad': True,
-                'weight_decay': 0.01,
-            }
-        }
-
-        factor_lr_scheduler = {
-            'class': 'torch.optim.lr_scheduler.StepLR',
-            'args': [
-                '@factor_optimizer',
-            ],
-            'kwargs': {
-                'step_size': 200
-            }
-        }

@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 
-class FCBaseLine(torch.nn.Module, VAEBase):
+class BaselineFCAE(torch.nn.Module, VAEBase):
 
     def __init__(
             self,

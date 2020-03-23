@@ -9,7 +9,7 @@ class ReconstructionBase(torch.nn.Module, abc.ABC):
         self.weight = weight
 
     @abc.abstractmethod
-    def loss(self, batch):
+    def loss(self, *args, **kwargs):
         raise NotImplementedError
 
     @abc.abstractmethod

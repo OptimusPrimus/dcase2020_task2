@@ -51,6 +51,8 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         self.meta_data = self.__load_meta_data__(sorted(files))
         self.data = self.__load_data__(sorted(files))
 
+        self.complement_data_set = None
+
 
     @property
     def class_map(self):
@@ -78,7 +80,11 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
     def observation_shape(self) -> tuple:
         return 1, self.num_mel, self.context
 
-    def get_complement_dataset(self):
+    def get_complement_data_set(self):
+
+        if self.complement_data_set:
+            return self.complement_data_set
+
         machine_types = list(range(6))
         machine_types.remove(self.class_map[self.machine_type])
         data_sets = [
@@ -91,6 +97,21 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
                 n_fft=self.n_fft,
                 hop_size=self.hop_size
             ) for i in machine_types
+        ]
+
+        for data_set in data_sets:
+            data_set.mean = self.mean
+            data_set.std = self.std
+
+        data_set = torch.utils.data.ConcatDataset(data_sets)
+        self.complement_data_set = data_set
+        return data_set
+
+    def get_various_data_set(self):
+
+        data_sets = [
+            self.get_complement_data_set(),
+            self
         ]
 
         for data_set in data_sets:
@@ -170,5 +191,4 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         }
 
     def __normalize_observation__(self, x):
-        (x - self.mean[:, None]) / self.std[:, None]
-        return x
+        return (x - self.mean[:, None]) / self.std[:, None]

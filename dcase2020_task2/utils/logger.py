@@ -33,8 +33,13 @@ class Logger:
         self.__log_metric__('training_prior_loss', batch['prior_loss'].item(), step)
         self.__log_metric__('training_reconstruction_loss', batch['reconstruction_loss'].item(), step)
         self.__log_metric__('c', batch.get('c', 0.0), step)
-        self.__log_metric__('tpr', batch.get('tpr', 0.0), step)
-        self.__log_metric__('fpr', batch.get('fpr', 0.0), step)
+        self.__log_metric__('tpr', batch.get('tpr', torch.tensor(0.0)).item(), step)
+        self.__log_metric__('fpr', batch.get('fpr', torch.tensor(0.0)).item(), step)
+
+    def log_generator_step(self, batch, step):
+        self.__log_metric__('generator_loss', batch['loss'].item(), step)
+        self.__log_metric__('generator_loss', batch['prior_loss'].item(), step)
+        self.__log_metric__('generator_loss', batch['reconstruction_loss'].item(), step)
 
     def log_validation(self, outputs, step, epoch):
 
