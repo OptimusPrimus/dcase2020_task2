@@ -1,7 +1,6 @@
-#cd ..
-#cd dcase2020_task2/dcase2020_task2
-#conda activate dcase2020_task2
-
+cd ..
+cd dcase2020_task2
+conda activate dcase2020_task2
 
 #
 for MACHINE_TYPE in 0 1 2 3 4 5
