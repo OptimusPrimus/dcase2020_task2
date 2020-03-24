@@ -17,7 +17,7 @@ def configuration():
     batch_size = 512
 
     epochs = 100
-    num_workers = 4
+    num_workers = 2
 
     learning_rate = 1e-3
     weight_decay = 0
