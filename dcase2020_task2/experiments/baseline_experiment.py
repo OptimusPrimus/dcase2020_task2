@@ -9,6 +9,10 @@ from utils.logger import Logger
 import os
 import torch.utils.data
 
+# workaround...
+from sacred import SETTINGS
+SETTINGS['CAPTURE_MODE'] = 'sys'
+
 
 class BaselineExperiment(pl.LightningModule, BaseExperiment):
 

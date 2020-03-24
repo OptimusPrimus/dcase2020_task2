@@ -12,6 +12,9 @@ import sklearn.mixture
 import numpy as np
 import warnings
 
+# workaround...
+from sacred import SETTINGS
+SETTINGS['CAPTURE_MODE'] = 'sys'
 
 def warn(*args, **kwargs):
     pass

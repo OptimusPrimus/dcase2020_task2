@@ -29,17 +29,17 @@ class Logger:
             pickle.dump(config, config_dictionary_file)
 
     def log_training_step(self, batch, step):
-        self.__log_metric__('training_loss', batch['loss'].item(), step)
-        self.__log_metric__('training_prior_loss', batch['prior_loss'].item(), step)
-        self.__log_metric__('training_reconstruction_loss', batch['reconstruction_loss'].item(), step)
-        self.__log_metric__('c', batch.get('c', 0.0), step)
-        self.__log_metric__('tpr', batch.get('tpr', torch.tensor(0.0)).item(), step)
-        self.__log_metric__('fpr', batch.get('fpr', torch.tensor(0.0)).item(), step)
+        self.__log_metric__('training_loss', batch['loss'], step)
+        self.__log_metric__('training_prior_loss', batch['prior_loss'], step)
+        self.__log_metric__('training_reconstruction_loss', batch['reconstruction_loss'], step)
+        self.__log_metric__('c', batch.get('c'), step)
+        self.__log_metric__('tpr', batch.get('tpr'), step)
+        self.__log_metric__('fpr', batch.get('fpr',), step)
 
     def log_generator_step(self, batch, step):
-        self.__log_metric__('generator_loss', batch['loss'].item(), step)
-        self.__log_metric__('generator_loss', batch['prior_loss'].item(), step)
-        self.__log_metric__('generator_loss', batch['reconstruction_loss'].item(), step)
+        self.__log_metric__('generator_loss', batch['loss'], step)
+        self.__log_metric__('generator_loss', batch['prior_loss'], step)
+        self.__log_metric__('generator_loss', batch['reconstruction_loss'], step)
 
     def log_validation(self, outputs, step, epoch):
 
@@ -80,22 +80,31 @@ class Logger:
 
         if epoch != -2:
             self.__log_metric__('validation_auroc_mean', auroc_mean, step)
-            self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
+            self.__log_metric__('validation_pauroc_mean', auroc_mean, step)
 
             self.__log_metric__('validation_auroc_max', auroc_max, step)
             self.__log_metric__('validation_pauroc_max', pauroc_max, step)
 
         return {
-            'auroc_mean': int(auroc_mean),
-            'pauroc_mean': int(pauroc_mean),
-            'auroc_max': int(auroc_max),
-            'pauroc_max': int(pauroc_max),
+            'auroc_mean': float(auroc_mean),
+            'pauroc_mean': float(pauroc_mean),
+            'auroc_max': float(auroc_max),
+            'pauroc_max': float(pauroc_max),
         }
 
     def log_testing(self, outputs):
         return self.log_validation(outputs, 0, -2)
 
     def __log_metric__(self, name, value, step):
+
+        if value is None:
+            value = 0.0
+
+        if type(value) == torch.Tensor:
+            value = value.item()
+        elif type(value) == np.ndarray:
+            value = float(value)
+
         self._run.log_scalar(name, value, step)
 
     def __log_image__(self, image, file_name):
