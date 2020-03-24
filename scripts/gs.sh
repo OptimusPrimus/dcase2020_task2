@@ -1,3 +1,5 @@
+#!/usr/bin/zsh
+
 cd ..
 cd dcase2020_task2
 conda activate dcase2020_task2
