@@ -19,18 +19,28 @@ def configuration():
     epochs = 100
     num_workers = 4
 
-    learning_rate = 1e-3
-    weight_decay = 0
+    learning_rate = 1.5*1e-2
+    weight_decay = 0.0
 
-    context = 5
-    num_mel = 128
-    n_fft = 1024
-    hop_size = 512
+    rho = 0.1
 
+    feature_context = 'short'
+    normalize = True
 
     ########################
     # detailed configuration
     ########################
+
+    if feature_context == 'short':
+        context = 5
+        num_mel = 128
+        n_fft = 1024
+        hop_size = 512
+    elif feature_context == 'long':
+        context = 11
+        num_mel = 40
+        n_fft = 512
+        hop_size = 256
 
     prior = {
         'class': 'priors.NoPrior',
@@ -48,7 +58,8 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size
+            'hop_size': hop_size,
+            'normalize': normalize
         }
     }
 
@@ -60,7 +71,10 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size
+            'hop_size': hop_size,
+            'normalize': normalize,
+            'mean': '@training_data_set.mean',
+            'std': '@training_data_set.std'
         }
     }
 

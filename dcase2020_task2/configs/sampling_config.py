@@ -29,6 +29,8 @@ def configuration():
     n_fft = 512
     hop_size = 256
 
+    normalize = True
+
     ########################
     # detailed configuration
     ########################
@@ -62,7 +64,10 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size
+            'hop_size': hop_size,
+            'normalize': normalize,
+            'mean': '@training_data_set.mean',
+            'std': '@training_data_set.std'
         }
     }
 

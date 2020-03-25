@@ -42,43 +42,33 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
         self.result = None
 
     def forward(self, batch):
-
         batch['epoch'] = self.epoch
-
         batch = self.auto_encoder_model(batch)
-
-        reconstruction_loss = self.reconstruction.loss(batch)
-        prior_loss = self.prior.loss(batch)
-        loss = reconstruction_loss + prior_loss
-
-        if self.factor:
-            auxiliary_loss = self.factor.auxiliary_loss(batch)
-            loss += auxiliary_loss
-        batch['loss'] = loss
-
         return batch
 
-    def training_step(self, batch, batch_num, optimizer_idx=0):
+    def training_step(self, batch_normal, batch_num, optimizer_idx=0):
 
         if batch_num == 0 and optimizer_idx == 0:
             self.epoch += 1
 
         if optimizer_idx == 0:
-            batch = self(batch)
-            self.logger_.log_training_step(batch, self.step)
+            batch_normal = self(batch_normal)
+            reconstruction_loss = self.objects['reconstruction'].loss(batch_normal)
+            prior_loss = self.objects['prior'].loss(batch_normal)
+            batch_normal['reconstruction_loss'] = reconstruction_loss
+            batch_normal['prior_loss'] = prior_loss
+            batch_normal['loss'] = reconstruction_loss + prior_loss
+
+            self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
-            return {
-                'loss': batch['loss'],
-                'tqdm': {'loss': batch['loss']},
-            }
-        elif optimizer_idx == 1:
-            # no need to compute reconstruction loss, ...  - only need latent representation
-            batch = self.auto_encoder_model(batch)
-            loss = self.factor.training_loss(batch)
-            self.logger_.__log_metric__('training_factor_loss', loss.item(), self.step)
-            return {'loss': loss}
+
         else:
-            raise ValueError('Too many optimizers.')
+            raise AttributeError("Too many optimizers")
+
+        return {
+            'loss': batch_normal['loss'],
+            'tqdm': {'loss': batch_normal['loss']},
+        }
 
     def validation_step(self, batch, batch_num):
         self(batch)

@@ -17,16 +17,18 @@ def configuration():
     batch_size = 512
 
     epochs = 100
-    num_workers = 2
+    num_workers = 4
 
-    learning_rate = 1e-3
-    weight_decay = 0
+    learning_rate = 1e-4
+    weight_decay = 1e-4
 
     rho = 0.1
 
-    feature_context = 'short'
+    feature_context = 'long'
     reconstruction_class = 'reconstructions.NP'
-    model_class = 'models.BaselineFCAE'
+    model_class = 'models.SamplingCRNNAE'
+
+    normalize = True
 
     ########################
     # detailed configuration
@@ -42,6 +44,9 @@ def configuration():
         num_mel = 40
         n_fft = 512
         hop_size = 256
+
+    if model_class == 'models.SamplingCRNNAE':
+        context = 1
 
     prior = {
         'class': 'priors.NoPrior',
@@ -71,7 +76,10 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size
+            'hop_size': hop_size,
+            'normalize': normalize,
+            'mean': '@training_data_set.mean',
+            'std': '@training_data_set.std'
         }
     }
 

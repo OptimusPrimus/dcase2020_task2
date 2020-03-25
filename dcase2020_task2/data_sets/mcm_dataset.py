@@ -18,7 +18,10 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             machine_type=0,
             num_mel=128,
             n_fft=1024,
-            hop_size=512
+            hop_size=512,
+            normalize=True,
+            mean=None,
+            std=None
     ):
 
         assert mode in ['training', 'validation', 'testing']
@@ -31,6 +34,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         self.data_root = data_root
         self.context = context
         self.machine_type = self.inverse_class_map[machine_type]
+        self.normalize = normalize
 
         if mode == 'training':
             files = glob.glob(os.path.join(data_root, 'dev_data', self.machine_type, 'train', '*.wav'))
@@ -46,13 +50,18 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         self.files = files
         self.file_length = None
         self.num_samples_per_file = None
-        self.mean = None
-        self.std = None
+
         self.meta_data = self.__load_meta_data__(sorted(files))
         self.data = self.__load_data__(sorted(files))
 
-        self.complement_data_set = None
+        if mean is None:
+            assert mode == 'training'
+            self.mean = self.data.mean(axis=1)
+            self.std = self.data.std(axis=1)
+        else:
+            self.mean, self.std = mean, std
 
+        self.complement_data_set = None
 
     @property
     def class_map(self):
@@ -87,6 +96,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
 
         machine_types = list(range(6))
         machine_types.remove(self.class_map[self.machine_type])
+
         data_sets = [
             MCMDataset(
                 data_root=self.data_root,
@@ -95,17 +105,15 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
                 machine_type=i,
                 num_mel=self.num_mel,
                 n_fft=self.n_fft,
-                hop_size=self.hop_size
+                hop_size=self.hop_size,
+                normalize=self.normalize,
+                mean=self.mean,
+                std=self.std
             ) for i in machine_types
         ]
 
-        for data_set in data_sets:
-            data_set.mean = self.mean
-            data_set.std = self.std
-
-        data_set = torch.utils.data.ConcatDataset(data_sets)
-        self.complement_data_set = data_set
-        return data_set
+        self.complement_data_set = torch.utils.data.ConcatDataset(data_sets)
+        return self.complement_data_set
 
     def get_various_data_set(self):
 
@@ -113,10 +121,6 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             self.get_complement_data_set(),
             self
         ]
-
-        for data_set in data_sets:
-            data_set.mean = self.mean
-            data_set.std = self.std
 
         data_set = torch.utils.data.ConcatDataset(data_sets)
         return data_set
@@ -131,7 +135,10 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         observation = self.data[:, offset:offset+self.context]
         # create data object
         meta_data = self.meta_data[item].copy()
-        meta_data['observations'] = self.__normalize_observation__(observation)[None]
+        if self.normalize:
+            meta_data['observations'] = self.__normalize_observation__(observation)[None]
+        else:
+            meta_data['observations'] = observation[None]
         meta_data['file_ids'] = item
         return meta_data
 
@@ -151,8 +158,6 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         data = np.empty((self.num_mel, self.file_length*len(files)), dtype=np.float32)
         for i, f in tqdm.tqdm(enumerate(files), total=len(files)):
             data[:, i * self.file_length:(i+1) * self.file_length] = self.__load_preprocess_file__(f)
-        self.mean = data.mean(axis=1)
-        self.std = data.std(axis=1)
         return data
 
     def __load_preprocess_file__(self, file):

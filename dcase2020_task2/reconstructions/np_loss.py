@@ -1,6 +1,7 @@
 from reconstructions import ReconstructionBase
 import torch
 
+
 class NP(ReconstructionBase):
 
     def __init__(self, weight=1.0, rho=0.2, **kwargs):

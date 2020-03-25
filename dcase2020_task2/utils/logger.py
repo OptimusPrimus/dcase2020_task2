@@ -80,7 +80,7 @@ class Logger:
 
         if epoch != -2:
             self.__log_metric__('validation_auroc_mean', auroc_mean, step)
-            self.__log_metric__('validation_pauroc_mean', auroc_mean, step)
+            self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
 
             self.__log_metric__('validation_auroc_max', auroc_max, step)
             self.__log_metric__('validation_pauroc_max', pauroc_max, step)
