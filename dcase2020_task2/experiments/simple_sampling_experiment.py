@@ -13,6 +13,7 @@ import torch.utils.data
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 
+
 class SimpleSamplingExperiment(pl.LightningModule, BaseExperiment):
 
     def __init__(self, configuration_dict, _run):

@@ -16,11 +16,11 @@ def configuration():
     machine_type = 0
     batch_size = 512
 
-    epochs = 500
+    epochs = 100
     num_workers = 4
 
-    learning_rate = 1e-4
-    weight_decay = 1e-5
+    learning_rate = 1e-3
+    weight_decay = 0.0
 
     rho = 0.2
 

@@ -17,3 +17,6 @@ OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=2 python -m experiments.baseline_experime
 OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=2 python -m experiments.baseline_experiment with num_workers=2 normalize=False machine_type=3 latent_size=8 learning_rate=0.001 -m student2.cp.jku.at:27017:dcase2020_task2_baseline > /dev/null 2>&1 &
 OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=2 python -m experiments.baseline_experiment with num_workers=2 normalize=False machine_type=4 latent_size=8 learning_rate=0.001 -m student2.cp.jku.at:27017:dcase2020_task2_baseline > /dev/null 2>&1 &
 OMP_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=2 python -m experiments.baseline_experiment with num_workers=2 normalize=False machine_type=5 latent_size=8 learning_rate=0.001 -m student2.cp.jku.at:27017:dcase2020_task2_baseline > /dev/null 2>&1 &
+
+
+wait
