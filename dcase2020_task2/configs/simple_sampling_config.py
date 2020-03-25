@@ -19,14 +19,14 @@ def configuration():
     epochs = 100
     num_workers = 4
 
-    learning_rate = 1e-4
-    weight_decay = 1e-4
+    learning_rate = 1.5*1e-2    # this corresponds approx to the lr used in the baseline if we normalize the samples....
+    weight_decay = 0.0
 
     rho = 0.1
 
-    feature_context = 'long'
+    feature_context = 'short'
     reconstruction_class = 'reconstructions.NP'
-    model_class = 'models.SamplingCRNNAE'
+    model_class = 'models.SamplingFCAE'
 
     normalize = True
 

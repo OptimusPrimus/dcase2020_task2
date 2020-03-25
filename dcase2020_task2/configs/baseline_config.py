@@ -19,7 +19,7 @@ def configuration():
     epochs = 100
     num_workers = 4
 
-    learning_rate = 1.5*1e-2
+    learning_rate = 1e-3    # this corresponds approx to the lr used in the baseline if we normalize the samples....
     weight_decay = 0.0
 
     rho = 0.1
