@@ -22,7 +22,7 @@ def configuration():
     learning_rate = 1e-4
     weight_decay = 1e-4
 
-    rho = 0.2
+    rho = 0.1
 
     feature_context = 'long'
     reconstruction_class = 'reconstructions.NP'
