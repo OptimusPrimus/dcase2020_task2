@@ -15,7 +15,7 @@ class NP(ReconstructionBase):
             phi = torch.kthvalue(normal_scores, int((1 - self.rho) * normal_scores.shape[0]))[0]
         batch_normal['tpr'] = torch.sigmoid(abnormal_scores - phi).mean()
         batch_normal['fpr'] = torch.sigmoid(normal_scores - phi).mean()
-        batch_normal['reconstruction_loss'] = self.weight * batch_normal['fpr'] - batch_normal['tpr']
+        batch_normal['reconstruction_loss'] = self.weight * (batch_normal['fpr'] - batch_normal['tpr'])
 
         return batch_normal['reconstruction_loss']
 

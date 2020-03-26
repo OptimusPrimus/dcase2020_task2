@@ -47,12 +47,14 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
 
         assert len(files) > 0
 
+        files = sorted(files)
+
         self.files = files
         self.file_length = None
         self.num_samples_per_file = None
 
-        self.meta_data = self.__load_meta_data__(sorted(files))
-        self.data = self.__load_data__(sorted(files))
+        self.meta_data = self.__load_meta_data__(files)
+        self.data = self.__load_data__(files)
 
         if mean is None:
             assert mode == 'training'
@@ -60,6 +62,9 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             self.std = self.data.std(axis=1)
         else:
             self.mean, self.std = mean, std
+
+        if normalize:
+            self.data = (self.data - self.mean[:, None]) / self.std[:, None]
 
         self.complement_data_set = None
 
@@ -109,7 +114,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
                 normalize=self.normalize,
                 mean=self.mean,
                 std=self.std
-            ) for i in machine_types
+            ) for i in machine_types                                                            # TODO remove this
         ]
 
         self.complement_data_set = torch.utils.data.ConcatDataset(data_sets)
@@ -135,11 +140,9 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         observation = self.data[:, offset:offset+self.context]
         # create data object
         meta_data = self.meta_data[item].copy()
-        if self.normalize:
-            meta_data['observations'] = self.__normalize_observation__(observation)[None]
-        else:
-            meta_data['observations'] = observation[None]
+        meta_data['observations'] = observation[None]
         meta_data['file_ids'] = item
+
         return meta_data
 
     def __len__(self):
@@ -195,5 +198,3 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
             'part_numbers': part
         }
 
-    def __normalize_observation__(self, x):
-        return (x - self.mean[:, None]) / self.std[:, None]

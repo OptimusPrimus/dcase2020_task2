@@ -19,19 +19,19 @@ def configuration():
     epochs = 100
     num_workers = 4
 
-    learning_rate = 1e-3
-    weight_decay = 0.0
+    learning_rate = 1e-4
+    weight_decay = 1e-4
 
-    rho = 0.1
+    rho = 0.2
 
-    feature_context = 'short'
+    feature_context = 'long'
     reconstruction_class = 'reconstructions.NP'
-    model_class = 'models.BaselineFCAE'
+    model_class = 'models.SamplingFCAE'
 
     normalize = True
 
     ########################
-    # detailed configuration
+    # detailed configurationSamplingFCAE
     ########################
 
     if feature_context == 'short':
@@ -64,7 +64,8 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size
+            'hop_size': hop_size,
+            'normalize': normalize
         }
     }
 
