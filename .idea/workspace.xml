@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="30c4609b-c0f3-47c2-96b2-44333599f4dd" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/auc_loss.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/simple_sampling_np.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/configs/simple_sampling_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/configs/simple_sampling_config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/reconstructions/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/simple_sampling.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/simple_sampling_auc.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +36,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/dcase2020_task2/reconstructions" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/scripts" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -47,8 +46,8 @@
       <recent name="$PROJECT_DIR$" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/dcase2020_task2/reconstructions" />
       <recent name="$PROJECT_DIR$/scripts" />
+      <recent name="$PROJECT_DIR$/dcase2020_task2/reconstructions" />
       <recent name="$PROJECT_DIR$/dcase2020_task2/priors" />
       <recent name="$PROJECT_DIR$/dcase2020_task2/models" />
       <recent name="$PROJECT_DIR$/dcase2020_task2/configs" />
@@ -214,7 +213,7 @@
       <workItem from="1585131399401" duration="15868000" />
       <workItem from="1585158226846" duration="1907000" />
       <workItem from="1585212605225" duration="24381000" />
-      <workItem from="1585307534036" duration="4813000" />
+      <workItem from="1585307534036" duration="5374000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <created>1584710561144</created>
@@ -468,7 +467,14 @@
       <option name="project" value="LOCAL" />
       <updated>1585254224057</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="add AUC training experiments">
+      <created>1585317849420</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1585317849420</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -477,7 +483,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="initial" />
     <MESSAGE value="add NP training experiments" />
-    <option name="LAST_COMMIT_MESSAGE" value="add NP training experiments" />
+    <MESSAGE value="add AUC training experiments" />
+    <option name="LAST_COMMIT_MESSAGE" value="add AUC training experiments" />
   </component>
   <component name="WindowStateProjectService">
     <state x="2554" y="336" width="642" height="534" key="#baseline.sh_(1)" timestamp="1585138236415">
@@ -495,10 +502,10 @@
       <screen x="0" y="27" width="1920" height="994" />
     </state>
     <state x="693" y="273" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584897578975" />
-    <state x="522" y="188" width="865" height="919" key="CommitChangelistDialog2" timestamp="1585254223972">
+    <state x="522" y="188" width="865" height="919" key="CommitChangelistDialog2" timestamp="1585317849290">
       <screen x="0" y="147" width="1920" height="994" />
     </state>
-    <state x="522" y="188" width="865" height="919" key="CommitChangelistDialog2/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585254223972" />
+    <state x="522" y="188" width="865" height="919" key="CommitChangelistDialog2/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585317849290" />
     <state x="2442" y="49" width="865" height="919" key="CommitChangelistDialog2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585250545197" />
     <state x="522" y="68" width="865" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584908619341" />
     <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584841951704" />
@@ -577,10 +584,10 @@
       <screen x="0" y="27" width="1920" height="994" />
     </state>
     <state x="449" y="159" width="1022" height="737" key="SettingsEditor/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584731415230" />
-    <state x="555" y="380" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1585254225132">
+    <state x="555" y="380" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1585317851210">
       <screen x="0" y="147" width="1920" height="994" />
     </state>
-    <state x="555" y="380" width="800" height="535" key="Vcs.Push.Dialog.v2/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585254225132" />
+    <state x="555" y="380" width="800" height="535" key="Vcs.Push.Dialog.v2/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585317851210" />
     <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585250546497" />
     <state x="555" y="260" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584908620832" />
     <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584841953196" />
