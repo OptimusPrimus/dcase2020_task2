@@ -24,8 +24,8 @@ def configuration():
 
     rho = 0.1
 
-    feature_context = 'long'
-    reconstruction_class = 'reconstructions.NP'
+    feature_context = 'short'
+    reconstruction_class = 'reconstructions.AUC'
     model_class = 'models.SamplingFCAE'
 
     normalize = True
