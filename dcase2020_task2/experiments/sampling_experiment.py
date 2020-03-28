@@ -8,19 +8,10 @@ import copy
 from utils.logger import Logger
 import os
 import torch.utils.data
-import sklearn.mixture
-import numpy as np
-import warnings
 
 # workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
-
-def warn(*args, **kwargs):
-    pass
-
-
-warnings.warn = warn
 
 
 class SamplingExperiment(pl.LightningModule, BaseExperiment):
@@ -55,33 +46,10 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
             )
         )
 
-        self.inf_various_training_iterator = iter(
-            self.get_infinite_data_loader(
-                torch.utils.data.DataLoader(
-                    self.objects['training_data_set'].get_various_data_set(),
-                    batch_size=self.objects['batch_size'],
-                    shuffle=True,
-                    num_workers=self.objects['num_workers']
-                )
-            )
-        )
-
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
         self.epoch = -1
         self.step = 0
         self.result = None
-
-        self.gmm = sklearn.mixture.GaussianMixture(
-            n_components=16,
-            covariance_type='diag',
-            init_params='random',
-            max_iter=1,
-            warm_start=True,
-            verbose=0
-        )
-
-        self.codes_buffer = []
-        self.codes_buffer_length = 30
 
     def get_infinite_data_loader(self, dl):
         device = "cuda:{}".format(self.trainer.root_gpu)
@@ -103,7 +71,6 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
             self.epoch += 1
 
         if optimizer_idx == 0:
-            # forward
             batch_normal = self(batch_normal)
             batch_abnormal = self(next(self.inf_complement_training_iterator))
             reconstruction_loss = self.objects['reconstruction'].loss(batch_normal, batch_abnormal)
@@ -113,32 +80,17 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
             batch_normal['prior_loss'] = prior_loss
             batch_normal['loss'] = reconstruction_loss + prior_loss
 
-            if len(self.codes_buffer) == self.codes_buffer_length:
-                self.codes_buffer.pop(0)
-            self.codes_buffer.append(batch_normal['codes'].detach().cpu().numpy())
-
-            if self.step % self.codes_buffer_length == 0 and len(self.codes_buffer) == self.codes_buffer_length:
-                self.gmm.fit(np.concatenate(self.codes_buffer))
-
             self.logger_.log_training_step(batch_normal, self.step)
 
-        elif optimizer_idx == 1:
-            batch_various = self(next(self.inf_various_training_iterator))
-            reconstruction_loss = self.objects['generator_reconstruction'].loss(batch_various)
-            prior_loss = self.objects['generator_prior'].loss(batch_various)
-            batch_normal['reconstruction_loss'] = reconstruction_loss
-            batch_normal['prior_loss'] = prior_loss
-            batch_normal['loss'] = reconstruction_loss + prior_loss
-
-            self.logger_.log_generator_step(batch_normal, self.step)
-
             self.step += 1
+
+        else:
+            raise AttributeError
 
         return {
             'loss': batch_normal['loss'],
             'tqdm': {'loss': batch_normal['loss']},
         }
-
 
     def validation_step(self, batch, batch_num):
         self(batch)
@@ -151,11 +103,9 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
             'file_ids': batch['file_ids']
         }
 
-
     def validation_end(self, outputs):
         self.logger_.log_validation(outputs, self.step, self.epoch)
         return {}
-
 
     def test_step(self, batch, batch_num, *args):
         self(batch)
@@ -168,26 +118,21 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
             'file_ids': batch['file_ids']
         }
 
-
     def test_end(self, outputs):
         self.result = self.logger_.log_testing(outputs)
         self.logger_.close()
         return self.result
 
-
     def configure_optimizers(self):
         optimizers = [
-            self.objects['optimizer'],
-            self.objects['generator_optimizer']
+            self.objects['optimizer']
         ]
 
         lr_schedulers = [
-            self.objects['lr_scheduler'],
-            self.objects['generator_lr_scheduler'],
+            self.objects['lr_scheduler']
         ]
 
         return optimizers, lr_schedulers
-
 
     def train_dataloader(self):
         dl = torch.utils.data.DataLoader(
@@ -198,7 +143,6 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
         )
         return dl
 
-
     def val_dataloader(self):
         dl = torch.utils.data.DataLoader(
             self.objects['validation_data_set'],
@@ -207,7 +151,6 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
             num_workers=self.objects['num_workers']
         )
         return dl
-
 
     def test_dataloader(self):
         dl = torch.utils.data.DataLoader(
@@ -218,14 +161,13 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
         )
         return dl
 
-
     def run(self):
         self.trainer.fit(self)
         self.trainer.test(self)
         return self.result
 
 
-ex = Experiment('dcase2020_task2_sampling')
+ex = Experiment('dcase2020_task2_simple_sampling')
 cfg = ex.config(configuration)
 
 

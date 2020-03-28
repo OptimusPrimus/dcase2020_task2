@@ -12,7 +12,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
 
     def __init__(
             self,
-            data_root=os.path.join(os.path.expanduser('~'), 'shared', 'dcase2020_task2'),
+            data_root=os.path.join('/','mnt', 'ramdisk', 'dcase2020_task2'),    # os.path.join(os.path.expanduser('~'), 'shared', 'dcase2020_task2'),
             mode='training',
             context=5,
             machine_type=0,
@@ -56,7 +56,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         self.meta_data = self.__load_meta_data__(files)
         self.data = self.__load_data__(files)
 
-        if mean is None:
+        if mode == 'training': #mean is None:
             assert mode == 'training'
             self.mean = self.data.mean(axis=1)
             self.std = self.data.std(axis=1)
@@ -114,7 +114,7 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
                 normalize=self.normalize,
                 mean=self.mean,
                 std=self.std
-            ) for i in machine_types                                                            # TODO remove this
+            ) for i in machine_types
         ]
 
         self.complement_data_set = torch.utils.data.ConcatDataset(data_sets)
@@ -159,8 +159,9 @@ class MCMDataset(torch.utils.data.Dataset, data_sets.BaseDataSet):
         self.file_length = self.__load_preprocess_file__(files[0]).shape[-1]
         self.num_samples_per_file = self.file_length - self.context + 1
         data = np.empty((self.num_mel, self.file_length*len(files)), dtype=np.float32)
-        for i, f in tqdm.tqdm(enumerate(files), total=len(files)):
+        for i, f in enumerate(files):
             data[:, i * self.file_length:(i+1) * self.file_length] = self.__load_preprocess_file__(f)
+        print('Loaded {} data set for machine type {}'.format(self.mode, self.machine_type))
         return data
 
     def __load_preprocess_file__(self, file):
