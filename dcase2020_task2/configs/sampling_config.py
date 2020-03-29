@@ -14,7 +14,7 @@ def configuration():
     #####################
     latent_size = 8
 
-    machine_type = 3 # np.random.choice(np.arange(6))
+    machine_type = 0
     batch_size = 512
 
     epochs = 100
@@ -27,9 +27,8 @@ def configuration():
 
     feature_context = 'short'
     reconstruction_class = 'reconstructions.AUC'
+    mse_weight = 1.0
     model_class = 'models.SamplingFCAE'
-
-    normalize = True
 
     ########################
     # detailed configurationSamplingFCAE
@@ -72,7 +71,8 @@ def configuration():
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@data_set.observation_shape',
-            'rho': rho
+            'rho': rho,
+            'mse_weight': mse_weight
         }
     }
 

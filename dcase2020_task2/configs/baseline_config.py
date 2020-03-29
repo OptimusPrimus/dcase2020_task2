@@ -24,8 +24,8 @@ def configuration():
     epochs = 100
     num_workers = 4
 
-    learning_rate = 1e-3
-    weight_decay = 0.0
+    learning_rate = 1e-4
+    weight_decay = 1e-4
 
     rho = 0.1
 
@@ -73,7 +73,7 @@ def configuration():
     }
 
     auto_encoder_model = {
-        'class': 'models.BaselineFCAE',
+        'class': 'models.SamplingFCAE',
         'args': [
             '@data_set.observation_shape',
             '@reconstruction',
