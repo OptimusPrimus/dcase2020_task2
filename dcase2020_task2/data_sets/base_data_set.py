@@ -9,10 +9,22 @@ class BaseDataSet(ABC):
     def observation_shape(self) -> tuple:
         raise NotImplementedError
 
+    @property
     @abstractmethod
-    def __getitem__(self, item: int) -> Any:
+    def training_data_set(self, index):
         raise NotImplementedError
 
+    @property
     @abstractmethod
-    def __len__(self) -> int:
+    def validation_data_set(self, index):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def testing_data_set(self, index):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def complement_data_set(self, index):
         raise NotImplementedError

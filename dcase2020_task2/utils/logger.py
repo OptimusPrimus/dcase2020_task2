@@ -21,7 +21,6 @@ class Logger:
         self.objects = objects
 
         self.log_dir = self.configuration_dict['log_path']
-        self.testing_data_set = self.objects['validation_data_set']
 
         # self.writer = SummaryWriter(log_dir=self.log_dir)
         file = os.path.join(config['log_path'], 'conf.py')

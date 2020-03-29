@@ -14,10 +14,10 @@ def configuration():
     #####################
     latent_size = 8
 
-    machine_type = 0 # np.random.choice(np.arange(6))
+    machine_type = 3 # np.random.choice(np.arange(6))
     batch_size = 512
 
-    epochs = 512
+    epochs = 100
     num_workers = 0
 
     learning_rate = 1e-4
@@ -57,31 +57,13 @@ def configuration():
         }
     }
 
-    training_data_set = {
-        'class': 'data_sets.MCMDataset',
+    data_set = {
+        'class': 'data_sets.MCMDataSet',
         'kwargs': {
-            'mode': 'training',
-            'machine_type': machine_type,
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size,
-            'normalize': normalize
-        }
-    }
-
-    validation_data_set = {
-        'class': 'data_sets.MCMDataset',
-        'kwargs': {
-            'mode': 'validation',
-            'machine_type': machine_type,
-            'context': context,
-            'num_mel': num_mel,
-            'n_fft': n_fft,
-            'hop_size': hop_size,
-            'normalize': normalize,
-            'mean': '@training_data_set.mean',
-            'std': '@training_data_set.std'
+            'hop_size': hop_size
         }
     }
 
@@ -89,17 +71,15 @@ def configuration():
         'class': reconstruction_class,
         'kwargs': {
             'weight': 1.0,
-            'input_shape': '@training_data_set.observation_shape',
+            'input_shape': '@data_set.observation_shape',
             'rho': rho
         }
     }
 
-
-
     auto_encoder_model = {
         'class': model_class,
         'args': [
-            '@training_data_set.observation_shape',
+            '@data_set.observation_shape',
             '@reconstruction',
             '@prior'
         ]

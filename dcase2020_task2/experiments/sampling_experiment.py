@@ -8,7 +8,7 @@ import copy
 from utils.logger import Logger
 import os
 import torch.utils.data
-
+import numpy as np
 # workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
@@ -25,23 +25,40 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
         if not os.path.exists(self.configuration_dict['log_path']):
             os.mkdir(self.configuration_dict['log_path'])
 
-        self.trainer = self.objects['trainer']
-
         if self.objects.get('deterministic'):
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
+
+        self.machine_type = self.objects['machine_type']
+
+        self.trainer = self.objects['trainer']
 
         self.auto_encoder_model = self.objects['auto_encoder_model']
         self.prior = self.objects['prior']
         self.reconstruction = self.objects['reconstruction']
 
+        self.data_set = self.objects['data_set']
+
         self.inf_complement_training_iterator = iter(
             self.get_infinite_data_loader(
                 torch.utils.data.DataLoader(
-                    self.objects['training_data_set'].get_complement_data_set(),
+                    self.data_set.complement_data_set(self.machine_type),
                     batch_size=self.objects['batch_size'],
                     shuffle=True,
-                    num_workers=self.objects['num_workers']
+                    num_workers=self.objects['num_workers'],
+                    drop_last=True
+                )
+            )
+        )
+
+        self.inf_training_iterator = iter(
+            self.get_infinite_data_loader(
+                torch.utils.data.DataLoader(
+                    self.data_set.training_data_set(self.machine_type),
+                    batch_size=self.objects['batch_size'],
+                    shuffle=True,
+                    num_workers=self.objects['num_workers'],
+                    drop_last=True
                 )
             )
         )
@@ -72,18 +89,24 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-            batch_abnormal = self(next(self.inf_complement_training_iterator))
-            reconstruction_loss = self.objects['reconstruction'].loss(batch_normal, batch_abnormal)
-            prior_loss = self.objects['prior'].loss(batch_normal) + self.objects['prior'].loss(batch_abnormal)
+            batch_abnormal_0 = next(self.inf_training_iterator)
+            batch_abnormal_1 = next(self.inf_complement_training_iterator)
+
+            lambdas = np.random.beta(1, 1, size=(self.objects['batch_size'], 1, 1, 1)).astype(np.float32)
+            lambdas = torch.from_numpy(np.where(lambdas > 0.5, lambdas, 1.0-lambdas)).to(batch_normal['observations'].device)
+
+            batch_abnormal_0['observations'] = (-lambdas + 1.0) * batch_abnormal_0['observations'] + lambdas * batch_abnormal_1['observations']
+
+            batch_abnormal = self(batch_abnormal_0)
+            reconstruction_loss = self.reconstruction.loss(batch_normal, batch_abnormal)
+            prior_loss = self.prior.loss(batch_normal) + self.prior.loss(batch_abnormal)
 
             batch_normal['reconstruction_loss'] = reconstruction_loss
             batch_normal['prior_loss'] = prior_loss
             batch_normal['loss'] = reconstruction_loss + prior_loss
 
             self.logger_.log_training_step(batch_normal, self.step)
-
             self.step += 1
-
         else:
             raise AttributeError
 
@@ -136,16 +159,17 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
 
     def train_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.objects['training_data_set'],
+            self.data_set.training_data_set(self.machine_type),
             batch_size=self.objects['batch_size'],
             shuffle=True,
-            num_workers=self.objects['num_workers']
+            num_workers=self.objects['num_workers'],
+            drop_last=True
         )
         return dl
 
     def val_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.objects['validation_data_set'],
+            self.data_set.validation_data_set(self.machine_type),
             batch_size=self.objects['batch_size'],
             shuffle=False,
             num_workers=self.objects['num_workers']
@@ -154,7 +178,7 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
 
     def test_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.objects['validation_data_set'],
+            self.data_set.validation_data_set(self.machine_type),
             batch_size=self.objects['batch_size'],
             shuffle=False,
             num_workers=self.objects['num_workers']

@@ -1,6 +1,10 @@
 from datetime import datetime
 import os
 
+from datetime import datetime
+import os
+import numpy as np
+
 
 def configuration():
     seed = 1220
@@ -11,6 +15,7 @@ def configuration():
     #####################
     # quick configuration, uses default parameters of more detailed configuration
     #####################
+
     latent_size = 8
 
     machine_type = 0
@@ -25,7 +30,6 @@ def configuration():
     rho = 0.1
 
     feature_context = 'short'
-    normalize = True
 
     ########################
     # detailed configuration
@@ -50,31 +54,13 @@ def configuration():
         }
     }
 
-    training_data_set = {
-        'class': 'data_sets.MCMDataset',
+    data_set = {
+        'class': 'data_sets.MCMDataSet',
         'kwargs': {
-            'mode': 'training',
-            'machine_type': machine_type,
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size,
-            'normalize': normalize
-        }
-    }
-
-    validation_data_set = {
-        'class': 'data_sets.MCMDataset',
-        'kwargs': {
-            'mode': 'validation',
-            'machine_type': machine_type,
-            'context': context,
-            'num_mel': num_mel,
-            'n_fft': n_fft,
-            'hop_size': hop_size,
-            'normalize': normalize,
-            'mean': '@training_data_set.mean',
-            'std': '@training_data_set.std'
+            'hop_size': hop_size
         }
     }
 
@@ -82,14 +68,14 @@ def configuration():
         'class': 'reconstructions.MSE',
         'kwargs': {
             'weight': 1.0,
-            'input_shape': '@training_data_set.observation_shape'
+            'input_shape': '@data_set.observation_shape'
         }
     }
 
     auto_encoder_model = {
         'class': 'models.BaselineFCAE',
         'args': [
-            '@training_data_set.observation_shape',
+            '@data_set.observation_shape',
             '@reconstruction',
             '@prior'
         ]
@@ -101,7 +87,7 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': epochs
+            'step_size': 50
         }
     }
 
@@ -126,5 +112,7 @@ def configuration():
             'logger': False,
             'early_stop_callback': False,
             'gpus': [0],
+            'show_progress_bar': True,
+            'progress_bar_refresh_rate': 1000
         }
     }
