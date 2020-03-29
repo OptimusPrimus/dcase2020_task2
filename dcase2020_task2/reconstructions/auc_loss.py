@@ -24,12 +24,12 @@ class AUC(ReconstructionBase):
         batch_normal['tpr'] = tprs.mean()
         batch_normal['fpr'] = 0.5
 
-        batch_normal['reconstruction_loss'] = self.weight*(-batch_normal['tpr']+self.mse_weight*batch_normal['mse_normal'])
+        batch_normal['reconstruction_loss'] = self.weight*(-batch_normal['tpr'] + self.mse_weight*batch_normal['mse_normal'])
 
         return batch_normal['reconstruction_loss']
 
     def forward(self, batch):
         batch['visualizations'] = batch['pre_reconstructions']
         batch['reconstructions'] = batch['pre_reconstructions']
-        batch['scores'] = (batch['reconstructions'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
+        batch['scores'] = (batch['reconstructions'] - batch['observations']).pow(2).sum(axis=(1, 2, 3))
         return batch
