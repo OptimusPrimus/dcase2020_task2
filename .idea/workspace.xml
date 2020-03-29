@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="30c4609b-c0f3-47c2-96b2-44333599f4dd" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dcase2020_task2/reconstructions/auc_loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/reconstructions/auc_loss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dcase2020_task2/configs/baseline_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/dcase2020_task2/configs/baseline_config.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -215,7 +215,7 @@
       <workItem from="1585212605225" duration="24381000" />
       <workItem from="1585307534036" duration="29573000" />
       <workItem from="1585350519971" duration="17511000" />
-      <workItem from="1585409992261" duration="23216000" />
+      <workItem from="1585409992261" duration="23969000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <created>1584710561144</created>
@@ -511,7 +511,14 @@
       <option name="project" value="LOCAL" />
       <updated>1585449681984</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="brush up data set implementation">
+      <created>1585450396779</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1585450396779</updated>
+    </task>
+    <option name="localTasksCounter" value="44" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -549,11 +556,11 @@
     </state>
     <state x="693" y="393" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585333099598" />
     <state x="693" y="273" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584897578975" />
-    <state x="522" y="188" width="865" height="919" key="CommitChangelistDialog2" timestamp="1585449681851">
-      <screen x="0" y="147" width="1920" height="994" />
+    <state x="2442" y="49" width="865" height="919" key="CommitChangelistDialog2" timestamp="1585450396685">
+      <screen x="1920" y="0" width="1920" height="1200" />
     </state>
     <state x="522" y="188" width="865" height="919" key="CommitChangelistDialog2/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585449681851" />
-    <state x="2442" y="49" width="865" height="919" key="CommitChangelistDialog2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585250545197" />
+    <state x="2442" y="49" width="865" height="919" key="CommitChangelistDialog2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585450396685" />
     <state x="522" y="68" width="865" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584908619341" />
     <state x="2442" y="49" width="1100" height="919" key="CommitChangelistDialog2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584841951704" />
     <state x="697" y="373" width="515" height="549" key="EnvironmentVariablesDialog" timestamp="1585366460137">
@@ -632,11 +639,11 @@
       <screen x="0" y="27" width="1920" height="994" />
     </state>
     <state x="449" y="159" width="1022" height="737" key="SettingsEditor/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584731415230" />
-    <state x="555" y="380" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1585449683306">
-      <screen x="0" y="147" width="1920" height="994" />
+    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1585450398093">
+      <screen x="1920" y="0" width="1920" height="1200" />
     </state>
     <state x="555" y="380" width="800" height="535" key="Vcs.Push.Dialog.v2/0.147.1920.994/1920.0.1920.1200@0.147.1920.994" timestamp="1585449683306" />
-    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585250546497" />
+    <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.147.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1585450398093" />
     <state x="555" y="260" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@0.27.1920.994" timestamp="1584908620832" />
     <state x="2475" y="281" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.1920.994/1920.0.1920.1200@1920.0.1920.1200" timestamp="1584841953196" />
     <state width="960" height="497" key="XDebugger.FullValuePopup" timestamp="1585426374235">
