@@ -8,7 +8,7 @@ class AUC(ReconstructionBase):
     def __init__(self, weight=1.0, rho=0.2, mse_weight=0.0, **kwargs):
         super().__init__(weight=weight)
         self.rho = rho
-        self.mse_weight = mse
+        self.mse_weight = mse_weight
 
     def loss(self, batch_normal, batch_abnormal, *args, **kwargs):
         normal_scores = batch_normal['scores']
@@ -24,7 +24,7 @@ class AUC(ReconstructionBase):
         batch_normal['tpr'] = tprs.mean()
         batch_normal['fpr'] = 0.5
 
-        batch_normal['reconstruction_loss'] = self.weight*(-batch_normal['tpr']+self.mse*batch_normal['mse_normal'])
+        batch_normal['reconstruction_loss'] = self.weight*(-batch_normal['tpr']+self.mse_weight*batch_normal['mse_normal'])
 
         return batch_normal['reconstruction_loss']
 
