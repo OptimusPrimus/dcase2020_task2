@@ -29,6 +29,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
             torch.backends.cudnn.benchmark = False
 
         self.machine_type = self.objects['machine_type']
+        self.machine_id = self.objects['machine_id']
 
         self.trainer = self.objects['trainer']
         self.auto_encoder_model = self.objects['auto_encoder_model']
@@ -124,17 +125,17 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
 
     def train_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.data_set.training_data_set(self.machine_type),
+            self.data_set.training_data_set(self.machine_type, self.machine_id),
             batch_size=self.objects['batch_size'],
             shuffle=True,
             num_workers=self.objects['num_workers'],
-            drop_last=True
+            drop_last=False
         )
         return dl
 
     def val_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.data_set.validation_data_set(self.machine_type),
+            self.data_set.validation_data_set(self.machine_type, self.machine_id),
             batch_size=self.objects['batch_size'],
             shuffle=False,
             num_workers=self.objects['num_workers']
@@ -143,7 +144,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
 
     def test_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.data_set.validation_data_set(self.machine_type),
+            self.data_set.validation_data_set(self.machine_type, self.machine_id),
             batch_size=self.objects['batch_size'],
             shuffle=False,
             num_workers=self.objects['num_workers']

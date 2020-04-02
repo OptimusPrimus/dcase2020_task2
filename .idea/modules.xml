@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/dcase_2020_task_2.iml" filepath="$PROJECT_DIR$/.idea/dcase_2020_task_2.iml" />
+      <module fileurl="file://$USER_HOME$/shared/.idea/shared.iml" filepath="$USER_HOME$/shared/.idea/shared.iml" />
     </modules>
   </component>
 </project>

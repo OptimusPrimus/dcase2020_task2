@@ -29,21 +29,21 @@ class Logger:
 
     def log_training_step(self, batch, step):
         if step % 100 == 0:
-            self.__log_metric__('training_loss', batch['loss'], step)
-            self.__log_metric__('training_prior_loss', batch['prior_loss'], step)
-            self.__log_metric__('training_reconstruction_loss', batch['reconstruction_loss'], step)
+            self.__log_metric__('training_loss', batch.get('loss'), step)
+            self.__log_metric__('training_prior_loss', batch.get('prior_loss'), step)
+            self.__log_metric__('training_reconstruction_loss', batch.get('reconstruction_loss'), step)
             self.__log_metric__('tpr', batch.get('tpr'), step)
-            self.__log_metric__('fpr', batch.get('fpr',), step)
-            self.__log_metric__('normal_scores', batch.get('normal_scores', ), step)
-            self.__log_metric__('abnormal_scores', batch.get('abnormal_scores', ), step)
-            self.__log_metric__('mse_normal', batch.get('mse_normal', ), step)
-            self.__log_metric__('mse_abnormal', batch.get('mse_abnormal', ), step)
+            self.__log_metric__('fpr', batch.get('fpr'), step)
+            self.__log_metric__('normal_scores', batch.get('normal_scores' ), step)
+            self.__log_metric__('abnormal_scores', batch.get('abnormal_scores' ), step)
+            self.__log_metric__('mse_normal', batch.get('mse_normal'), step)
+            self.__log_metric__('mse_abnormal', batch.get('mse_abnormal'), step)
 
     def log_generator_step(self, batch, step):
         if step % 100 == 0:
-            self.__log_metric__('generator_loss', batch['loss'], step)
-            self.__log_metric__('generator_loss', batch['prior_loss'], step)
-            self.__log_metric__('generator_loss', batch['reconstruction_loss'], step)
+            self.__log_metric__('generator_loss', batch.get('loss'), step)
+            self.__log_metric__('generator_loss', batch.get('prior_loss'), step)
+            self.__log_metric__('generator_loss', batch.get('reconstruction_loss'), step)
 
     def log_validation(self, outputs, step, epoch):
 

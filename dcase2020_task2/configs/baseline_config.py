@@ -16,35 +16,27 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    latent_size = 8
+    machine_type = 3
+    machine_id = 4
 
-    machine_type = 0
+    latent_size = 8
     batch_size = 512
 
     epochs = 100
     num_workers = 4
 
-    learning_rate = 1e-4
-    weight_decay = 1e-4
-
-    rho = 0.1
-
-    feature_context = 'short'
+    learning_rate = 1e-3
+    weight_decay = 0
 
     ########################
     # detailed configuration
     ########################
 
-    if feature_context == 'short':
-        context = 5
-        num_mel = 128
-        n_fft = 1024
-        hop_size = 512
-    elif feature_context == 'long':
-        context = 11
-        num_mel = 40
-        n_fft = 512
-        hop_size = 256
+
+    context = 5
+    num_mel = 128
+    n_fft = 1024
+    hop_size = 512
 
     prior = {
         'class': 'priors.NoPrior',
@@ -73,7 +65,7 @@ def configuration():
     }
 
     auto_encoder_model = {
-        'class': 'models.SamplingFCAE',
+        'class': 'models.BaselineFCAE',
         'args': [
             '@data_set.observation_shape',
             '@reconstruction',

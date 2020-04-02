@@ -3,7 +3,7 @@ from experiments.parser import create_objects_from_config
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from configs.sampling_config import configuration
+from configs.classification_config import configuration
 import copy
 from utils.logger import Logger
 import os
@@ -14,7 +14,7 @@ from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 
 
-class SamplingExperiment(pl.LightningModule, BaseExperiment):
+class ClassifiactionExperiment(pl.LightningModule, BaseExperiment):
 
     def __init__(self, configuration_dict, _run):
         super().__init__()
@@ -33,17 +33,26 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
         self.machine_id = self.objects['machine_id']
 
         self.trainer = self.objects['trainer']
-
-        self.auto_encoder_model = self.objects['auto_encoder_model']
-        self.prior = self.objects['prior']
-        self.reconstruction = self.objects['reconstruction']
-
+        self.model = self.objects['model']
         self.data_set = self.objects['data_set']
+        self.reconstruction = self.objects['reconstruction']
 
         self.inf_complement_training_iterator = iter(
             self.get_infinite_data_loader(
                 torch.utils.data.DataLoader(
                     self.data_set.complement_data_set(self.machine_type, self.machine_id),
+                    batch_size=self.objects['batch_size'],
+                    shuffle=True,
+                    num_workers=self.objects['num_workers'],
+                    drop_last=True
+                )
+            )
+        )
+
+        self.inf_training_iterator = iter(
+            self.get_infinite_data_loader(
+                torch.utils.data.DataLoader(
+                    self.data_set.training_data_set(self.machine_type, self.machine_id),
                     batch_size=self.objects['batch_size'],
                     shuffle=True,
                     num_workers=self.objects['num_workers'],
@@ -68,7 +77,7 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
 
     def forward(self, batch):
         batch['epoch'] = self.epoch
-        batch = self.auto_encoder_model(batch)
+        batch = self.model(batch)
         return batch
 
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
@@ -78,21 +87,18 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-            # batch_abnormal_0 = next(self.inf_training_iterator)
-            batch_abnormal = next(self.inf_complement_training_iterator)
 
-            # lambdas = np.random.beta(1, 1, size=(self.objects['batch_size'], 1, 1, 1)).astype(np.float32)
-            # lambdas = torch.from_numpy(lambdas).to(batch_normal['observations'].device) # torch.from_numpy(np.where(lambdas > 0.5, lambdas, 1.0-lambdas))
+            #batch_abnormal_0 = next(self.inf_training_iterator)
+            batch_abnormal_1 = next(self.inf_complement_training_iterator)
+            #lambdas = np.random.beta(1, 1, size=(self.objects['batch_size'], 1, 1, 1)).astype(np.float32)
+            #lambdas = torch.from_numpy(np.where(lambdas > 0.5, lambdas, 1.0-lambdas)).to(batch_normal['observations'].device)
+            #batch_abnormal_1['observations'] = (-lambdas + 1.0) * batch_abnormal_0['observations'] + lambdas * batch_abnormal_1['observations']
 
-            # batch_abnormal_0['observations'] = (-lambdas + 1.0) * batch_abnormal_0['observations'] + lambdas * batch_abnormal_1['observations']
+            batch_abnormal = self(batch_abnormal_1)
 
-            batch_abnormal = self(batch_abnormal)
             reconstruction_loss = self.reconstruction.loss(batch_normal, batch_abnormal)
-            prior_loss = self.prior.loss(batch_normal) + self.prior.loss(batch_abnormal)
 
-            batch_normal['reconstruction_loss'] = reconstruction_loss
-            batch_normal['prior_loss'] = prior_loss
-            batch_normal['loss'] = reconstruction_loss + prior_loss
+            batch_normal['loss'] = reconstruction_loss
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
@@ -180,11 +186,11 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
         return self.result
 
 
-ex = Experiment('dcase2020_task2_simple_sampling')
+ex = Experiment('dcase2020_task2_classification')
 cfg = ex.config(configuration)
 
 
 @ex.automain
 def run(_config, _run):
-    experiment = SamplingExperiment(_config, _run)
+    experiment = ClassifiactionExperiment(_config, _run)
     return experiment.run()

@@ -14,9 +14,7 @@ def configuration():
     #####################
 
     machine_type = 0
-    machine_id = 0
-
-    latent_size = 8
+    machine_id = 2
 
     batch_size = 512
 
@@ -31,7 +29,7 @@ def configuration():
     feature_context = 'short'
     reconstruction_class = 'reconstructions.AUC'
     mse_weight = 0.0
-    model_class = 'models.SamplingFCAE'
+    model_class = 'models.BaselineFCNN'
 
     ########################
     # detailed configurationSamplingFCAE
@@ -50,14 +48,6 @@ def configuration():
 
     if model_class == 'models.SamplingCRNNAE':
         context = 1
-
-    prior = {
-        'class': 'priors.NoPrior',
-        'kwargs': {
-            'latent_size': latent_size,
-            'weight': 1.0
-        }
-    }
 
     data_set = {
         'class': 'data_sets.MCMDataSet',
@@ -79,12 +69,11 @@ def configuration():
         }
     }
 
-    auto_encoder_model = {
+    model = {
         'class': model_class,
         'args': [
             '@data_set.observation_shape',
-            '@reconstruction',
-            '@prior'
+            '@reconstruction'
         ]
     }
 
@@ -101,7 +90,7 @@ def configuration():
     optimizer = {
         'class': 'torch.optim.Adam',
         'args': [
-            '@auto_encoder_model.parameters()'
+            '@model.parameters()'
         ],
         'kwargs': {
             'lr': learning_rate,
