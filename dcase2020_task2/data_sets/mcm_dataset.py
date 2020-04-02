@@ -109,10 +109,15 @@ class MCMDataSet(data_sets.BaseDataSet):
     def complement_data_set(self, type, id):
         complement_sets = []
 
-        for machine_type in range(6):
+        if type in [3, 4]:
+            types = [3, 4]
+        else:
+            types = [0, 1, 2, 5]
+
+        for machine_type in types:
             for machine_id in TRAINING_ID_MAP[machine_type]:
-                if machine_type != type or machine_id != id:
-                    complement_sets.append(self.data_sets[machine_type][machine_id][0])
+                if machine_type != type:
+                        complement_sets.append(self.data_sets[machine_type][machine_id][0])
 
         return torch.utils.data.ConcatDataset(complement_sets)
 
