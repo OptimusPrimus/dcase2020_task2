@@ -76,8 +76,7 @@ class BaselineFCNN(torch.nn.Module):
             torch.nn.ReLU(True),
             torch.nn.Linear(64, 64),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, 1),
-            torch.nn.Tanh()
+            torch.nn.Linear(64, 1)
         )
 
     def forward(self, batch):

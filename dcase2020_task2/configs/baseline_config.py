@@ -16,8 +16,8 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    machine_type = 3
-    machine_id = 4
+    machine_type = 5
+    machine_id = 0
 
     latent_size = 8
     batch_size = 512
