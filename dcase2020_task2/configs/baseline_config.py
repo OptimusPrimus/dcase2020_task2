@@ -16,7 +16,7 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    machine_type = 5
+    machine_type = 0
     machine_id = 0
 
     latent_size = 8
@@ -79,7 +79,7 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': 50
+            'step_size': epochs
         }
     }
 

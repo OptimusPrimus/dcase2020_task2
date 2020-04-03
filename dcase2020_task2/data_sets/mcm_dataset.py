@@ -43,7 +43,8 @@ class MCMDataSet(data_sets.BaseDataSet):
             num_mel=128,
             n_fft=1024,
             hop_size=512,
-            normalize=True
+            normalize=True,
+            normalize_raw=True
     ):
         self.data_root = data_root
         self.context = context
@@ -64,7 +65,8 @@ class MCMDataSet(data_sets.BaseDataSet):
                         context=self.context,
                         num_mel=self.num_mel,
                         n_fft=self.n_fft,
-                        hop_size=self.hop_size
+                        hop_size=self.hop_size,
+                        normalize=normalize_raw
                     ),
                     MachineDataSet(
                         machine_type,
@@ -74,7 +76,8 @@ class MCMDataSet(data_sets.BaseDataSet):
                         context=self.context,
                         num_mel=self.num_mel,
                         n_fft=self.n_fft,
-                        hop_size=self.hop_size
+                        hop_size=self.hop_size,
+                        normalize=normalize_raw
                     )
                 )
 
@@ -192,14 +195,15 @@ class MachineDataSet(torch.utils.data.Dataset):
         return data
 
     def __load_data__(self, files):
-        file_name = "{}_{}_{}_{}_{}_{}_{}.npy".format(
+        file_name = "{}_{}_{}_{}_{}_{}_{}_{}.npy".format(
             self.num_mel,
             self.n_fft,
             self.hop_size,
             self.mode,
             self.context,
             self.machine_type,
-            self.machine_id
+            self.machine_id,
+            self.normalize
         )
         file_path = os.path.join(self.data_root, file_name)
 
@@ -218,7 +222,7 @@ class MachineDataSet(torch.utils.data.Dataset):
     def __load_preprocess_file__(self, file):
         x, sr = librosa.load(file, sr=None)
         if self.normalize:
-            x = ((x - x.mean()) / x.std())      # * 0.01
+            x = ((x - x.mean()) / x.std())
 
         x = librosa.feature.melspectrogram(
             y=x,

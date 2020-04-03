@@ -31,6 +31,9 @@ def configuration():
     mse_weight = 0.0
     model_class = 'models.BaselineFCNN'
 
+    normalize = True
+    normalize_raw = False
+
     ########################
     # detailed configurationSamplingFCAE
     ########################
@@ -55,7 +58,9 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size
+            'hop_size': hop_size,
+            'normalize': normalize,
+            'normalize_raw': normalize_raw
         }
     }
 
