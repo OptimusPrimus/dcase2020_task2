@@ -32,7 +32,7 @@ def configuration():
     model_class = 'models.BaselineFCNN'
 
     normalize = True
-    normalize_raw = False
+    normalize_raw = True
 
     ########################
     # detailed configurationSamplingFCAE
