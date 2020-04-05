@@ -28,6 +28,9 @@ def configuration():
     learning_rate = 1e-3
     weight_decay = 0
 
+    normalize_raw = False
+    normalize = False
+
     ########################
     # detailed configuration
     ########################
@@ -52,7 +55,9 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size
+            'hop_size': hop_size,
+            'normalize': normalize,
+            'normalize_raw': normalize_raw
         }
     }
 
