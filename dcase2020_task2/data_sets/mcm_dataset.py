@@ -44,13 +44,15 @@ class MCMDataSet(data_sets.BaseDataSet):
             n_fft=1024,
             hop_size=512,
             normalize='all',
-            normalize_raw=True
+            normalize_raw=True,
+            complement='all'
     ):
         self.data_root = data_root
         self.context = context
         self.num_mel = num_mel
         self.n_fft = n_fft
         self.hop_size = hop_size
+        self.complement = complement
 
         self.data_sets = dict()
         for machine_type in range(6):
@@ -147,8 +149,11 @@ class MCMDataSet(data_sets.BaseDataSet):
                     train, val = self.data_sets[machine_type][machine_id]
                     train.data = (train.data - mean) / std
                     val.data = (val.data - mean) / std
+        elif normalize == 'none':
+            pass
         else:
             raise AttributeError
+
     @property
     def observation_shape(self) -> tuple:
         return 1, self.num_mel, self.context
@@ -161,15 +166,30 @@ class MCMDataSet(data_sets.BaseDataSet):
 
     def complement_data_set(self, type, id):
         complement_sets = []
+        if self.complement == 'all':
+            for machine_type in range(6):
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    if machine_type != type or machine_id != id:
+                            complement_sets.append(self.data_sets[machine_type][machine_id][0])
 
-        if type in [3, 4]:
-            types = [3, 4]
-        else:
-            types = [0, 1, 2, 5]
+        elif self.complement == 'same_mic_diff_type':
+            if type in [3, 4]:
+                types = [3, 4]
+            else:
+                types = [0, 1, 2, 5]
+            for machine_type in types:
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    if machine_type != type:
+                        complement_sets.append(self.data_sets[machine_type][machine_id][0])
 
-        for machine_type in types:
-            for machine_id in TRAINING_ID_MAP[machine_type]:
-                if machine_type != type:
+        elif self.complement == 'same_mic':
+            if type in [3, 4]:
+                types = [3, 4]
+            else:
+                types = [0, 1, 2, 5]
+            for machine_type in types:
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    if machine_type != type or machine_id != id:
                         complement_sets.append(self.data_sets[machine_type][machine_id][0])
 
         return torch.utils.data.ConcatDataset(complement_sets)

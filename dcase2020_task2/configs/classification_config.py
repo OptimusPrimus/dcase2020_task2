@@ -13,7 +13,7 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    machine_type = 5
+    machine_type = 0
     machine_id = 0
 
     batch_size = 512
@@ -31,8 +31,10 @@ def configuration():
     mse_weight = 0.0
     model_class = 'models.BaselineFCNN'
 
-    normalize = True
+    normalize = 'per_mic'
     normalize_raw = True
+
+    complement = 'all'
 
     ########################
     # detailed configurationSamplingFCAE
@@ -60,7 +62,8 @@ def configuration():
             'n_fft': n_fft,
             'hop_size': hop_size,
             'normalize': normalize,
-            'normalize_raw': normalize_raw
+            'normalize_raw': normalize_raw,
+            'complement': complement
         }
     }
 
