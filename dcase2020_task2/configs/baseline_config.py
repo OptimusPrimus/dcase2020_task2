@@ -28,8 +28,8 @@ def configuration():
     learning_rate = 1e-3
     weight_decay = 0
 
-    normalize_raw = False
-    normalize = False
+    normalize = 'per_machine_id'
+    normalize_raw = True
 
     ########################
     # detailed configuration

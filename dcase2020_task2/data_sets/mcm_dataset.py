@@ -43,7 +43,7 @@ class MCMDataSet(data_sets.BaseDataSet):
             num_mel=128,
             n_fft=1024,
             hop_size=512,
-            normalize=True,
+            normalize='all',
             normalize_raw=True
     ):
         self.data_root = data_root
@@ -81,24 +81,74 @@ class MCMDataSet(data_sets.BaseDataSet):
                     )
                 )
 
-        if normalize:
+        if normalize == 'all':
             data = []
-
             for machine_type in range(6):
                 for machine_id in TRAINING_ID_MAP[machine_type]:
                     train, _ = self.data_sets[machine_type][machine_id]
                     data.append(train.data)
-
             data = np.concatenate(data, axis=1)
             mean = data.mean(axis=1, keepdims=True)
             std = data.std(axis=1, keepdims=True)
-
             for machine_type in range(6):
                 for machine_id in TRAINING_ID_MAP[machine_type]:
                     train, val = self.data_sets[machine_type][machine_id]
                     train.data = (train.data - mean) / std
                     val.data = (val.data - mean) / std
 
+        elif normalize == 'per_machine_type':
+            for machine_type in range(6):
+                data = []
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    train, _ = self.data_sets[machine_type][machine_id]
+                    data.append(train.data)
+                data = np.concatenate(data, axis=1)
+                mean = data.mean(axis=1, keepdims=True)
+                std = data.std(axis=1, keepdims=True)
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    train, val = self.data_sets[machine_type][machine_id]
+                    train.data = (train.data - mean) / std
+                    val.data = (val.data - mean) / std
+
+        elif normalize == 'per_machine_id':
+            for machine_type in range(6):
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    train, val = self.data_sets[machine_type][machine_id]
+                    data = train.data
+                    mean = data.mean(axis=1, keepdims=True)
+                    std = data.std(axis=1, keepdims=True)
+                    train.data = (train.data - mean) / std
+                    val.data = (val.data - mean) / std
+
+        elif normalize == 'per_mic':
+            data = []
+            for machine_type in [0, 1, 2, 5]:
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    train, _ = self.data_sets[machine_type][machine_id]
+                    data.append(train.data)
+            data = np.concatenate(data, axis=1)
+            mean = data.mean(axis=1, keepdims=True)
+            std = data.std(axis=1, keepdims=True)
+            for machine_type in [0, 1, 2, 5]:
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    train, val = self.data_sets[machine_type][machine_id]
+                    train.data = (train.data - mean) / std
+                    val.data = (val.data - mean) / std
+            data = []
+            for machine_type in [3, 4]:
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    train, _ = self.data_sets[machine_type][machine_id]
+                    data.append(train.data)
+            data = np.concatenate(data, axis=1)
+            mean = data.mean(axis=1, keepdims=True)
+            std = data.std(axis=1, keepdims=True)
+            for machine_type in [3, 4]:
+                for machine_id in TRAINING_ID_MAP[machine_type]:
+                    train, val = self.data_sets[machine_type][machine_id]
+                    train.data = (train.data - mean) / std
+                    val.data = (val.data - mean) / std
+        else:
+            raise AttributeError
     @property
     def observation_shape(self) -> tuple:
         return 1, self.num_mel, self.context
