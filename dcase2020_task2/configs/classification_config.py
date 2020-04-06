@@ -13,6 +13,8 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
+    descriptor = None
+
     machine_type = 0
     machine_id = 0
 
