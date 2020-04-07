@@ -15,8 +15,8 @@ def configuration():
 
     descriptor = None
 
-    machine_type = 0
-    machine_id = 0
+    machine_type = 3
+    machine_id = 1
 
     batch_size = 512
 

@@ -5,6 +5,7 @@ import data_sets
 import librosa
 import sys
 import numpy as np
+import random
 
 CLASS_MAP = {
     'fan': 0,
@@ -193,6 +194,30 @@ class MCMDataSet(data_sets.BaseDataSet):
                         complement_sets.append(self.data_sets[machine_type][machine_id][0])
 
         return torch.utils.data.ConcatDataset(complement_sets)
+
+
+class MixUpDataSet(torch.utils.data.Dataset):
+
+    def __init__(
+            self,
+            data_sets
+    ):
+        self.data_sets = data_sets
+
+    def __getitem__(self, item):
+        ds_1 = self.data_sets[np.random.random_integers(0, len(self.data_sets)-1)]
+        sample_1 = ds_1[np.random.random_integers(0, len(ds_1)-1)]
+        ds_2 = self.data_sets[np.random.random_integers(0, len(self.data_sets)-1)]
+        sample_2 = ds_2[np.random.random_integers(0, len(ds_2)-1)]
+
+        l = np.random.beta(1, 1, size=1).astype(np.float32)
+
+        sample_1['observations'] = l * sample_1['observations'] + (1 - l) * sample_2['observations']
+
+        return sample_1
+
+    def __len__(self):
+        return 20000
 
 
 class MachineDataSet(torch.utils.data.Dataset):

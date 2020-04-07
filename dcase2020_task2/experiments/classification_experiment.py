@@ -49,18 +49,6 @@ class ClassifiactionExperiment(pl.LightningModule, BaseExperiment):
             )
         )
 
-        self.inf_training_iterator = iter(
-            self.get_infinite_data_loader(
-                torch.utils.data.DataLoader(
-                    self.data_set.training_data_set(self.machine_type, self.machine_id),
-                    batch_size=self.objects['batch_size'],
-                    shuffle=True,
-                    num_workers=self.objects['num_workers'],
-                    drop_last=True
-                )
-            )
-        )
-
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
         self.epoch = -1
         self.step = 0
@@ -87,14 +75,7 @@ class ClassifiactionExperiment(pl.LightningModule, BaseExperiment):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-
-            #batch_abnormal_0 = next(self.inf_training_iterator)
-            batch_abnormal_1 = next(self.inf_complement_training_iterator)
-            #lambdas = np.random.beta(1, 1, size=(self.objects['batch_size'], 1, 1, 1)).astype(np.float32)
-            #lambdas = torch.from_numpy(np.where(lambdas > 0.5, lambdas, 1.0-lambdas)).to(batch_normal['observations'].device)
-            #batch_abnormal_1['observations'] = (-lambdas + 1.0) * batch_abnormal_0['observations'] + lambdas * batch_abnormal_1['observations']
-
-            batch_abnormal = self(batch_abnormal_1)
+            batch_abnormal = self(next(self.inf_complement_training_iterator))
 
             reconstruction_loss = self.reconstruction.loss(batch_normal, batch_abnormal)
 
