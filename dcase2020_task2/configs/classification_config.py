@@ -36,7 +36,7 @@ def configuration():
     normalize = 'per_mic'
     normalize_raw = True
 
-    complement = 'all'
+    complement = 'per_mic'
 
     ########################
     # detailed configurationSamplingFCAE
