@@ -192,6 +192,15 @@ class MCMDataSet(data_sets.BaseDataSet):
                 for machine_id in TRAINING_ID_MAP[machine_type]:
                     if machine_type != type or machine_id != id:
                         complement_sets.append(self.data_sets[machine_type][machine_id][0])
+        elif self.complement == 'same_type':
+            for machine_id in TRAINING_ID_MAP[type]:
+                if machine_id != id:
+                    complement_sets.append(self.data_sets[type][machine_id][0])
+        elif self.complement == 'different_type':
+            for machine_type in range(6):
+                if machine_type != type:
+                    for machine_id in TRAINING_ID_MAP[type]:
+                            complement_sets.append(self.data_sets[type][machine_id][0])
 
         return torch.utils.data.ConcatDataset(complement_sets)
 

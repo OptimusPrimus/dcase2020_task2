@@ -15,8 +15,8 @@ def configuration():
 
     descriptor = None
 
-    machine_type = 3
-    machine_id = 3
+    machine_type = 1
+    machine_id = 2
 
     batch_size = 512
 
@@ -34,9 +34,9 @@ def configuration():
     model_class = 'models.BaselineFCNN'
 
     normalize = 'all'
-    normalize_raw = True
+    normalize_raw = False
 
-    complement = 'same_mic'
+    complement = 'same_type'
 
     ########################
     # detailed configurationSamplingFCAE
