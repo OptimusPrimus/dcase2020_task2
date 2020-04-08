@@ -79,6 +79,13 @@ class BaselineFCNN(torch.nn.Module):
             torch.nn.Linear(64, 1)
         )
 
+        self.apply(self.init_weights)
+
+    def init_weights(self, m):
+        if type(m) == torch.nn.Linear:
+            torch.nn.init.xavier_uniform(m.weight)
+            m.bias.data.fill_(0.01)
+
     def forward(self, batch):
         x = batch['observations']
         x = x.view(x.shape[0], -1)

@@ -16,7 +16,7 @@ def configuration():
     descriptor = None
 
     machine_type = 3
-    machine_id = 1
+    machine_id = 3
 
     batch_size = 512
 
@@ -29,11 +29,11 @@ def configuration():
     rho = 0.1
 
     feature_context = 'short'
-    reconstruction_class = 'reconstructions.AUC'
+    reconstruction_class = 'losses.BCE'
     mse_weight = 0.0
     model_class = 'models.BaselineFCNN'
 
-    normalize = 'per_mic'
+    normalize = 'all'
     normalize_raw = True
 
     complement = 'same_mic'

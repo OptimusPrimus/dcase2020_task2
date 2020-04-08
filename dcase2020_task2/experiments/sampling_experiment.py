@@ -92,7 +92,7 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
 
             batch_normal['reconstruction_loss'] = reconstruction_loss
             batch_normal['prior_loss'] = prior_loss
-            batch_normal['loss'] = reconstruction_loss + prior_loss
+            batch_normal['losses'] = reconstruction_loss + prior_loss
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
@@ -100,8 +100,8 @@ class SamplingExperiment(pl.LightningModule, BaseExperiment):
             raise AttributeError
 
         return {
-            'loss': batch_normal['loss'],
-            'tqdm': {'loss': batch_normal['loss']},
+            'losses': batch_normal['losses'],
+            'tqdm': {'losses': batch_normal['losses']},
         }
 
     def validation_step(self, batch, batch_num):

@@ -1,4 +1,4 @@
-from reconstructions import ReconstructionBase
+from losses import ReconstructionBase
 import torch.nn.functional as F
 
 
@@ -10,13 +10,13 @@ class MSE(ReconstructionBase):
         self.p = p
 
     def loss(self, batch, *args, **kwargs):
-        bce = F.mse_loss(batch['reconstructions'], batch['observations'], reduction='mean')
+        bce = F.mse_loss(batch['losses'], batch['observations'], reduction='mean')
         batch['reconstruction_loss'] = self.weight * bce # / (batch['observations'].shape[0])
         return batch['reconstruction_loss']
 
     def forward(self, batch):
 
         batch['visualizations'] = batch['pre_reconstructions']
-        batch['reconstructions'] = batch['pre_reconstructions']
-        batch['scores'] = (batch['reconstructions'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
+        batch['losses'] = batch['pre_reconstructions']
+        batch['scores'] = (batch['losses'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
         return batch

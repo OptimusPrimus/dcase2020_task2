@@ -62,7 +62,7 @@ def configuration():
     }
 
     reconstruction = {
-        'class': 'reconstructions.MSE',
+        'class': 'losses.MSE',
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@data_set.observation_shape'

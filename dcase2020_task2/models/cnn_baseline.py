@@ -71,7 +71,7 @@ class BaselineCNN(torch.nn.Module, VAEBase):
 
 '''
 from priors.no_prior import NoPrior
-from reconstructions.mse_loss import MSE
+from losses.mse_loss import MSE
 import torch
 
 input_shape = (1, 128, 5)

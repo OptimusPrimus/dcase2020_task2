@@ -29,7 +29,7 @@ def configuration():
     rho = 0.1
 
     feature_context = 'short'
-    reconstruction_class = 'reconstructions.AUC'
+    reconstruction_class = 'losses.AUC'
     mse_weight = 0.0
     model_class = 'models.SamplingFCAE'
 

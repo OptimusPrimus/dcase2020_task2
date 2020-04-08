@@ -1,4 +1,4 @@
-from reconstructions import ReconstructionBase
+from losses import ReconstructionBase
 import torch
 
 
@@ -21,6 +21,6 @@ class NP(ReconstructionBase):
 
     def forward(self, batch):
         batch['visualizations'] = batch['pre_reconstructions']
-        batch['reconstructions'] = batch['pre_reconstructions']
-        batch['scores'] = (batch['reconstructions'] - batch['observations']).pow(2).sum(axis=(1, 2, 3))
+        batch['losses'] = batch['pre_reconstructions']
+        batch['scores'] = (batch['losses'] - batch['observations']).pow(2).sum(axis=(1, 2, 3))
         return batch

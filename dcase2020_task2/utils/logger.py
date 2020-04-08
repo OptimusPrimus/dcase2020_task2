@@ -29,7 +29,7 @@ class Logger:
 
     def log_training_step(self, batch, step):
         if step % 100 == 0:
-            self.__log_metric__('training_loss', batch.get('loss'), step)
+            self.__log_metric__('training_loss', batch.get('losses'), step)
             self.__log_metric__('training_prior_loss', batch.get('prior_loss'), step)
             self.__log_metric__('training_reconstruction_loss', batch.get('reconstruction_loss'), step)
             self.__log_metric__('tpr', batch.get('tpr'), step)
@@ -41,7 +41,7 @@ class Logger:
 
     def log_generator_step(self, batch, step):
         if step % 100 == 0:
-            self.__log_metric__('generator_loss', batch.get('loss'), step)
+            self.__log_metric__('generator_loss', batch.get('losses'), step)
             self.__log_metric__('generator_loss', batch.get('prior_loss'), step)
             self.__log_metric__('generator_loss', batch.get('reconstruction_loss'), step)
 
