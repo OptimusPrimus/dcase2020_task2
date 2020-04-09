@@ -45,7 +45,7 @@ class Logger:
             self.__log_metric__('generator_loss', batch.get('prior_loss'), step)
             self.__log_metric__('generator_loss', batch.get('reconstruction_loss'), step)
 
-    def log_validation(self, outputs, step, epoch, gmm_model=None):
+    def log_validation(self, outputs, step, epoch, gmm=None):
 
         if epoch == -1:
             return None
@@ -58,16 +58,16 @@ class Logger:
             targets.append(o['targets'].detach().cpu().numpy())
             predictions.append(o['scores'].detach().cpu().numpy())
             file_ids.append(o['file_ids'].detach().cpu().numpy())
-            if gmm_model:
+            if gmm:
                 codes.append(o['codes'].detach().cpu().numpy())
 
         targets = np.concatenate(targets)
         predictions = np.concatenate(predictions)
         file_ids = np.concatenate(file_ids)
 
-        if gmm_model:
+        if gmm:
             codes = np.concatenate(codes)
-            predictions = gmm_model.predict_proba(codes)
+            predictions = gmm.predict_proba(codes)
 
         ground_truth = []
         scores_mean = []
@@ -104,7 +104,7 @@ class Logger:
         }
 
     def log_testing(self, outputs, gmm_model=None):
-        return self.log_validation(outputs, 0, -2, gmm_model=gmm_model)
+        return self.log_validation(outputs, 0, -2, gmm=gmm_model)
 
     def __log_metric__(self, name, value, step):
 
