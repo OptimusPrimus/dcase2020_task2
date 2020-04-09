@@ -36,8 +36,9 @@ class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
 
         self.trainer = self.objects['trainer']
         self.model = self.objects['model']
+        self.prior = self.objects['prior']
         self.data_set = self.objects['data_set']
-        self.whole_data_set = self.data_set.get_whole_data_set(),
+        self.whole_data_set = self.data_set.get_whole_data_set()
         self.reconstruction = self.objects['reconstruction']
 
         self.machine_data_set = iter(
@@ -51,6 +52,8 @@ class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
                 )
             )
         )
+
+
 
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
         self.epoch = -1
@@ -138,7 +141,7 @@ class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
 
     def train_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.data_set.training_data_set(self.machine_type, self.machine_id),
+            self.whole_data_set, # self.data_set.training_data_set(self.machine_type, self.machine_id),
             batch_size=self.objects['batch_size'],
             shuffle=True,
             num_workers=self.objects['num_workers'],
@@ -187,7 +190,7 @@ def configuration():
     batch_size = 512
 
     epochs = 100
-    num_workers = 4
+    num_workers = 0
 
     learning_rate = 1e-3
     weight_decay = 0
@@ -234,7 +237,7 @@ def configuration():
         }
     }
 
-    auto_encoder_model = {
+    model = {
         'class': 'models.BaselineFCAE',
         'args': [
             '@data_set.observation_shape',
@@ -256,7 +259,7 @@ def configuration():
     optimizer = {
         'class': 'torch.optim.Adam',
         'args': [
-            '@auto_encoder_model.parameters()'
+            '@model.parameters()'
         ],
         'kwargs': {
             'lr': learning_rate,

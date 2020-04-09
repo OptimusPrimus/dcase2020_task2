@@ -29,7 +29,7 @@ class Logger:
 
     def log_training_step(self, batch, step):
         if step % 100 == 0:
-            self.__log_metric__('training_loss', batch.get('losses'), step)
+            self.__log_metric__('training_loss', batch.get('loss'), step)
             self.__log_metric__('training_prior_loss', batch.get('prior_loss'), step)
             self.__log_metric__('training_reconstruction_loss', batch.get('reconstruction_loss'), step)
             self.__log_metric__('tpr', batch.get('tpr'), step)
@@ -45,7 +45,7 @@ class Logger:
             self.__log_metric__('generator_loss', batch.get('prior_loss'), step)
             self.__log_metric__('generator_loss', batch.get('reconstruction_loss'), step)
 
-    def log_validation(self, outputs, step, epoch):
+    def log_validation(self, outputs, step, epoch, gmm_model=None):
 
         if epoch == -1:
             return None
@@ -53,14 +53,21 @@ class Logger:
         targets = []
         predictions = []
         file_ids = []
+        codes = []
         for o in outputs:
             targets.append(o['targets'].detach().cpu().numpy())
             predictions.append(o['scores'].detach().cpu().numpy())
             file_ids.append(o['file_ids'].detach().cpu().numpy())
+            if gmm_model:
+                codes.append(o['codes'].detach().cpu().numpy())
 
         targets = np.concatenate(targets)
         predictions = np.concatenate(predictions)
         file_ids = np.concatenate(file_ids)
+
+        if gmm_model:
+            codes = np.concatenate(codes)
+            predictions = gmm_model.predict_proba(codes)
 
         ground_truth = []
         scores_mean = []
@@ -82,10 +89,10 @@ class Logger:
         auroc_max = metrics.roc_auc_score(ground_truth, scores_max)
         pauroc_max = metrics.roc_auc_score(ground_truth, scores_max, max_fpr=0.1)
 
+
         if epoch != -2:
             self.__log_metric__('validation_auroc_mean', auroc_mean, step)
             self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
-
             self.__log_metric__('validation_auroc_max', auroc_max, step)
             self.__log_metric__('validation_pauroc_max', pauroc_max, step)
 
@@ -96,8 +103,8 @@ class Logger:
             'pauroc_max': float(pauroc_max),
         }
 
-    def log_testing(self, outputs):
-        return self.log_validation(outputs, 0, -2)
+    def log_testing(self, outputs, gmm_model=None):
+        return self.log_validation(outputs, 0, -2, gmm_model=gmm_model)
 
     def __log_metric__(self, name, value, step):
 
