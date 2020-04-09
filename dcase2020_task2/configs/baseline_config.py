@@ -1,10 +1,9 @@
 from datetime import datetime
 import os
+import numpy as np
 
 from datetime import datetime
 import os
-import numpy as np
-
 
 def configuration():
     seed = 1220
