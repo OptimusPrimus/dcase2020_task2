@@ -14,6 +14,7 @@ import os
 # workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
+import sklearn.mixture
 
 
 class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
@@ -53,7 +54,17 @@ class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
             )
         )
 
+        self.gmm = sklearn.mixture.GaussianMixture(
+            n_components=16,
+            covariance_type='diag',
+            init_params='random',
+            max_iter=1,
+            warm_start=True,
+            verbose=0
+        )
 
+        self.codes_buffer = []
+        self.codes_buffer_length = 30
 
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
         self.epoch = -1
@@ -87,6 +98,13 @@ class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
             batch_normal['prior_loss'] = prior_loss
             batch_normal['loss'] = reconstruction_loss + prior_loss
 
+            if len(self.codes_buffer) == self.codes_buffer_length:
+                self.codes_buffer.pop(0)
+            self.codes_buffer.append(batch_normal['codes'].detach().cpu().numpy())
+
+            if self.step % self.codes_buffer_length == 0 and len(self.codes_buffer) == self.codes_buffer_length:
+                self.gmm.fit(np.concatenate(self.codes_buffer))
+
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
         else:
@@ -109,7 +127,7 @@ class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
         }
 
     def validation_end(self, outputs):
-        self.logger_.log_validation(outputs, self.step, self.epoch)
+        self.logger_.log_validation(outputs, self.step, self.epoch, gmm=self.gmm)
         return {}
 
     def test_step(self, batch, batch_num, *args):
@@ -124,7 +142,7 @@ class AutoEncoderExperiment(pl.LightningModule, BaseExperiment):
         }
 
     def test_end(self, outputs):
-        self.result = self.logger_.log_testing(outputs)
+        self.result = self.logger_.log_testing(outputs, gmm=self.gmm)
         self.logger_.close()
         return self.result
 
