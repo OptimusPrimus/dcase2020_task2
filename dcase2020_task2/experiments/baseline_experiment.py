@@ -1,49 +1,36 @@
 from experiments import BaseExperiment
-from experiments.parser import create_objects_from_config
+from datetime import datetime
+import os
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from configs.baseline_config import configuration
-import copy
 from utils.logger import Logger
-import os
 import torch.utils.data
 # workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 
 
-class BaselineExperiment(pl.LightningModule, BaseExperiment):
+class BaselineExperiment(BaseExperiment, pl.LightningModule):
+    '''
+    Reproduction of the DCASE Baseline. It is basically an Auto Encoder, the anomaly score is the reconstruction error.
+    '''
 
     def __init__(self, configuration_dict, _run):
-        super().__init__()
+        super().__init__(configuration_dict)
 
-        self.configuration_dict = copy.deepcopy(configuration_dict)
-        self.objects = create_objects_from_config(configuration_dict)
-
-        if not os.path.exists(self.configuration_dict['log_path']):
-            os.mkdir(self.configuration_dict['log_path'])
-
-        if self.objects.get('deterministic'):
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
-
-        self.machine_type = self.objects['machine_type']
-        self.machine_id = self.objects['machine_id']
-
-        self.trainer = self.objects['trainer']
-        self.auto_encoder_model = self.objects['auto_encoder_model']
+        self.network = self.objects['auto_encoder_model']
         self.prior = self.objects['prior']
         self.reconstruction = self.objects['reconstruction']
-        self.data_set = self.objects['data_set']
-
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
+
+        # experiment state variables
         self.epoch = -1
         self.step = 0
         self.result = None
 
     def get_infinite_data_loader(self, dl):
-        device = "cuda:{}".format(self.trainer.root_gpu)
+        device = "cuda:{}".format(next(iter(self.network.parameters())).device)
         while True:
             for batch in iter(dl):
                 for key in batch:
@@ -53,7 +40,7 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
 
     def forward(self, batch):
         batch['epoch'] = self.epoch
-        batch = self.auto_encoder_model(batch)
+        batch = self.network(batch)
         return batch
 
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
@@ -63,13 +50,12 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-
             reconstruction_loss = self.reconstruction.loss(batch_normal)
             prior_loss = self.prior.loss(batch_normal)
 
             batch_normal['reconstruction_loss'] = reconstruction_loss
             batch_normal['prior_loss'] = prior_loss
-            batch_normal['losses'] = reconstruction_loss + prior_loss
+            batch_normal['loss'] = reconstruction_loss + prior_loss
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
@@ -77,8 +63,8 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
             raise AttributeError
 
         return {
-            'losses': batch_normal['losses'],
-            'tqdm': {'losses': batch_normal['losses']},
+            'loss': batch_normal['loss'],
+            'tqdm': {'loss': batch_normal['loss']},
         }
 
     def validation_step(self, batch, batch_num):
@@ -96,65 +82,127 @@ class BaselineExperiment(pl.LightningModule, BaseExperiment):
         self.logger_.log_validation(outputs, self.step, self.epoch)
         return {}
 
-    def test_step(self, batch, batch_num, *args):
-        self(batch)
-        return {
-            'targets': batch['targets'],
-            'scores': batch['scores'],
-            'machine_types': batch['machine_types'],
-            'machine_ids': batch['machine_ids'],
-            'part_numbers': batch['part_numbers'],
-            'file_ids': batch['file_ids']
-        }
+    def test_step(self, batch, batch_num):
+        return self.validation_step(batch, batch_num)
 
     def test_end(self, outputs):
         self.result = self.logger_.log_testing(outputs)
         self.logger_.close()
         return self.result
 
-    def configure_optimizers(self):
-        optimizers = [
-            self.objects['optimizer']
+
+def configuration():
+    seed = 1220
+    deterministic = False
+    id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S:%f")
+    log_path = os.path.join('..', 'experiment_logs', id)
+
+    #####################
+    # quick configuration, uses default parameters of more detailed configuration
+    #####################
+
+    machine_type = 0
+    machine_id = 0
+
+    latent_size = 8
+    batch_size = 512
+
+    debug = False
+    if debug:
+        epochs = 1
+        num_workers = 0
+    else:
+        epochs = 100
+        num_workers = 4
+
+    learning_rate = 1e-3
+    weight_decay = 0
+
+    normalize = 'per_machine_id'
+    normalize_raw = True
+
+    ########################
+    # detailed configuration
+    ########################
+
+
+    context = 5
+    num_mel = 128
+    n_fft = 1024
+    hop_size = 512
+
+    prior = {
+        'class': 'priors.NoPrior',
+        'kwargs': {
+            'latent_size': latent_size,
+            'weight': 1.0
+        }
+    }
+
+    data_set = {
+        'class': 'data_sets.MCMDataSet',
+        'kwargs': {
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size,
+            'normalize': normalize,
+            'normalize_raw': normalize_raw
+        }
+    }
+
+    reconstruction = {
+        'class': 'losses.MSE',
+        'kwargs': {
+            'weight': 1.0,
+            'input_shape': '@data_set.observation_shape'
+        }
+    }
+
+    auto_encoder_model = {
+        'class': 'models.BaselineFCAE',
+        'args': [
+            '@data_set.observation_shape',
+            '@reconstruction',
+            '@prior'
         ]
+    }
 
-        lr_schedulers = [
-            self.objects['lr_scheduler']
-        ]
+    lr_scheduler = {
+        'class': 'torch.optim.lr_scheduler.StepLR',
+        'args': [
+            '@optimizer',
+        ],
+        'kwargs': {
+            'step_size': epochs
+        }
+    }
 
-        return optimizers, lr_schedulers
+    optimizer = {
+        'class': 'torch.optim.Adam',
+        'args': [
+            '@auto_encoder_model.parameters()'
+        ],
+        'kwargs': {
+            'lr': learning_rate,
+            'betas': (0.9, 0.999),
+            'amsgrad': False,
+            'weight_decay': weight_decay,
+        }
+    }
 
-    def train_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.data_set.training_data_set(self.machine_type, self.machine_id),
-            batch_size=self.objects['batch_size'],
-            shuffle=True,
-            num_workers=self.objects['num_workers'],
-            drop_last=False
-        )
-        return dl
-
-    def val_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.data_set.validation_data_set(self.machine_type, self.machine_id),
-            batch_size=self.objects['batch_size'],
-            shuffle=False,
-            num_workers=self.objects['num_workers']
-        )
-        return dl
-
-    def test_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.data_set.validation_data_set(self.machine_type, self.machine_id),
-            batch_size=self.objects['batch_size'],
-            shuffle=False,
-            num_workers=self.objects['num_workers']
-        )
-        return dl
-
-    def run(self):
-        self.trainer.fit(self)
-        self.trainer.test(self)
-        return self.result
+    trainer = {
+        'class': 'trainers.PTLTrainer',
+        'kwargs': {
+            'max_epochs': epochs,
+            'checkpoint_callback': False,
+            'logger': False,
+            'early_stop_callback': False,
+            'gpus': [0],
+            'show_progress_bar': True,
+            'progress_bar_refresh_rate': 1000
+        }
+    }
 
 
 ex = Experiment('dcase2020_task2_baseline')
