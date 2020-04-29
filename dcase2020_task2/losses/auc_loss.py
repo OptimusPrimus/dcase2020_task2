@@ -16,9 +16,9 @@ class AUC(ReconstructionBase):
         batch_normal['normal_scores'] = normal_scores.mean()
         batch_normal['abnormal_scores'] = abnormal_scores.mean()
 
-        if batch_normal.get('losses'):
-            batch_normal['mse_normal'] = F.mse_loss(batch_normal['losses'], batch_normal['observations'])
-            batch_normal['mse_abnormal'] = F.mse_loss(batch_abnormal['losses'], batch_abnormal['observations'])    # batch_abnormal['observations'])
+        if batch_normal.get('loss') != None:
+            batch_normal['mse_normal'] = F.mse_loss(batch_normal['loss'], batch_normal['observations'])
+            batch_normal['mse_abnormal'] = F.mse_loss(batch_abnormal['loss'], batch_abnormal['observations'])    # batch_abnormal['observations'])
 
         tprs = torch.sigmoid(abnormal_scores[:, None] - normal_scores[None, :]).mean(dim=0)
         batch_normal['tpr'] = tprs.mean()
@@ -33,6 +33,6 @@ class AUC(ReconstructionBase):
 
     def forward(self, batch):
         batch['visualizations'] = batch['pre_reconstructions']
-        batch['losses'] = batch['pre_reconstructions']
-        batch['scores'] = (batch['losses'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
+        batch['loss'] = batch['pre_reconstructions']
+        batch['scores'] = (batch['loss'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
         return batch

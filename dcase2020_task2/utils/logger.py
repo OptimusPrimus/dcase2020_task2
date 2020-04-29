@@ -29,23 +29,15 @@ class Logger:
 
     def log_training_step(self, batch, step):
         if step % 100 == 0:
-            self.__log_metric__('training_loss', batch.get('loss'), step)
-            self.__log_metric__('training_prior_loss', batch.get('prior_loss'), step)
-            self.__log_metric__('training_reconstruction_loss', batch.get('reconstruction_loss'), step)
-            self.__log_metric__('tpr', batch.get('tpr'), step)
-            self.__log_metric__('fpr', batch.get('fpr'), step)
-            self.__log_metric__('normal_scores', batch.get('normal_scores' ), step)
-            self.__log_metric__('abnormal_scores', batch.get('abnormal_scores' ), step)
-            self.__log_metric__('mse_normal', batch.get('mse_normal'), step)
-            self.__log_metric__('mse_abnormal', batch.get('mse_abnormal'), step)
+            for key in batch:
+                if type(batch[key]) == np.ndarray and batch[key].dims == 1 and batch[key].shape[0]:
+                    self.__log_metric__(key, float(batch[key]), step)
+                elif type(batch[key]) in [float, int]:
+                    self.__log_metric__(key, float(batch[key]), step)
+                elif type(batch[key]) == torch.Tensor and batch[key].ndim == 1 and batch[key].shape[0] == 1:
+                    self.__log_metric__(key, batch[key].item(), step)
 
-    def log_generator_step(self, batch, step):
-        if step % 100 == 0:
-            self.__log_metric__('generator_loss', batch.get('losses'), step)
-            self.__log_metric__('generator_loss', batch.get('prior_loss'), step)
-            self.__log_metric__('generator_loss', batch.get('reconstruction_loss'), step)
-
-    def log_validation(self, outputs, step, epoch, gmm=None):
+    def log_auto_encoder_validation(self, outputs, step, epoch, gmm=None):
 
         if epoch == -1:
             return None
@@ -54,6 +46,7 @@ class Logger:
         predictions = []
         file_ids = []
         codes = []
+
         for o in outputs:
             targets.append(o['targets'].detach().cpu().numpy())
             predictions.append(o['scores'].detach().cpu().numpy())
@@ -67,7 +60,7 @@ class Logger:
 
         if gmm:
             codes = np.concatenate(codes)
-            predictions = gmm.predict_proba(codes)
+            predictions = -1 * np.array([gmm.score([c])for c in codes])
 
         ground_truth = []
         scores_mean = []
@@ -103,8 +96,66 @@ class Logger:
             'pauroc_max': float(pauroc_max),
         }
 
-    def log_testing(self, outputs, gmm_model=None):
-        return self.log_validation(outputs, 0, -2, gmm=gmm_model)
+
+        return {
+            '': None
+        }
+
+    def log_validation(self, outputs, step, epoch):
+
+        if epoch == -1:
+            return None
+
+        targets = []
+        predictions = []
+        file_ids = []
+        codes = []
+
+        for o in outputs:
+            targets.append(o['targets'].detach().cpu().numpy())
+            predictions.append(o['scores'].detach().cpu().numpy())
+            file_ids.append(o['file_ids'].detach().cpu().numpy())
+
+        targets = np.concatenate(targets)
+        predictions = np.concatenate(predictions)
+        file_ids = np.concatenate(file_ids)
+
+        ground_truth = []
+        scores_mean = []
+        scores_max = []
+
+        for file_id in np.unique(file_ids):
+            selected = file_ids == file_id
+            ground_truth.append(targets[selected][0])
+            scores_mean.append(predictions[selected].mean())
+            scores_max.append(predictions[selected].max())
+
+        ground_truth = np.array(ground_truth)
+        scores_mean = np.array(scores_mean)
+        scores_max = np.array(scores_max)
+
+        auroc_mean = metrics.roc_auc_score(ground_truth, scores_mean)
+        pauroc_mean = metrics.roc_auc_score(ground_truth, scores_mean, max_fpr=0.1)
+
+        auroc_max = metrics.roc_auc_score(ground_truth, scores_max)
+        pauroc_max = metrics.roc_auc_score(ground_truth, scores_max, max_fpr=0.1)
+
+
+        if epoch != -2:
+            self.__log_metric__('validation_auroc_mean', auroc_mean, step)
+            self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
+            self.__log_metric__('validation_auroc_max', auroc_max, step)
+            self.__log_metric__('validation_pauroc_max', pauroc_max, step)
+
+        return {
+            'auroc_mean': float(auroc_mean),
+            'pauroc_mean': float(pauroc_mean),
+            'auroc_max': float(auroc_max),
+            'pauroc_max': float(pauroc_max),
+        }
+
+    def log_testing(self, outputs, gmm=None):
+        return self.log_validation(outputs, 0, -2)
 
     def __log_metric__(self, name, value, step):
 

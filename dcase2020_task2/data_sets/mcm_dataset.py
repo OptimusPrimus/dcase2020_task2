@@ -204,7 +204,7 @@ class MCMDataSet(data_sets.BaseDataSet):
 
         return torch.utils.data.ConcatDataset(complement_sets)
 
-    def get_whole_data_set(self):
+    def get_whole_training_data_set(self):
         complement_sets = []
 
         for machine_type in range(6):
@@ -212,6 +212,16 @@ class MCMDataSet(data_sets.BaseDataSet):
                 complement_sets.append(self.data_sets[machine_type][machine_id][0])
 
         return torch.utils.data.ConcatDataset(complement_sets)
+
+    def get_whole_validation_data_set(self):
+        complement_sets = []
+
+        for machine_type in range(6):
+            for machine_id in TRAINING_ID_MAP[machine_type]:
+                complement_sets.append(self.data_sets[machine_type][machine_id][1])
+
+        return torch.utils.data.ConcatDataset(complement_sets)
+
 
 class MixUpDataSet(torch.utils.data.Dataset):
 

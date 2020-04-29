@@ -1,3 +1,3 @@
 from experiments.base_experiment import BaseExperiment
 from experiments.baseline_experiment import BaselineExperiment
-from experiments.sampling_experiment import SamplingExperiment
+from experiments.simple_sampling_experiment import SimpleSamplingExperiment

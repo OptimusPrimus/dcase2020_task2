@@ -1,41 +1,25 @@
 from experiments import BaseExperiment
-from experiments.parser import create_objects_from_config
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from configs.classification_config import configuration
-import copy
 from utils.logger import Logger
 import os
 import torch.utils.data
-import numpy as np
 # workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
+from datetime import datetime
 
 
-class ClassifiactionExperiment(pl.LightningModule, BaseExperiment):
+class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
 
     def __init__(self, configuration_dict, _run):
-        super().__init__()
+        super().__init__(configuration_dict)
 
-        self.configuration_dict = copy.deepcopy(configuration_dict)
-        self.objects = create_objects_from_config(configuration_dict)
-
-        if not os.path.exists(self.configuration_dict['log_path']):
-            os.mkdir(self.configuration_dict['log_path'])
-
-        if self.objects.get('deterministic'):
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
-
-        self.machine_type = self.objects['machine_type']
-        self.machine_id = self.objects['machine_id']
-
-        self.trainer = self.objects['trainer']
         self.model = self.objects['model']
         self.data_set = self.objects['data_set']
         self.reconstruction = self.objects['reconstruction']
+        self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
 
         self.inf_complement_training_iterator = iter(
             self.get_infinite_data_loader(
@@ -49,19 +33,20 @@ class ClassifiactionExperiment(pl.LightningModule, BaseExperiment):
             )
         )
 
-        self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
+        # experiment state variables
         self.epoch = -1
         self.step = 0
         self.result = None
 
     def get_infinite_data_loader(self, dl):
-        device = "cuda:{}".format(self.trainer.root_gpu)
+        device = "cuda:{}".format(next(iter(self.network.parameters())).device)
         while True:
             for batch in iter(dl):
                 for key in batch:
                     if type(batch[key]) is torch.Tensor:
                         batch[key] = batch[key].to(device)
                 yield batch
+
 
     def forward(self, batch):
         batch['epoch'] = self.epoch
@@ -106,65 +91,139 @@ class ClassifiactionExperiment(pl.LightningModule, BaseExperiment):
         self.logger_.log_validation(outputs, self.step, self.epoch)
         return {}
 
-    def test_step(self, batch, batch_num, *args):
-        self(batch)
-        return {
-            'targets': batch['targets'],
-            'scores': batch['scores'],
-            'machine_types': batch['machine_types'],
-            'machine_ids': batch['machine_ids'],
-            'part_numbers': batch['part_numbers'],
-            'file_ids': batch['file_ids']
-        }
+    def test_step(self, batch, batch_num):
+        return self.validation_step(batch, batch_num)
 
     def test_end(self, outputs):
         self.result = self.logger_.log_testing(outputs)
         self.logger_.close()
         return self.result
 
-    def configure_optimizers(self):
-        optimizers = [
-            self.objects['optimizer']
+
+def configuration():
+    seed = 1220
+    deterministic = False
+    id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    log_path = os.path.join('..', 'experiment_logs', id)
+
+    #####################
+    # quick configuration, uses default parameters of more detailed configuration
+    #####################
+
+    descriptor = None
+
+    machine_type = 1
+    machine_id = 2
+
+    batch_size = 512
+
+    debug = False
+    if debug:
+        epochs = 1
+        num_workers = 0
+    else:
+        epochs = 100
+        num_workers = 4
+
+    learning_rate = 1e-4
+    weight_decay = 1e-4
+
+    rho = 0.1
+
+    feature_context = 'short'
+    reconstruction_class = 'losses.BCE'
+    mse_weight = 0.0
+    model_class = 'models.BaselineFCNN'
+
+    normalize = 'all'
+    normalize_raw = False
+
+    complement = 'same_type'
+
+    ########################
+    # detailed configurationSamplingFCAE
+    ########################
+
+    if feature_context == 'short':
+        context = 5
+        num_mel = 128
+        n_fft = 1024
+        hop_size = 512
+    elif feature_context == 'long':
+        context = 11
+        num_mel = 40
+        n_fft = 512
+        hop_size = 256
+
+    if model_class == 'models.SamplingCRNNAE':
+        context = 1
+
+    data_set = {
+        'class': 'data_sets.MCMDataSet',
+        'kwargs': {
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size,
+            'normalize': normalize,
+            'normalize_raw': normalize_raw,
+            'complement': complement
+        }
+    }
+
+    reconstruction = {
+        'class': reconstruction_class,
+        'kwargs': {
+            'weight': 1.0,
+            'input_shape': '@data_set.observation_shape',
+            'rho': rho,
+            'mse_weight': mse_weight
+        }
+    }
+
+    model = {
+        'class': model_class,
+        'args': [
+            '@data_set.observation_shape',
+            '@reconstruction'
         ]
+    }
 
-        lr_schedulers = [
-            self.objects['lr_scheduler']
-        ]
+    lr_scheduler = {
+        'class': 'torch.optim.lr_scheduler.StepLR',
+        'args': [
+            '@optimizer',
+        ],
+        'kwargs': {
+            'step_size': 50
+        }
+    }
 
-        return optimizers, lr_schedulers
+    optimizer = {
+        'class': 'torch.optim.Adam',
+        'args': [
+            '@model.parameters()'
+        ],
+        'kwargs': {
+            'lr': learning_rate,
+            'betas': (0.9, 0.999),
+            'amsgrad': False,
+            'weight_decay': weight_decay,
+        }
+    }
 
-    def train_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.data_set.training_data_set(self.machine_type, self.machine_id),
-            batch_size=self.objects['batch_size'],
-            shuffle=True,
-            num_workers=self.objects['num_workers'],
-            drop_last=True
-        )
-        return dl
-
-    def val_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.data_set.validation_data_set(self.machine_type, self.machine_id),
-            batch_size=self.objects['batch_size'],
-            shuffle=False,
-            num_workers=self.objects['num_workers']
-        )
-        return dl
-
-    def test_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.data_set.validation_data_set(self.machine_type, self.machine_id),
-            batch_size=self.objects['batch_size'],
-            shuffle=False,
-            num_workers=self.objects['num_workers']
-        )
-        return dl
-
-    def run(self):
-        self.trainer.fit(self)
-        self.trainer.test(self)
-        return self.result
+    trainer = {
+        'class': 'trainers.PTLTrainer',
+        'kwargs': {
+            'max_epochs': epochs,
+            'checkpoint_callback': False,
+            'logger': False,
+            'early_stop_callback': False,
+            'gpus': [0],
+            'show_progress_bar': True,
+            'progress_bar_refresh_rate': 1000
+        }
+    }
 
 
 ex = Experiment('dcase2020_task2_classification')

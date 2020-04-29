@@ -3,42 +3,55 @@ import pytorch_lightning as pl
 import torch
 from sacred import Experiment
 from utils.logger import Logger
-import torch.utils.data
-from datetime import datetime
 import os
+import torch.utils.data
 # workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
-import warnings
-warnings.filterwarnings("ignore")
+
+from datetime import datetime
 
 
-class AutoEncoderExperiment(BaseExperiment, pl.LightningModule):
+class SimpleSamplingExperiment(BaseExperiment, pl.LightningModule):
 
     def __init__(self, configuration_dict, _run):
         super().__init__(configuration_dict)
 
-        self.model = self.objects['model']
+        self.auto_encoder_model = self.objects['auto_encoder_model']
         self.prior = self.objects['prior']
-        self.data_set = self.objects['data_set']
         self.reconstruction = self.objects['reconstruction']
-
+        self.data_set = self.objects['data_set']
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
+
+        self.inf_complement_training_iterator = iter(
+            self.get_infinite_data_loader(
+                torch.utils.data.DataLoader(
+                    self.data_set.complement_data_set(self.machine_type, self.machine_id),
+                    batch_size=self.objects['batch_size'],
+                    shuffle=True,
+                    num_workers=self.objects['num_workers'],
+                    drop_last=True
+                )
+            )
+        )
+
+        # training state
         self.epoch = -1
         self.step = 0
         self.result = None
 
-    def get_data_loader(self, dl):
-        device = "cuda:{}".format(self.trainer.root_gpu)
-        for batch in iter(dl):
-            for key in batch:
-                if type(batch[key]) is torch.Tensor:
-                    batch[key] = batch[key].to(device)
-            yield batch
+    def get_infinite_data_loader(self, dl):
+        device = "cuda:{}".format(next(iter(self.network.parameters())).device)
+        while True:
+            for batch in iter(dl):
+                for key in batch:
+                    if type(batch[key]) is torch.Tensor:
+                        batch[key] = batch[key].to(device)
+                yield batch
 
     def forward(self, batch):
         batch['epoch'] = self.epoch
-        batch = self.model(batch)
+        batch = self.auto_encoder_model(batch)
         return batch
 
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
@@ -48,8 +61,13 @@ class AutoEncoderExperiment(BaseExperiment, pl.LightningModule):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-            reconstruction_loss = self.reconstruction.loss(batch_normal)
-            prior_loss = self.prior.loss(batch_normal)
+
+            # use high loss samples only here
+            batch_abnormal = next(self.inf_complement_training_iterator)
+            batch_abnormal = self(batch_abnormal)
+
+            reconstruction_loss = self.reconstruction.loss(batch_normal, batch_abnormal)
+            prior_loss = self.prior.loss(batch_normal) + self.prior.loss(batch_abnormal)
 
             batch_normal['reconstruction_loss'] = reconstruction_loss
             batch_normal['prior_loss'] = prior_loss
@@ -70,7 +88,6 @@ class AutoEncoderExperiment(BaseExperiment, pl.LightningModule):
         return {
             'targets': batch['targets'],
             'scores': batch['scores'],
-            'codes': batch['codes'],
             'machine_types': batch['machine_types'],
             'machine_ids': batch['machine_ids'],
             'part_numbers': batch['part_numbers'],
@@ -93,7 +110,7 @@ class AutoEncoderExperiment(BaseExperiment, pl.LightningModule):
 def configuration():
     seed = 1220
     deterministic = False
-    id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S:%f")
+    id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
     log_path = os.path.join('..', 'experiment_logs', id)
 
     #####################
@@ -103,7 +120,8 @@ def configuration():
     machine_type = 0
     machine_id = 0
 
-    latent_size = 32
+    latent_size = 8
+
     batch_size = 512
 
     debug = False
@@ -115,22 +133,33 @@ def configuration():
         num_workers = 4
 
 
-    learning_rate = 1e-3
-    weight_decay = 0
+    learning_rate = 1e-4
+    weight_decay = 1e-4
 
-    normalize = 'all'
-    normalize_raw = True
+    rho = 0.1
 
+    feature_context = 'short'
+    reconstruction_class = 'losses.AUC'
+    mse_weight = 0.0
+    model_class = 'models.SamplingFCAE'
 
     ########################
-    # detailed configuration
+    # detailed configurationSamplingFCAE
     ########################
 
+    if feature_context == 'short':
+        context = 5
+        num_mel = 128
+        n_fft = 1024
+        hop_size = 512
+    elif feature_context == 'long':
+        context = 11
+        num_mel = 40
+        n_fft = 512
+        hop_size = 256
 
-    context = 5
-    num_mel = 128
-    n_fft = 1024
-    hop_size = 512
+    if model_class == 'models.SamplingCRNNAE':
+        context = 1
 
     prior = {
         'class': 'priors.NoPrior',
@@ -146,22 +175,22 @@ def configuration():
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
-            'hop_size': hop_size,
-            'normalize': normalize,
-            'normalize_raw': normalize_raw
+            'hop_size': hop_size
         }
     }
 
     reconstruction = {
-        'class': 'losses.MSE',
+        'class': reconstruction_class,
         'kwargs': {
             'weight': 1.0,
-            'input_shape': '@data_set.observation_shape'
+            'input_shape': '@data_set.observation_shape',
+            'rho': rho,
+            'mse_weight': mse_weight
         }
     }
 
-    model = {
-        'class': 'models.BaselineFCAE',
+    auto_encoder_model = {
+        'class': model_class,
         'args': [
             '@data_set.observation_shape',
             '@reconstruction',
@@ -175,14 +204,14 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': epochs
+            'step_size': 50
         }
     }
 
     optimizer = {
         'class': 'torch.optim.Adam',
         'args': [
-            '@model.parameters()'
+            '@auto_encoder_model.parameters()'
         ],
         'kwargs': {
             'lr': learning_rate,
@@ -206,11 +235,11 @@ def configuration():
     }
 
 
-ex = Experiment('dcase2020_task2_autoencoder')
+ex = Experiment('dcase2020_task2_simple_sampling')
 cfg = ex.config(configuration)
 
 
 @ex.automain
 def run(_config, _run):
-    experiment = AutoEncoderExperiment(_config, _run)
+    experiment = SimpleSamplingExperiment(_config, _run)
     return experiment.run()

@@ -1,9 +1,31 @@
 from typing import NoReturn
 from abc import ABC, abstractmethod
 import torch
+from experiments.parser import create_objects_from_config
+import copy
+import os
 
 
 class BaseExperiment(ABC, torch.nn.Module):
+
+    def __init__(self, configuration_dict):
+        super(BaseExperiment, self).__init__()
+        self.configuration_dict = copy.deepcopy(configuration_dict)
+        self.objects = create_objects_from_config(configuration_dict)
+
+        for k in ['machine_type', 'machine_id', 'trainer', 'data_set', 'log_path', 'batch_size', 'num_workers']:
+            assert k in self.objects
+
+        if not os.path.exists(self.configuration_dict['log_path']):
+            os.mkdir(self.configuration_dict['log_path'])
+
+        if self.objects.get('deterministic'):
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+
+        self.machine_type = self.objects['machine_type']
+        self.machine_id = self.objects['machine_id']
+        self.trainer = self.objects['trainer']
 
     @abstractmethod
     def forward(self, *args, **kwargs):
@@ -29,18 +51,46 @@ class BaseExperiment(ABC, torch.nn.Module):
     def test_end(self, *args, **kwargs):
         raise NotImplementedError()
 
-    @abstractmethod
+    def configure_optimizers(self):
+        optimizers = [
+            self.objects['optimizer']
+        ]
+
+        lr_schedulers = [
+            self.objects['lr_scheduler']
+        ]
+
+        return optimizers, lr_schedulers
+
     def train_dataloader(self):
-        raise NotImplementedError()
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].training_data_set(self.machine_type, self.machine_id),
+            batch_size=self.objects['batch_size'],
+            shuffle=True,
+            num_workers=self.objects['num_workers'],
+            drop_last=False
+        )
+        return dl
 
-    @abstractmethod
     def val_dataloader(self):
-        raise NotImplementedError()
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].validation_data_set(self.machine_type, self.machine_id),
+            batch_size=self.objects['batch_size'],
+            shuffle=False,
+            num_workers=self.objects['num_workers']
+        )
+        return dl
 
-    @abstractmethod
     def test_dataloader(self):
-        raise NotImplementedError()
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].validation_data_set(self.machine_type, self.machine_id),
+            batch_size=self.objects['batch_size'],
+            shuffle=False,
+            num_workers=self.objects['num_workers']
+        )
+        return dl
 
-    @abstractmethod
     def run(self):
-        raise NotImplementedError()
+        self.trainer.fit(self)
+        self.trainer.test(self)
+        return self.result
