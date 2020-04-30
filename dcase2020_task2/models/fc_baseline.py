@@ -4,6 +4,12 @@ import numpy as np
 import torch
 
 
+def init_weights(m):
+    if type(m) == torch.nn.Linear:
+        torch.nn.init.xavier_uniform_(m.weight, gain=torch.nn.init.calculate_gain('relu'))
+        m.bias.data.fill_(0.01)
+
+
 class BaselineFCAE(torch.nn.Module, VAEBase):
 
     def __init__(
@@ -34,6 +40,8 @@ class BaselineFCAE(torch.nn.Module, VAEBase):
             torch.nn.ReLU(True),
             torch.nn.Linear(64, np.prod(input_shape))
         )
+
+        self.apply(init_weights)
 
     def forward(self, batch):
         batch = self.encode(batch)
@@ -79,12 +87,7 @@ class BaselineFCNN(torch.nn.Module):
             torch.nn.Linear(64, 1)
         )
 
-        self.apply(self.init_weights)
-
-    def init_weights(self, m):
-        if type(m) == torch.nn.Linear:
-            torch.nn.init.xavier_uniform(m.weight)
-            m.bias.data.fill_(0.01)
+        self.apply(init_weights)
 
     def forward(self, batch):
         x = batch['observations']

@@ -3,6 +3,10 @@ from models import VAEBase
 import numpy as np
 import torch
 
+def init_weights(m):
+    if type(m) == torch.nn.Linear:
+        torch.nn.init.xavier_uniform_(m.weight, gain=torch.nn.init.calculate_gain('relu'))
+        m.bias.data.fill_(0.01)
 
 class SamplingFCAE(torch.nn.Module, VAEBase):
 
@@ -33,6 +37,8 @@ class SamplingFCAE(torch.nn.Module, VAEBase):
             torch.nn.ReLU(True),
             torch.nn.Linear(512, np.prod(input_shape)),
         )
+
+        self.apply(init_weights)
 
     def forward(self, batch):
         batch = self.encode(batch)
@@ -85,6 +91,8 @@ class SamplingFCGenerator(torch.nn.Module, VAEBase):
             torch.nn.ReLU(True),
             torch.nn.Linear(512, np.prod(input_shape)),
         )
+
+        self.apply(init_weights)
 
     def forward(self, batch):
         batch = self.encode(batch)
@@ -142,6 +150,8 @@ class SamplingCRNNAE(torch.nn.Module, VAEBase):
             Reshape((128, channels)),                               # (b, 128, 31)
             torch.nn.ConvTranspose1d(128, 1, 10)                    # (b, 1, 40)
         )
+
+        self.apply(init_weights)
 
     def forward(self, batch):
         batch = self.encode(batch)
