@@ -7,6 +7,7 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 import PIL
 from sklearn import metrics
+import matplotlib.pyplot as plt
 
 PIL.PILLOW_VERSION = PIL.__version__
 import torchvision
@@ -22,6 +23,9 @@ class Logger:
 
         self.log_dir = self.configuration_dict['log_path']
 
+        self.machine_type = self.objects['machine_type']
+        self.machine_id = self.objects['machine_id']
+
         # self.writer = SummaryWriter(log_dir=self.log_dir)
         file = os.path.join(config['log_path'], 'conf.py')
         with open(file, 'wb') as config_dictionary_file:
@@ -34,112 +38,29 @@ class Logger:
                     self.__log_metric__(key, float(batch[key]), step)
                 elif type(batch[key]) in [float, int]:
                     self.__log_metric__(key, float(batch[key]), step)
+                elif type(batch[key]) == torch.Tensor and batch[key].ndim == 0:
+                    self.__log_metric__(key, batch[key].item(), step)
                 elif type(batch[key]) == torch.Tensor and batch[key].ndim == 1 and batch[key].shape[0] == 1:
                     self.__log_metric__(key, batch[key].item(), step)
-
-    def log_auto_encoder_validation(self, outputs, step, epoch, gmm=None):
-
-        if epoch == -1:
-            return None
-
-        targets = []
-        predictions = []
-        file_ids = []
-        codes = []
-
-        for o in outputs:
-            targets.append(o['targets'].detach().cpu().numpy())
-            predictions.append(o['scores'].detach().cpu().numpy())
-            file_ids.append(o['file_ids'].detach().cpu().numpy())
-            if gmm:
-                codes.append(o['codes'].detach().cpu().numpy())
-
-        targets = np.concatenate(targets)
-        predictions = np.concatenate(predictions)
-        file_ids = np.concatenate(file_ids)
-
-        if gmm:
-            codes = np.concatenate(codes)
-            predictions = -1 * np.array([gmm.score([c])for c in codes])
-
-        ground_truth = []
-        scores_mean = []
-        scores_max = []
-
-        for file_id in np.unique(file_ids):
-            selected = file_ids == file_id
-            ground_truth.append(targets[selected][0])
-            scores_mean.append(predictions[selected].mean())
-            scores_max.append(predictions[selected].max())
-
-        ground_truth = np.array(ground_truth)
-        scores_mean = np.array(scores_mean)
-        scores_max = np.array(scores_max)
-
-        auroc_mean = metrics.roc_auc_score(ground_truth, scores_mean)
-        pauroc_mean = metrics.roc_auc_score(ground_truth, scores_mean, max_fpr=0.1)
-
-        auroc_max = metrics.roc_auc_score(ground_truth, scores_max)
-        pauroc_max = metrics.roc_auc_score(ground_truth, scores_max, max_fpr=0.1)
-
-
-        if epoch != -2:
-            self.__log_metric__('validation_auroc_mean', auroc_mean, step)
-            self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
-            self.__log_metric__('validation_auroc_max', auroc_max, step)
-            self.__log_metric__('validation_pauroc_max', pauroc_max, step)
-
-        return {
-            'auroc_mean': float(auroc_mean),
-            'pauroc_mean': float(pauroc_mean),
-            'auroc_max': float(auroc_max),
-            'pauroc_max': float(pauroc_max),
-        }
-
-
-        return {
-            '': None
-        }
 
     def log_validation(self, outputs, step, epoch):
 
         if epoch == -1:
             return None
 
-        targets = []
-        predictions = []
-        file_ids = []
-        codes = []
+        scores_mean, _, _, _, _ = self.__batches_to_per_file_scores__(outputs, aggregation_fun=np.mean)
+        scores_max, ground_truth, file_id, machine_types, machine_ids = self.__batches_to_per_file_scores__(outputs, aggregation_fun=np.max)
 
-        for o in outputs:
-            targets.append(o['targets'].detach().cpu().numpy())
-            predictions.append(o['scores'].detach().cpu().numpy())
-            file_ids.append(o['file_ids'].detach().cpu().numpy())
-
-        targets = np.concatenate(targets)
-        predictions = np.concatenate(predictions)
-        file_ids = np.concatenate(file_ids)
-
-        ground_truth = []
-        scores_mean = []
-        scores_max = []
-
-        for file_id in np.unique(file_ids):
-            selected = file_ids == file_id
-            ground_truth.append(targets[selected][0])
-            scores_mean.append(predictions[selected].mean())
-            scores_max.append(predictions[selected].max())
-
-        ground_truth = np.array(ground_truth)
-        scores_mean = np.array(scores_mean)
-        scores_max = np.array(scores_max)
+        # select samples with matching machine_types and machine ids only
+        ground_truth = ground_truth[np.logical_and(machine_types == self.machine_type, machine_ids == self.machine_id)]
+        scores_mean = scores_mean[np.logical_and(machine_types == self.machine_type, machine_ids == self.machine_id)]
+        scores_max = scores_max[np.logical_and(machine_types == self.machine_type, machine_ids == self.machine_id)]
 
         auroc_mean = metrics.roc_auc_score(ground_truth, scores_mean)
         pauroc_mean = metrics.roc_auc_score(ground_truth, scores_mean, max_fpr=0.1)
 
         auroc_max = metrics.roc_auc_score(ground_truth, scores_max)
         pauroc_max = metrics.roc_auc_score(ground_truth, scores_max, max_fpr=0.1)
-
 
         if epoch != -2:
             self.__log_metric__('validation_auroc_mean', auroc_mean, step)
@@ -154,8 +75,42 @@ class Logger:
             'pauroc_max': float(pauroc_max),
         }
 
-    def log_testing(self, outputs, gmm=None):
+    def log_testing(self, outputs):
         return self.log_validation(outputs, 0, -2)
+
+    def __batches_to_per_file_scores__(self, outputs, aggregation_fun=np.mean):
+
+        # extract targets, scores and file_ids fom batches
+        targets = np.concatenate([o['targets'].detach().cpu().numpy() for o in outputs])
+        predictions = np.concatenate([o['scores'].detach().cpu().numpy() for o in outputs])
+        file_ids = np.concatenate([o['file_ids'].detach().cpu().numpy() for o in outputs])
+        machine_types = np.concatenate([o['machine_types'].detach().cpu().numpy() for o in outputs])
+        machine_ids = np.concatenate([o['machine_ids'].detach().cpu().numpy() for o in outputs])
+
+        # compute per file aggregated targets and scores
+        files = np.unique(np.stack([targets, file_ids, machine_types, machine_ids], axis=1), axis=0)
+
+        scores = np.array([
+            aggregation_fun(
+                predictions[
+                    np.logical_and(targets == target,
+                        np.logical_and(file_ids == file_id,
+                                   np.logical_and(machine_types == mty, machine_ids == mid)))
+                ]
+            )
+            for target, file_id, mty, mid in files
+        ])
+
+        scores = np.array([
+                predictions[
+                    np.logical_and(targets == target,
+                                   np.logical_and(file_ids == file_id,
+                                                  np.logical_and(machine_types == mty, machine_ids == mid)))
+                ].shape[0]
+            for target, file_id, mty, mid in files
+        ])
+
+        return scores, files[:, 0], files[:, 1], files[:, 2], files[:, 3]
 
     def __log_metric__(self, name, value, step):
 
@@ -177,20 +132,6 @@ class Logger:
                 file_name
             )
         )
-
-    @staticmethod
-    def auroc(normal_scores, abnormal_scores):
-        if len(normal_scores) == 0 or len(abnormal_scores) == 0:
-            return 0
-        return np.mean(np.where((abnormal_scores[None, :] - normal_scores[:, None]) > 0, 1, 0))
-
-    @staticmethod
-    def pauroc(normal_scores, abnormal_scores, p=0.1):
-        if len(normal_scores) == 0 or len(abnormal_scores) == 0:
-            return 0
-        num_samp = int(len(normal_scores) * p)
-        normal_scores = np.sort(normal_scores)[:num_samp]
-        return np.mean(np.where((abnormal_scores[:, None] - normal_scores[None, :]) > 0, 1, 0))
 
     def __log_video__(self, animation, file_name):
         Writer = matplotlib.animation.writers['ffmpeg']

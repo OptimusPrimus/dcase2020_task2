@@ -24,10 +24,10 @@ class AUC(ReconstructionBase):
         batch_normal['tpr'] = tprs.mean()
         batch_normal['fpr'] = 0.5
 
-        a = torch.nn.functional.binary_cross_entropy_with_logits(abnormal_scores, torch.ones_like(abnormal_scores).to(abnormal_scores.device))
-        b = torch.nn.functional.binary_cross_entropy_with_logits(normal_scores, torch.zeros_like(normal_scores).to(normal_scores.device))
+        # a = torch.nn.functional.binary_cross_entropy_with_logits(abnormal_scores, torch.ones_like(abnormal_scores).to(abnormal_scores.device))
+        # b = torch.nn.functional.binary_cross_entropy_with_logits(normal_scores, torch.zeros_like(normal_scores).to(normal_scores.device))
 
-        batch_normal['reconstruction_loss'] = self.weight * (-batch_normal['tpr'] + a + b)
+        batch_normal['reconstruction_loss'] = self.weight * - batch_normal['tpr']
 
         return batch_normal['reconstruction_loss']
 

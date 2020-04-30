@@ -13,6 +13,10 @@ from datetime import datetime
 
 
 class SimpleSamplingExperiment(BaseExperiment, pl.LightningModule):
+    '''
+    A Simplified Version of 'Unsupervised Detection of Anomalous Sound based on Deep Learning and the Neyman-Pearson Lemma'.
+    Instead of training a VAE to generate new samples we sample from the complement data set. For experiments both NP and AUC loss can be use.
+    '''
 
     def __init__(self, configuration_dict, _run):
         super().__init__(configuration_dict)
