@@ -118,7 +118,7 @@ def configuration():
     learning_rate = 1e-3
     weight_decay = 0
 
-    normalize = 'none'
+    normalize = 'all'
     normalize_raw = False
 
     context = 5
