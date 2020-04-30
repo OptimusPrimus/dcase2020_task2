@@ -16,9 +16,9 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
     def __init__(self, configuration_dict, _run):
         super().__init__(configuration_dict)
 
-        self.model = self.objects['model']
+        self.network = self.objects['model']
         self.data_set = self.objects['data_set']
-        self.reconstruction = self.objects['reconstruction']
+        self.loss = self.objects['loss']
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
 
         self.inf_complement_training_iterator = iter(
@@ -39,7 +39,7 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
         self.result = None
 
     def get_infinite_data_loader(self, dl):
-        device = "cuda:{}".format(next(iter(self.network.parameters())).device)
+        device = next(iter(self.network.parameters())).device
         while True:
             for batch in iter(dl):
                 for key in batch:
@@ -50,7 +50,7 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
 
     def forward(self, batch):
         batch['epoch'] = self.epoch
-        batch = self.model(batch)
+        batch = self.network(batch)
         return batch
 
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
@@ -62,9 +62,9 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
             batch_normal = self(batch_normal)
             batch_abnormal = self(next(self.inf_complement_training_iterator))
 
-            reconstruction_loss = self.reconstruction.loss(batch_normal, batch_abnormal)
+            loss = self.loss.loss(batch_normal, batch_abnormal)
 
-            batch_normal['loss'] = reconstruction_loss
+            batch_normal['loss'] = loss
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
@@ -110,8 +110,8 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    machine_type = 1
-    machine_id = 2
+    machine_type = 0
+    machine_id = 0
 
     batch_size = 512
 
@@ -129,19 +129,19 @@ def configuration():
     rho = 0.1
 
     feature_context = 'short'
-    reconstruction_class = 'losses.BCE'
+    loss_class = 'losses.BCE'
     mse_weight = 0.0
     model_class = 'models.BaselineFCNN'
 
     normalize = 'all'
     normalize_raw = False
 
-    complement = 'same_type'
+    complement = 'all'
 
     # TODO: change default descriptor
     descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
         model_class,
-        reconstruction_class,
+        loss_class,
         batch_size,
         learning_rate,
         weight_decay,
@@ -183,8 +183,8 @@ def configuration():
         }
     }
 
-    reconstruction = {
-        'class': reconstruction_class,
+    loss = {
+        'class': loss_class,
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@data_set.observation_shape',
@@ -197,7 +197,7 @@ def configuration():
         'class': model_class,
         'args': [
             '@data_set.observation_shape',
-            '@reconstruction'
+            '@loss'
         ]
     }
 
