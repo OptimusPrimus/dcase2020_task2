@@ -139,7 +139,7 @@ def configuration():
     complement = 'all'
 
     # TODO: change default descriptor
-    descriptor = "classification_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
         model_class,
         loss_class,
         batch_size,
