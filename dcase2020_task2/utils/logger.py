@@ -101,15 +101,6 @@ class Logger:
             for target, file_id, mty, mid in files
         ])
 
-        scores = np.array([
-                predictions[
-                    np.logical_and(targets == target,
-                                   np.logical_and(file_ids == file_id,
-                                                  np.logical_and(machine_types == mty, machine_ids == mid)))
-                ].shape[0]
-            for target, file_id, mty, mid in files
-        ])
-
         return scores, files[:, 0], files[:, 1], files[:, 2], files[:, 3]
 
     def __log_metric__(self, name, value, step):
