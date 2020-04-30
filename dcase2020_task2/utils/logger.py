@@ -7,8 +7,7 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 import PIL
 from sklearn import metrics
-import matplotlib.pyplot as plt
-
+from  data_sets.mcm_dataset import TRAINING_ID_MAP
 PIL.PILLOW_VERSION = PIL.__version__
 import torchvision
 
@@ -43,7 +42,7 @@ class Logger:
                 elif type(batch[key]) == torch.Tensor and batch[key].ndim == 1 and batch[key].shape[0] == 1:
                     self.__log_metric__(key, batch[key].item(), step)
 
-    def log_validation(self, outputs, step, epoch):
+    def log_validation(self, outputs, step, epoch, all_ids=False):
 
         if epoch == -1:
             return None
@@ -52,31 +51,38 @@ class Logger:
         scores_max, ground_truth, file_id, machine_types, machine_ids = self.__batches_to_per_file_scores__(outputs, aggregation_fun=np.max)
 
         # select samples with matching machine_types and machine ids only
-        ground_truth = ground_truth[np.logical_and(machine_types == self.machine_type, machine_ids == self.machine_id)]
-        scores_mean = scores_mean[np.logical_and(machine_types == self.machine_type, machine_ids == self.machine_id)]
-        scores_max = scores_max[np.logical_and(machine_types == self.machine_type, machine_ids == self.machine_id)]
 
-        auroc_mean = metrics.roc_auc_score(ground_truth, scores_mean)
-        pauroc_mean = metrics.roc_auc_score(ground_truth, scores_mean, max_fpr=0.1)
+        auroc_mean = []
+        pauroc_mean = []
+        auroc_max = []
+        pauroc_max = []
 
-        auroc_max = metrics.roc_auc_score(ground_truth, scores_max)
-        pauroc_max = metrics.roc_auc_score(ground_truth, scores_max, max_fpr=0.1)
+        for id in (TRAINING_ID_MAP[self.machine_type] if all_ids else [self.machine_id]):
+            ground_truth_ = ground_truth[np.logical_and(machine_types == self.machine_type, machine_ids == id)]
+            scores_mean_ = scores_mean[np.logical_and(machine_types == self.machine_type, machine_ids == id)]
+            scores_max_ = scores_max[np.logical_and(machine_types == self.machine_type, machine_ids == id)]
 
-        if epoch != -2:
-            self.__log_metric__('validation_auroc_mean', auroc_mean, step)
-            self.__log_metric__('validation_pauroc_mean', pauroc_mean, step)
-            self.__log_metric__('validation_auroc_max', auroc_max, step)
-            self.__log_metric__('validation_pauroc_max', pauroc_max, step)
+            auroc_mean.append(metrics.roc_auc_score(ground_truth_, scores_mean_))
+            pauroc_mean.append(metrics.roc_auc_score(ground_truth_, scores_mean_, max_fpr=0.1))
+            auroc_max.append(metrics.roc_auc_score(ground_truth_, scores_max_))
+            pauroc_max.append(metrics.roc_auc_score(ground_truth_, scores_max_, max_fpr=0.1))
+
+            if epoch != -2:
+                self.__log_metric__('validation_auroc_mean{}'.format(id if all_ids else ""), auroc_mean[-1], step)
+                self.__log_metric__('validation_pauroc_mean{}'.format(id if all_ids else ""), pauroc_mean[-1], step)
+                self.__log_metric__('validation_auroc_max{}'.format(id if all_ids else ""), auroc_max[-1], step)
+                self.__log_metric__('validation_pauroc_max{}'.format(id if all_ids else ""), pauroc_max[-1], step)
+
 
         return {
-            'auroc_mean': float(auroc_mean),
-            'pauroc_mean': float(pauroc_mean),
-            'auroc_max': float(auroc_max),
-            'pauroc_max': float(pauroc_max),
+            'auroc_mean': float(np.mean(auroc_mean)),
+            'pauroc_mean': float(np.mean(pauroc_mean)),
+            'auroc_max': float(np.mean(auroc_max)),
+            'pauroc_max': float(np.mean(pauroc_max))
         }
 
-    def log_testing(self, outputs):
-        return self.log_validation(outputs, 0, -2)
+    def log_testing(self, outputs, all_ids=False):
+        return self.log_validation(outputs, 0, -2, all_ids=all_ids)
 
     def __batches_to_per_file_scores__(self, outputs, aggregation_fun=np.mean):
 

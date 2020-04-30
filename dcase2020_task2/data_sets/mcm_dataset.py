@@ -34,7 +34,6 @@ INVERSE_CLASS_MAP = {
     5: 'valve'
 }
 
-
 class MCMDataSet(data_sets.BaseDataSet):
 
     def __init__(
@@ -222,6 +221,17 @@ class MCMDataSet(data_sets.BaseDataSet):
 
         return torch.utils.data.ConcatDataset(complement_sets)
 
+    def get_machine_training_data_set(self, machine_type):
+        complement_sets = []
+        for machine_id in TRAINING_ID_MAP[machine_type]:
+            complement_sets.append(self.data_sets[machine_type][machine_id][0])
+        return torch.utils.data.ConcatDataset(complement_sets)
+
+    def get_machine_validation_data_set(self, machine_type):
+        complement_sets = []
+        for machine_id in TRAINING_ID_MAP[machine_type]:
+            complement_sets.append(self.data_sets[machine_type][machine_id][1])
+        return torch.utils.data.ConcatDataset(complement_sets)
 
 class MixUpDataSet(torch.utils.data.Dataset):
 

@@ -11,7 +11,7 @@ from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 
 
-class BaselineExperiment(BaseExperiment, pl.LightningModule):
+class SimpleBaselineExperiment(BaseExperiment, pl.LightningModule):
     '''
     Reproduction of the DCASE Baseline. It is basically an Auto Encoder, the anomaly score is the reconstruction error.
     '''
@@ -28,6 +28,11 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
         self.epoch = -1
         self.step = 0
         self.result = None
+
+    def forward(self, batch):
+        batch['epoch'] = self.epoch
+        batch = self.network(batch)
+        return batch
 
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
 
@@ -65,16 +70,46 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
         }
 
     def validation_end(self, outputs):
-        self.logger_.log_validation(outputs, self.step, self.epoch)
+        self.logger_.log_validation(outputs, self.step, self.epoch, all_ids=True)
         return {}
 
     def test_step(self, batch, batch_num):
         return self.validation_step(batch, batch_num)
 
     def test_end(self, outputs):
-        self.result = self.logger_.log_testing(outputs)
+        self.result = self.logger_.log_testing(outputs, all_ids=True)
         self.logger_.close()
         return self.result
+
+    def train_dataloader(self):
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].get_machine_training_data_set(self.machine_type),
+            batch_size=self.objects['batch_size'],
+            shuffle=True,
+            num_workers=self.objects['num_workers'],
+            drop_last=False
+        )
+        return dl
+
+    def val_dataloader(self):
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].get_machine_validation_data_set(self.machine_type),
+            batch_size=self.objects['batch_size'],
+            shuffle=False,
+            num_workers=self.objects['num_workers']
+        )
+        return dl
+
+    def test_dataloader(self):
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].get_whole_validation_data_set(),
+            batch_size=self.objects['batch_size'],
+            shuffle=False,
+            num_workers=self.objects['num_workers']
+        )
+        return dl
+
+
 
 
 def configuration():
@@ -108,7 +143,7 @@ def configuration():
     normalize_raw = False
 
     context = 5
-    descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "simple_baseline_{}_{}_{}_{}_{}_{}_{}".format(
         latent_size,
         batch_size,
         learning_rate,
@@ -200,11 +235,11 @@ def configuration():
     }
 
 
-ex = Experiment('dcase2020_task2_baseline')
+ex = Experiment('dcase2020_task2_simple_baseline')
 cfg = ex.config(configuration)
 
 
 @ex.automain
 def run(_config, _run):
-    experiment = BaselineExperiment(_config, _run)
+    experiment = SimpleBaselineExperiment(_config, _run)
     return experiment.run()
