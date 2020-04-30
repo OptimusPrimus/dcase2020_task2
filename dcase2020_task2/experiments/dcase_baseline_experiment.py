@@ -11,7 +11,7 @@ from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 
 
-class SimpleBaselineExperiment(BaseExperiment, pl.LightningModule):
+class DCASEBaseline(BaseExperiment, pl.LightningModule):
     '''
     Reproduction of the DCASE Baseline. It is basically an Auto Encoder, the anomaly score is the reconstruction error.
     '''
@@ -110,8 +110,6 @@ class SimpleBaselineExperiment(BaseExperiment, pl.LightningModule):
         return dl
 
 
-
-
 def configuration():
     seed = 1220
     deterministic = False
@@ -143,7 +141,7 @@ def configuration():
     normalize_raw = False
 
     context = 5
-    descriptor = "simple_baseline_{}_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "dcase_baseline_{}_{}_{}_{}_{}_{}_{}".format(
         latent_size,
         batch_size,
         learning_rate,
@@ -235,11 +233,11 @@ def configuration():
     }
 
 
-ex = Experiment('dcase2020_task2_simple_baseline')
+ex = Experiment('dcase2020_task2_simple_dcase_baseline')
 cfg = ex.config(configuration)
 
 
 @ex.automain
 def run(_config, _run):
-    experiment = SimpleBaselineExperiment(_config, _run)
+    experiment = DCASEBaseline(_config, _run)
     return experiment.run()
