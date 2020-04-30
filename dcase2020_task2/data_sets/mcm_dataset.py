@@ -43,6 +43,7 @@ class MCMDataSet(data_sets.BaseDataSet):
             num_mel=128,
             n_fft=1024,
             hop_size=512,
+            power=2.0,
             normalize='all',
             normalize_raw=True,
             complement='all'
@@ -52,6 +53,7 @@ class MCMDataSet(data_sets.BaseDataSet):
         self.num_mel = num_mel
         self.n_fft = n_fft
         self.hop_size = hop_size
+        self.power = power
         self.complement = complement
 
         self.data_sets = dict()
@@ -68,6 +70,7 @@ class MCMDataSet(data_sets.BaseDataSet):
                         num_mel=self.num_mel,
                         n_fft=self.n_fft,
                         hop_size=self.hop_size,
+                        power=power,
                         normalize=normalize_raw
                     ),
                     MachineDataSet(
@@ -79,6 +82,7 @@ class MCMDataSet(data_sets.BaseDataSet):
                         num_mel=self.num_mel,
                         n_fft=self.n_fft,
                         hop_size=self.hop_size,
+                        power=power,
                         normalize=normalize_raw
                     )
                 )
@@ -269,6 +273,7 @@ class MachineDataSet(torch.utils.data.Dataset):
             num_mel=128,
             n_fft=1024,
             hop_size=512,
+            power=2.0,
             normalize=True
     ):
 
@@ -277,6 +282,7 @@ class MachineDataSet(torch.utils.data.Dataset):
         self.num_mel = num_mel
         self.n_fft = n_fft
         self.hop_size = hop_size
+        self.power = power
         self.normalize=normalize
         self.mode = mode
         self.data_root = data_root
@@ -327,10 +333,11 @@ class MachineDataSet(torch.utils.data.Dataset):
         return data
 
     def __load_data__(self, files):
-        file_name = "{}_{}_{}_{}_{}_{}_{}_{}.npy".format(
+        file_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}.npy".format(
             self.num_mel,
             self.n_fft,
             self.hop_size,
+            self.power,
             self.mode,
             self.context,
             self.machine_type,
@@ -363,7 +370,7 @@ class MachineDataSet(torch.utils.data.Dataset):
             n_fft=self.n_fft,
             hop_length=self.hop_size,
             n_mels=self.num_mel,
-            power=2.0
+            power=self.power
         )
 
         x = 20.0 / 2.0 * np.log10(x + sys.float_info.epsilon)
