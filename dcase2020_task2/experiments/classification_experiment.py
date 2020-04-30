@@ -110,8 +110,6 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    descriptor = None
-
     machine_type = 1
     machine_id = 2
 
@@ -139,6 +137,20 @@ def configuration():
     normalize_raw = False
 
     complement = 'same_type'
+
+    # TODO: change default descriptor
+    descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
+        model_class,
+        reconstruction_class,
+        batch_size,
+        learning_rate,
+        weight_decay,
+        normalize,
+        normalize_raw,
+        rho,
+        feature_context,
+        complement
+    )
 
     ########################
     # detailed configurationSamplingFCAE

@@ -121,12 +121,21 @@ def configuration():
     normalize = 'none'
     normalize_raw = False
 
+    context = 5
+    descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}".format(
+        latent_size,
+        batch_size,
+        learning_rate,
+        weight_decay,
+        normalize,
+        normalize_raw,
+        context
+    )
+
     ########################
     # detailed configuration
     ########################
 
-
-    context = 5
     num_mel = 128
     n_fft = 1024
     hop_size = 512
