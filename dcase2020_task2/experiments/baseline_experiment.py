@@ -29,6 +29,13 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
         self.step = 0
         self.result = None
 
+
+    def forward(self, batch):
+        batch['epoch'] = self.epoch
+        batch = self.network(batch)
+        return batch
+
+
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
 
         if batch_num == 0 and optimizer_idx == 0:
