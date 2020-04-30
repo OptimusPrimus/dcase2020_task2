@@ -356,13 +356,14 @@ class MachineDataSet(torch.utils.data.Dataset):
         if self.normalize:
             x = ((x - x.mean()) / x.std())
 
+        # TODO: Check params
         x = librosa.feature.melspectrogram(
             y=x,
             sr=sr,
             n_fft=self.n_fft,
             hop_length=self.hop_size,
             n_mels=self.num_mel,
-            power=1.0
+            power=2.0
         )
 
         x = 20.0 / 2.0 * np.log10(x + sys.float_info.epsilon)

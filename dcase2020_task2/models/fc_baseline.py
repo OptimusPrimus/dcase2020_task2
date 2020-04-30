@@ -25,21 +25,48 @@ class BaselineFCAE(torch.nn.Module, VAEBase):
         self.reconstruction = reconstruction_loss
 
         self.encoder = torch.nn.Sequential(
-            torch.nn.Linear(np.prod(input_shape), 64),
+            # 1
+            torch.nn.Linear(np.prod(input_shape), 128),
+            torch.nn.BatchNorm1d(128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, 64),
+            # 2
+            torch.nn.Linear(128, 128),
+            torch.nn.BatchNorm1d(128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, prior.latent_size),
+            # 3
+            torch.nn.Linear(128, 128),
+            torch.nn.BatchNorm1d(128),
+            torch.nn.ReLU(True),
+            # 4
+            torch.nn.Linear(128, 128),
+            torch.nn.BatchNorm1d(128),
+            torch.nn.ReLU(True),
+            # bn
+            torch.nn.Linear(128, prior.latent_size),
+            torch.nn.BatchNorm1d(prior.latent_size),
             torch.nn.ReLU(True)
         )
 
         self.decoder = torch.nn.Sequential(
-            torch.nn.Linear(prior.latent_size, 64),
+            # 5
+            torch.nn.Linear(prior.latent_size, 128),
+            torch.nn.BatchNorm1d(128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, 64),
+            # 6
+            torch.nn.Linear(128, 128),
+            torch.nn.BatchNorm1d(128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, np.prod(input_shape))
-        )
+            # 7
+            torch.nn.Linear(128, 128),
+            torch.nn.BatchNorm1d(128),
+            torch.nn.ReLU(True),
+            # 8
+            torch.nn.Linear(128, 128),
+            torch.nn.BatchNorm1d(128),
+            torch.nn.ReLU(True),
+            # out
+            torch.nn.Linear(128, np.prod(input_shape))
+        ),
 
         self.apply(init_weights)
 
