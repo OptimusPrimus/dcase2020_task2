@@ -66,7 +66,7 @@ class BaselineFCAE(torch.nn.Module, VAEBase):
             torch.nn.ReLU(True),
             # out
             torch.nn.Linear(128, np.prod(input_shape))
-        ),
+        )
 
         self.apply(init_weights)
 
