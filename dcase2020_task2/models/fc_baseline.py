@@ -101,17 +101,20 @@ class BaselineFCNN(torch.nn.Module):
         self.reconstruction = reconstruction_loss
 
         self.classifier = torch.nn.Sequential(
-            torch.nn.Linear(np.prod(input_shape), 64),
+            # 1
+            torch.nn.Linear(np.prod(input_shape), 128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, 64),
+            # 2
+            torch.nn.Linear(128, 128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, 64),
+            # 3
+            torch.nn.Linear(128, 128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, 64),
+            # 4
+            torch.nn.Linear(128, 128),
             torch.nn.ReLU(True),
-            torch.nn.Linear(64, 64),
-            torch.nn.ReLU(True),
-            torch.nn.Linear(64, 1)
+            # bn
+            torch.nn.Linear(128, 1)
         )
 
         self.apply(init_weights)

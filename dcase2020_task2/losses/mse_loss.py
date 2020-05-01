@@ -10,13 +10,13 @@ class MSE(ReconstructionBase):
         self.p = p
 
     def loss(self, batch, *args, **kwargs):
-        bce = F.mse_loss(batch['losses'], batch['observations'], reduction='mean')
-        batch['reconstruction_loss'] = self.weight * bce # / (batch['observations'].shape[0])
+        bce = F.mse_loss(batch['predictions'], batch['observations'], reduction='mean')
+        batch['reconstruction_loss'] = self.weight * bce
         return batch['reconstruction_loss']
 
     def forward(self, batch):
 
         batch['visualizations'] = batch['pre_reconstructions']
-        batch['losses'] = batch['pre_reconstructions']
-        batch['scores'] = (batch['losses'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
+        batch['predictions'] = batch['pre_reconstructions']
+        batch['scores'] = (batch['predictions'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
         return batch
