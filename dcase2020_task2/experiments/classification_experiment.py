@@ -131,15 +131,6 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
         self.logger_.close()
         return self.result
 
-    def val_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.objects['data_set'].get_whole_validation_data_set(),
-            batch_size=self.objects['batch_size'],
-            shuffle=False,
-            num_workers=self.objects['num_workers']
-        )
-        return dl
-
 
 def configuration():
     seed = 1220
