@@ -111,8 +111,8 @@ def configuration():
     learning_rate = 1e-3
     weight_decay = 0
 
-    normalize = 'none'
-    normalize_raw = False
+    normalize = 'all'
+    normalize_raw = True
 
     context = 5
     descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}".format(

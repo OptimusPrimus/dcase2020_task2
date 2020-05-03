@@ -9,7 +9,7 @@ import torch.utils.data
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 from datetime import datetime
-
+import numpy as np
 
 class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
 
@@ -21,8 +21,7 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
         self.loss = self.objects['loss']
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
 
-        self.inf_complement_training_iterator = iter(
-            self.get_infinite_data_loader(
+        self.inf_complement_training_iterator = self.get_infinite_data_loader(
                 torch.utils.data.DataLoader(
                     self.data_set.complement_data_set(self.machine_type, self.machine_id),
                     batch_size=self.objects['batch_size'],
@@ -31,7 +30,6 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
                     drop_last=True
                 )
             )
-        )
 
         # experiment state variables
         self.epoch = -1
@@ -47,7 +45,6 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
                         batch[key] = batch[key].to(device)
                 yield batch
 
-
     def forward(self, batch):
         batch['epoch'] = self.epoch
         batch = self.network(batch)
@@ -57,6 +54,41 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
 
         if batch_num == 0 and optimizer_idx == 0:
             self.epoch += 1
+
+            if self.epoch != 0:
+                dl = torch.utils.data.DataLoader(
+                        self.data_set.complement_data_set(self.machine_type, self.machine_id),
+                        batch_size=self.objects['batch_size'],
+                        shuffle=False,
+                        num_workers=self.objects['num_workers'],
+                        drop_last=False
+                    )
+
+                scores = []
+
+                with torch.set_grad_enabled(False):
+                    self.network.eval()
+                    device = next(iter(self.network.parameters())).device
+                    for batch in dl:
+                        for key in batch:
+                            if type(batch[key]) is torch.Tensor:
+                                batch[key] = batch[key].to(device)
+                        scores.append(self(batch)['scores'].detach().cpu().numpy())
+                    self.network.train()
+
+                scores = np.concatenate(scores).reshape(-1)
+                indices = np.argpartition(scores, len(self.train_dataloader()) * self.objects['batch_size'])[: len(self.train_dataloader()) * self.objects['batch_size']]
+
+                self.inf_complement_training_iterator = self.get_infinite_data_loader(
+                    torch.utils.data.DataLoader(
+                        self.data_set.complement_data_set(self.machine_type, self.machine_id),
+                        sampler=torch.utils.data.SubsetRandomSampler(indices),
+                        batch_size=self.objects['batch_size'],
+                        shuffle=False,
+                        num_workers=self.objects['num_workers'],
+                        drop_last=True
+                    )
+                )
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
@@ -99,6 +131,15 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
         self.logger_.close()
         return self.result
 
+    def val_dataloader(self):
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].get_whole_validation_data_set(),
+            batch_size=self.objects['batch_size'],
+            shuffle=False,
+            num_workers=self.objects['num_workers']
+        )
+        return dl
+
 
 def configuration():
     seed = 1220
@@ -134,7 +175,7 @@ def configuration():
     model_class = 'models.BaselineFCNN'
 
     normalize = 'all'
-    normalize_raw = False
+    normalize_raw = True
 
     complement = 'all'
 
@@ -236,6 +277,8 @@ def configuration():
             'progress_bar_refresh_rate': 1000
         }
     }
+
+
 
 
 ex = Experiment('dcase2020_task2_classification')

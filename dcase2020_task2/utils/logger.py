@@ -7,7 +7,9 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 import PIL
 from sklearn import metrics
-from  data_sets.mcm_dataset import TRAINING_ID_MAP
+from data_sets.mcm_dataset import TRAINING_ID_MAP
+import matplotlib.pyplot as plt
+
 PIL.PILLOW_VERSION = PIL.__version__
 import torchvision
 
@@ -30,6 +32,8 @@ class Logger:
         with open(file, 'wb') as config_dictionary_file:
             pickle.dump(config, config_dictionary_file)
 
+        self.file_indices = dict()
+
     def log_training_step(self, batch, step):
         if step % 100 == 0:
             for key in batch:
@@ -48,9 +52,31 @@ class Logger:
             return None
 
         scores_mean, _, _, _, _ = self.__batches_to_per_file_scores__(outputs, aggregation_fun=np.mean)
-        scores_max, ground_truth, file_id, machine_types, machine_ids = self.__batches_to_per_file_scores__(outputs, aggregation_fun=np.max)
+        scores_max, ground_truth, file_id, machine_types, machine_ids = self.__batches_to_per_file_scores__(outputs,
+                                                                                                            aggregation_fun=np.max)
 
         # select samples with matching machine_types and machine ids only
+        plt.ioff()
+        plt.figure(figsize=(24, 20))
+
+        bins = np.linspace(scores_mean.min(), scores_mean.max(), 50)
+
+        for i, typ in enumerate(np.arange(6)):
+            for j, id in enumerate(TRAINING_ID_MAP[typ]):
+                plt.subplot(6, 4, ((i*4) + j)+1)
+
+                x_normal = scores_mean[np.logical_and(ground_truth == 0, np.logical_and(machine_ids == id, machine_types == typ))]
+                x_abnormal = scores_mean[np.logical_and(ground_truth == 1, np.logical_and(machine_ids == id, machine_types == typ))]
+
+                plt.hist(x_normal, bins, alpha=0.5, label='normal')
+                plt.hist(x_abnormal, bins, alpha=0.5, label='abnormal')
+
+                if i == 0 and j == 0:
+                    plt.legend(loc='upper right')
+
+
+        plt.savefig(os.path.join(self.log_dir, 'score_distribution_{}.png'.format(epoch)), bbox_inches='tight')
+        plt.close()
 
         auroc_mean = []
         pauroc_mean = []
@@ -72,7 +98,6 @@ class Logger:
                 self.__log_metric__('validation_pauroc_mean{}'.format(id if all_ids else ""), pauroc_mean[-1], step)
                 self.__log_metric__('validation_auroc_max{}'.format(id if all_ids else ""), auroc_max[-1], step)
                 self.__log_metric__('validation_pauroc_max{}'.format(id if all_ids else ""), pauroc_max[-1], step)
-
 
         return {
             'auroc_mean': float(np.mean(auroc_mean)),
@@ -96,13 +121,29 @@ class Logger:
         # compute per file aggregated targets and scores
         files = np.unique(np.stack([targets, file_ids, machine_types, machine_ids], axis=1), axis=0)
 
+        # pre compute indices to speed up validation
+        if self.file_indices.get(len(predictions)) is None:
+            self.file_indices[len(predictions)] = dict()
+            for target, file_id, mty, mid in files:
+                id = "{}_{}_{}_{}".format(target, file_id, mty, mid)
+                self.file_indices[len(predictions)][id] = np.where(
+                    np.logical_and(
+                        targets == target,
+                        np.logical_and(
+                            file_ids == file_id,
+                            np.logical_and(
+                                machine_types == mty,
+                                machine_ids == mid
+                            )
+                        )
+                    )
+                )
+                assert len(self.file_indices[len(predictions)][id][0]) > 200
+                assert len(self.file_indices[len(predictions)][id][0]) < 400
+
         scores = np.array([
             aggregation_fun(
-                predictions[
-                    np.logical_and(targets == target,
-                        np.logical_and(file_ids == file_id,
-                                   np.logical_and(machine_types == mty, machine_ids == mid)))
-                ]
+                predictions[self.file_indices[len(predictions)]["{}_{}_{}_{}".format(target, file_id, mty, mid)]]
             )
             for target, file_id, mty, mid in files
         ])
