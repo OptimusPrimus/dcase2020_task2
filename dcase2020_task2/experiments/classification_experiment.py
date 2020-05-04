@@ -41,11 +41,12 @@ class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
 
     def get_inf_data_loader(self, dl):
         device = next(iter(self.network.parameters())).device
-        for batch in iter(dl):
-            for key in batch:
-                if type(batch[key]) is torch.Tensor:
-                    batch[key] = batch[key].to(device)
-            yield batch
+        while True:
+            for batch in iter(dl):
+                for key in batch:
+                    if type(batch[key]) is torch.Tensor:
+                        batch[key] = batch[key].to(device)
+                yield batch
 
     def forward(self, batch):
         batch['epoch'] = self.epoch
