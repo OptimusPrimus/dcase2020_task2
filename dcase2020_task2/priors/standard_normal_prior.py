@@ -25,7 +25,7 @@ class StandardNormalPrior(PriorBase):
 
     def loss(self, batch):
         batch['klds'] = -0.5 * (1 + batch['logvars'] - batch['mus'].pow(2) - batch['logvars'].exp())
-        batch['prior_loss'] = batch['klds'].sum(1).mean(0)
+        batch['prior_loss'] = batch['klds'].sum()
         return self.weight_anneal(batch)
 
     @property

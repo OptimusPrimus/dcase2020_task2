@@ -46,6 +46,14 @@ class Logger:
                 elif type(batch[key]) == torch.Tensor and batch[key].ndim == 1 and batch[key].shape[0] == 1:
                     self.__log_metric__(key, batch[key].item(), step)
 
+    def log_reconstruction(self, batch, epoch):
+        for i, (observation, reconstructed) in enumerate(zip(batch['observations'], batch['predictions'])):
+            if i == 10:
+                break
+            self.__log_image__(observation, '{}_{}_image_x.png'.format(epoch, i))
+            self.__log_image__(reconstructed, '{}_{}_image_xhat.png'.format(epoch, i))
+
+
     def log_validation(self, outputs, step, epoch, all_ids=False):
 
         if epoch == -1:
@@ -63,17 +71,18 @@ class Logger:
 
         for i, typ in enumerate(np.arange(6)):
             for j, id in enumerate(TRAINING_ID_MAP[typ]):
-                plt.subplot(6, 4, ((i*4) + j)+1)
+                plt.subplot(6, 4, ((i * 4) + j) + 1)
 
-                x_normal = scores_mean[np.logical_and(ground_truth == 0, np.logical_and(machine_ids == id, machine_types == typ))]
-                x_abnormal = scores_mean[np.logical_and(ground_truth == 1, np.logical_and(machine_ids == id, machine_types == typ))]
+                x_normal = scores_mean[
+                    np.logical_and(ground_truth == 0, np.logical_and(machine_ids == id, machine_types == typ))]
+                x_abnormal = scores_mean[
+                    np.logical_and(ground_truth == 1, np.logical_and(machine_ids == id, machine_types == typ))]
 
                 plt.hist(x_normal, bins, alpha=0.5, label='normal')
                 plt.hist(x_abnormal, bins, alpha=0.5, label='abnormal')
 
                 if i == 0 and j == 0:
                     plt.legend(loc='upper right')
-
 
         plt.savefig(os.path.join(self.log_dir, 'score_distribution_{}.png'.format(epoch)), bbox_inches='tight')
         plt.close()
@@ -105,6 +114,27 @@ class Logger:
             'auroc_max': float(np.mean(auroc_max)),
             'pauroc_max': float(np.mean(pauroc_max))
         }
+
+    def log_vae_validation(self, outputs, step, epoch):
+
+        if epoch == -1:
+            return None
+
+        errors = np.concatenate([o['scores'].detach().cpu().numpy() for o in outputs])
+        machine_types = np.concatenate([o['machine_types'].detach().cpu().numpy() for o in outputs])
+        machine_ids = np.concatenate([o['machine_ids'].detach().cpu().numpy() for o in outputs])
+
+        for ty in range(6):
+            for id in TRAINING_ID_MAP[ty]:
+                idxs = np.logical_and(machine_types == ty, machine_ids == id)
+                if np.any(idxs):
+                    self.__log_metric__(
+                        'validation_reconstruction_error_{}_{}'.format(id, ty),
+                        np.mean(errors[idxs]),
+                        step
+                    )
+
+        self.__log_metric__('validation_reconstruction_error', np.mean(errors), step)
 
     def log_testing(self, outputs, all_ids=False):
         return self.log_validation(outputs, 0, -2, all_ids=all_ids)

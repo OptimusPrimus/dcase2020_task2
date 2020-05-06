@@ -27,7 +27,7 @@ class SamplingFCAE(torch.nn.Module, VAEBase):
             torch.nn.ReLU(True),
             torch.nn.Linear(512, 512),
             torch.nn.ReLU(True),
-            torch.nn.Linear(512, prior.latent_size),
+            torch.nn.Linear(512, prior.input_size),
         )
 
         self.decoder = torch.nn.Sequential(

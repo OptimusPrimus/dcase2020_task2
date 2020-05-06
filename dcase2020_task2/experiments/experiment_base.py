@@ -93,4 +93,5 @@ class BaseExperiment(ABC, torch.nn.Module):
     def run(self):
         self.trainer.fit(self)
         self.trainer.test(self)
+        self.trainer.save_checkpoint(os.path.join(self.objects['log_path'], "model.ckpt"))
         return self.result

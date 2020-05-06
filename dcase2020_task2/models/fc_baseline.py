@@ -42,8 +42,8 @@ class BaselineFCAE(torch.nn.Module, VAEBase):
             torch.nn.BatchNorm1d(128),
             torch.nn.ReLU(True),
             # bn
-            torch.nn.Linear(128, prior.latent_size),
-            torch.nn.BatchNorm1d(prior.latent_size),
+            torch.nn.Linear(128, prior.input_size),
+            torch.nn.BatchNorm1d(prior.input_size),
             torch.nn.ReLU(True)
         )
 
