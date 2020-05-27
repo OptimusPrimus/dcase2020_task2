@@ -1,11 +1,11 @@
-from experiments import BaseExperiment
+from dcase2020_task2.experiments import BaseExperiment
+from dcase2020_task2.utils.logger import Logger
 from datetime import datetime
 import os
 import pytorch_lightning as pl
-import torch
 from sacred import Experiment
-from utils.logger import Logger
-import torch.utils.data
+
+
 # workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
@@ -134,7 +134,7 @@ def configuration():
     hop_size = 512
 
     prior = {
-        'class': 'priors.NoPrior',
+        'class': 'dcase2020_task2.priors.NoPrior',
         'kwargs': {
             'latent_size': latent_size,
             'weight': 1.0
@@ -142,7 +142,7 @@ def configuration():
     }
 
     data_set = {
-        'class': 'data_sets.MCMDataSet',
+        'class': 'dcase2020_task2.data_sets.MCMDataSet',
         'kwargs': {
             'context': context,
             'num_mel': num_mel,
@@ -154,7 +154,7 @@ def configuration():
     }
 
     reconstruction = {
-        'class': 'losses.MSE',
+        'class': 'dcase2020_task2.losses.MSE',
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@data_set.observation_shape'
@@ -162,7 +162,7 @@ def configuration():
     }
 
     auto_encoder_model = {
-        'class': 'models.BaselineFCAE',
+        'class': 'dcase2020_task2.models.BaselineFCAE',
         'args': [
             '@data_set.observation_shape',
             '@reconstruction',
@@ -194,7 +194,7 @@ def configuration():
     }
 
     trainer = {
-        'class': 'trainers.PTLTrainer',
+        'class': 'dcase2020_task2.trainers.PTLTrainer',
         'kwargs': {
             'max_epochs': epochs,
             'checkpoint_callback': False,

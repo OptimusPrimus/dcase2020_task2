@@ -1,7 +1,7 @@
 import os
 import torch.utils.data
 import glob
-import data_sets
+from dcase2020_task2.data_sets import BaseDataSet
 import librosa
 import sys
 import numpy as np
@@ -34,7 +34,7 @@ INVERSE_CLASS_MAP = {
     5: 'valve'
 }
 
-class MCMDataSet(data_sets.BaseDataSet):
+class MCMDataSet(BaseDataSet):
 
     def __init__(
             self,

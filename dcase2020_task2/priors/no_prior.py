@@ -1,4 +1,4 @@
-from priors import PriorBase
+from dcase2020_task2.priors import PriorBase
 import torch.nn
 
 

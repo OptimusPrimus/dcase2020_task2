@@ -1,7 +1,7 @@
 import os
 import pickle
 import copy
-import experiments
+import dcase2020_task2.experiments
 import torch
 
 

@@ -1,6 +1,6 @@
 from typing import NoReturn
-from trainers import BaseTrainer
-from experiments import BaseExperiment
+from dcase2020_task2.trainers import BaseTrainer
+from dcase2020_task2.experiments import BaseExperiment
 import pytorch_lightning as pl
 
 

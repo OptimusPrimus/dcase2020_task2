@@ -1,2 +1,2 @@
-from trainers.base_trainer import BaseTrainer
-from trainers.ptl_trainer import PTLTrainer
+from dcase2020_task2.trainers.base_trainer import BaseTrainer
+from dcase2020_task2.trainers.ptl_trainer import PTLTrainer

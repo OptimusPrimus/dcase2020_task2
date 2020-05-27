@@ -1,6 +1,6 @@
 from typing import Union, Sequence, Dict, NoReturn
 from abc import ABC, abstractmethod
-from experiments import BaseExperiment
+from dcase2020_task2.experiments import BaseExperiment
 
 
 class BaseTrainer(ABC):

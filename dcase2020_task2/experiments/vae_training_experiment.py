@@ -1,10 +1,11 @@
-from experiments import BaseExperiment
+from dcase2020_task2.experiments import BaseExperiment
+from dcase2020_task2.utils.logger import Logger
+
 from datetime import datetime
 import os
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from utils.logger import Logger
 import torch.utils.data
 # workaround...
 from sacred import SETTINGS

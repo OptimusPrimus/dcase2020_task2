@@ -7,7 +7,7 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 import PIL
 from sklearn import metrics
-from data_sets.mcm_dataset import TRAINING_ID_MAP
+from dcase2020_task2.data_sets.mcm_dataset import TRAINING_ID_MAP
 import matplotlib.pyplot as plt
 
 PIL.PILLOW_VERSION = PIL.__version__
@@ -103,10 +103,10 @@ class Logger:
             pauroc_max.append(metrics.roc_auc_score(ground_truth_, scores_max_, max_fpr=0.1))
 
             if epoch != -2:
-                self.__log_metric__('validation_auroc_mean{}'.format(id if all_ids else ""), auroc_mean[-1], step)
-                self.__log_metric__('validation_pauroc_mean{}'.format(id if all_ids else ""), pauroc_mean[-1], step)
-                self.__log_metric__('validation_auroc_max{}'.format(id if all_ids else ""), auroc_max[-1], step)
-                self.__log_metric__('validation_pauroc_max{}'.format(id if all_ids else ""), pauroc_max[-1], step)
+                self.__log_metric__('validation_auroc_mean_{}'.format(id if all_ids else ""), auroc_mean[-1], step)
+                self.__log_metric__('validation_pauroc_mean_{}'.format(id if all_ids else ""), pauroc_mean[-1], step)
+                self.__log_metric__('validation_auroc_max_{}'.format(id if all_ids else ""), auroc_max[-1], step)
+                self.__log_metric__('validation_pauroc_max_{}'.format(id if all_ids else ""), pauroc_max[-1], step)
 
         return {
             'auroc_mean': float(np.mean(auroc_mean)),
@@ -139,6 +139,7 @@ class Logger:
     def log_testing(self, outputs, all_ids=False):
         return self.log_validation(outputs, 0, -2, all_ids=all_ids)
 
+
     def __batches_to_per_file_scores__(self, outputs, aggregation_fun=np.mean):
 
         # extract targets, scores and file_ids fom batches
@@ -148,37 +149,15 @@ class Logger:
         machine_types = np.concatenate([o['machine_types'].detach().cpu().numpy() for o in outputs])
         machine_ids = np.concatenate([o['machine_ids'].detach().cpu().numpy() for o in outputs])
 
-        # compute per file aggregated targets and scores
-        files = np.unique(np.stack([targets, file_ids, machine_types, machine_ids], axis=1), axis=0)
+        unique_files = np.unique(file_ids)
 
-        # pre compute indices to speed up validation
-        if self.file_indices.get(len(predictions)) is None:
-            self.file_indices[len(predictions)] = dict()
-            for target, file_id, mty, mid in files:
-                id = "{}_{}_{}_{}".format(target, file_id, mty, mid)
-                self.file_indices[len(predictions)][id] = np.where(
-                    np.logical_and(
-                        targets == target,
-                        np.logical_and(
-                            file_ids == file_id,
-                            np.logical_and(
-                                machine_types == mty,
-                                machine_ids == mid
-                            )
-                        )
-                    )
-                )
-                assert len(self.file_indices[len(predictions)][id][0]) > 200
-                assert len(self.file_indices[len(predictions)][id][0]) < 400
+        ground_truth = np.array([targets[file_ids == f][0] for f in unique_files])
+        scores = np.array([aggregation_fun(predictions[file_ids == f]) for f in unique_files])
+        machine_types = np.array([machine_types[file_ids == f] for f in unique_files])
+        machine_id = np.array([machine_ids[file_ids == f] for f in unique_files])
 
-        scores = np.array([
-            aggregation_fun(
-                predictions[self.file_indices[len(predictions)]["{}_{}_{}_{}".format(target, file_id, mty, mid)]]
-            )
-            for target, file_id, mty, mid in files
-        ])
+        return scores, ground_truth, unique_files, machine_types, machine_id
 
-        return scores, files[:, 0], files[:, 1], files[:, 2], files[:, 3]
 
     def __log_metric__(self, name, value, step):
 

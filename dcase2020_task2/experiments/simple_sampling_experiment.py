@@ -1,8 +1,8 @@
-from experiments import BaseExperiment
+from dcase2020_task2.experiments import BaseExperiment
 import pytorch_lightning as pl
 import torch
 from sacred import Experiment
-from utils.logger import Logger
+from dcase2020_task2.utils.logger import Logger
 import os
 import torch.utils.data
 # workaround...

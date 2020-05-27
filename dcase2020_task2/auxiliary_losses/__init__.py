@@ -1,2 +1,0 @@
-from auxiliary_losses.auxiliary_loss_base import AuxiliaryLossBase
-from auxiliary_losses.factor_vae import FactorVAE

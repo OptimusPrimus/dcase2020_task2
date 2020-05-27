@@ -1,5 +1,5 @@
 import torch.nn
-from models import VAEBase
+from dcase2020_task2.models import VAEBase
 import numpy as np
 import torch
 

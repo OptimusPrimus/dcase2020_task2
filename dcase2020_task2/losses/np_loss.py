@@ -1,4 +1,4 @@
-from losses import ReconstructionBase
+from dcase2020_task2.losses import ReconstructionBase
 import torch
 
 

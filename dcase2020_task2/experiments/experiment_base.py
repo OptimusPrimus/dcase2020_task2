@@ -1,7 +1,7 @@
 from typing import NoReturn
 from abc import ABC, abstractmethod
 import torch
-from experiments.parser import create_objects_from_config
+from dcase2020_task2.experiments.parser import create_objects_from_config
 import copy
 import os
 
