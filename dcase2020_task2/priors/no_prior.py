@@ -4,17 +4,19 @@ import torch.nn
 
 class NoPrior(PriorBase):
 
-    def __init__(self, weight=1.0, input_size=256, latent_size=32, c_max=0.0, c_stop_epoch=-1, **kwargs):
-        super().__init__(weight=weight, c_max=c_max, c_stop_epoch=c_stop_epoch)
+    def __init__(self, latent_size=256, **kwargs):
+        super().__init__()
         self.latent_size_ = latent_size
 
     def forward(self, batch):
+        """ No modification """
         batch['codes'] = batch['pre_codes']
         return batch
 
     def loss(self, batch):
+        """ Zero Loss """
         batch['prior_loss'] = torch.tensor(0)
-        return self.weight_anneal(batch)
+        return batch['prior_loss']
 
     @property
     def latent_size(self):

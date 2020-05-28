@@ -4,34 +4,27 @@ import torch
 
 class PriorBase(ABC, torch.nn.Module):
 
-    def __init__(self, weight=1.0, c_max=0.0, c_stop_epoch=-1):
+    def __init__(self):
         super().__init__()
-        self.weight = weight
-        self.c_max = c_max
-        self.c_stop_epoch = c_stop_epoch
 
     @property
     @abstractmethod
     def input_size(self):
+        """ number of activations that go into the prior, e.g. 2 * latent_size for Gaussian prior """
         raise NotImplementedError
 
     @property
     @abstractmethod
     def latent_size(self):
+        """ number latent dimensions """
         raise NotImplementedError
 
     @abstractmethod
     def loss(self, batch):
+        """ prior loss """
         raise NotImplementedError
 
     @abstractmethod
     def forward(self, pre_prior):
+        """ sampling, etc, ... """
         raise NotImplementedError
-
-    def weight_anneal(self, batch):
-        if batch.get('epoch'):
-            batch['c'] = self.c_max if batch['epoch'] > self.c_stop_epoch else (self.c_max / self.c_stop_epoch) * batch['epoch']
-        else:
-            batch['c'] = 0.0
-        batch['prior_loss'] = self.weight * (batch['prior_loss'] - batch['c']).abs()
-        return batch['prior_loss']

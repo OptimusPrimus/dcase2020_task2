@@ -1,30 +1,40 @@
-from dcase2020_task2.losses import ReconstructionBase
+from dcase2020_task2.losses import BaseReconstruction, BaseLoss
 import torch
 import torch.nn.functional as F
 
 
-class BCE(ReconstructionBase):
+class BCE(BaseLoss):
 
-    def __init__(self, weight=1.0, rho=0.2, **kwargs):
-        super().__init__(weight=weight)
-        self.rho = rho
+    def __init__(self, weight=1.0, **kwargs):
 
-    def loss(self, batch_normal, batch_abnormal, *args, **kwargs):
+        super().__init__()
+        self.weight = weight
+
+    def forward(self, batch_normal, batch_abnormal):
+
+        assert batch_normal.get('scores'), "cannot compute loss without scores"
+        assert batch_abnormal.get('scores'), "cannot compute loss without scores"
+
         normal_scores = batch_normal['scores']
         abnormal_scores = batch_abnormal['scores']
 
-        batch_normal['normal_scores'] = normal_scores.mean()
-        batch_normal['abnormal_scores'] = abnormal_scores.mean()
+        abnormal_loss = F.binary_cross_entropy_with_logits(
+            abnormal_scores,
+            torch.ones_like(abnormal_scores).to(abnormal_scores.device)
+        )
 
-        abnormal_loss = torch.nn.functional.binary_cross_entropy_with_logits(abnormal_scores, torch.ones_like(abnormal_scores).to(abnormal_scores.device))
-        normal_loss = torch.nn.functional.binary_cross_entropy_with_logits(normal_scores, torch.zeros_like(normal_scores).to(normal_scores.device))
+        normal_loss = F.binary_cross_entropy_with_logits(
+            normal_scores,
+            torch.zeros_like(normal_scores).to(normal_scores.device)
+        )
 
-        batch_normal['reconstruction_loss'] = self.weight * (abnormal_loss + normal_loss)
+        batch_normal['loss_raw'] = 0.5 * (abnormal_loss + normal_loss)
+        batch_normal['loss'] = self.weight * batch_normal['loss_raw']
 
-        return batch_normal['reconstruction_loss']
+        # log some stuff...
+        batch_normal['normal_scores_mean'] = normal_scores.mean()
+        batch_normal['normal_scores_std'] = normal_scores.std()
+        batch_normal['abnormal_scores_mean'] = abnormal_scores.mean()
+        batch_normal['abnormal_scores_std'] = normal_scores.std()
 
-    def forward(self, batch):
-        batch['visualizations'] = batch['pre_reconstructions']
-        batch['losses'] = batch['pre_reconstructions']
-        batch['scores'] = (batch['losses'] - batch['observations']).pow(2).mean(axis=(1, 2, 3))
-        return batch
+        return batch_normal

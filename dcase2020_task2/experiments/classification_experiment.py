@@ -12,7 +12,7 @@ SETTINGS['CAPTURE_MODE'] = 'sys'
 from datetime import datetime
 
 
-class ClassifiactionExperiment(BaseExperiment, pl.LightningModule):
+class ClassificationExperiment(BaseExperiment, pl.LightningModule):
 
     def __init__(self, configuration_dict, _run):
         super().__init__(configuration_dict)
@@ -138,7 +138,7 @@ def configuration():
     complement = 'all'
 
     # TODO: change default descriptor
-    descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "ClassificationExperiment_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
         model_class,
         loss_class,
         batch_size,
@@ -237,11 +237,11 @@ def configuration():
     }
 
 
-ex = Experiment('dcase2020_task2_classification')
+ex = Experiment('dcase2020_task2_ClassificationExperiment')
 cfg = ex.config(configuration)
 
 
 @ex.automain
 def run(_config, _run):
-    experiment = ClassifiactionExperiment(_config, _run)
+    experiment = ClassificationExperiment(_config, _run)
     return experiment.run()

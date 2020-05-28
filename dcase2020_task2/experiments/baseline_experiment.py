@@ -5,15 +5,14 @@ import os
 import pytorch_lightning as pl
 from sacred import Experiment
 
-
-# workaround...
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 
 
 class BaselineExperiment(BaseExperiment, pl.LightningModule):
+
     '''
-    Reproduction of the DCASE Baseline. It is basically an Auto Encoder, the anomaly score is the reconstruction error.
+    DCASE Baseline with AE per machine ID.
     '''
 
     def __init__(self, configuration_dict, _run):
@@ -115,7 +114,7 @@ def configuration():
     normalize_raw = True
 
     context = 5
-    descriptor = "baseline_{}_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "BaselineExperiment_{}_{}_{}_{}_{}_{}_{}".format(
         latent_size,
         batch_size,
         learning_rate,
@@ -207,7 +206,7 @@ def configuration():
     }
 
 
-ex = Experiment('dcase2020_task2_baseline')
+ex = Experiment('dcase2020_task2_BaselineExperiment')
 cfg = ex.config(configuration)
 
 

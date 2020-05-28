@@ -10,8 +10,7 @@ import torch.utils.data
 from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 
-
-class DCASEBaseline(BaseExperiment, pl.LightningModule):
+class BaselineDCASEExperiment(BaseExperiment, pl.LightningModule):
     '''
     Reproduction of the DCASE Baseline. It is basically an Auto Encoder, the anomaly score is the reconstruction error.
     '''
@@ -141,7 +140,7 @@ def configuration():
     normalize_raw = False
 
     context = 5
-    descriptor = "dcase_baseline_{}_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "BaselineDCASEExperiment_{}_{}_{}_{}_{}_{}_{}".format(
         latent_size,
         batch_size,
         learning_rate,
@@ -233,11 +232,11 @@ def configuration():
     }
 
 
-ex = Experiment('dcase2020_task2_simple_dcase_baseline')
+ex = Experiment('dcase2020_task2_BaselineDCASEExperiment')
 cfg = ex.config(configuration)
 
 
 @ex.automain
 def run(_config, _run):
-    experiment = DCASEBaseline(_config, _run)
+    experiment = BaselineDCASEExperiment(_config, _run)
     return experiment.run()
