@@ -1,7 +1,6 @@
 from dcase2020_task2.priors import PriorBase
 import torch.nn
 
-
 class StandardNormalPrior(PriorBase):
 
     def __init__(
@@ -24,8 +23,14 @@ class StandardNormalPrior(PriorBase):
 
         batch['codes'] = batch['mus'] + batch['eps'] * batch['stds']
 
-        batch['prior_loss_raw'] = (-0.5 * (1 + batch['logvars'] - batch['mus'].pow(2) - batch['logvars'].exp())).sum
+        batch['prior_loss_raw'] = (-0.5 * (1 + batch['logvars'] - batch['mus'].pow(2) - batch['logvars'].exp())).sum()
         batch['prior_loss'] = self.weight * batch['prior_loss_raw']
+
+        # log some stuff...
+        batch['mean_mus'] = batch['mus'].mean()
+        batch['std_mus'] = batch['mus'].std()
+        batch['mean_logvar'] = batch['logvars'].mean()
+        batch['std_logvar'] = batch['logvars'].std()
 
         return batch
 

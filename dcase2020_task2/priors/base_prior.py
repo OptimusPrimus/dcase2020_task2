@@ -19,10 +19,6 @@ class PriorBase(ABC, torch.nn.Module):
         """ number latent dimensions """
         raise NotImplementedError
 
-    @abstractmethod
-    def loss(self, batch):
-        """ prior loss """
-        raise NotImplementedError
 
     @abstractmethod
     def forward(self, pre_prior):

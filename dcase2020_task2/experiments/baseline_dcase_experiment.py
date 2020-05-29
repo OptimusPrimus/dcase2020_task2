@@ -40,15 +40,11 @@ class BaselineDCASEExperiment(BaseExperiment, pl.LightningModule):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-            reconstruction_loss = self.reconstruction.loss(batch_normal)
-            prior_loss = self.prior.loss(batch_normal)
-
-            batch_normal['reconstruction_loss'] = reconstruction_loss
-            batch_normal['prior_loss'] = prior_loss
-            batch_normal['loss'] = reconstruction_loss + prior_loss
+            batch_normal['loss'] = batch_normal['reconstruction_loss'] + batch_normal['prior_loss']
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
+
         else:
             raise AttributeError
 
@@ -64,19 +60,18 @@ class BaselineDCASEExperiment(BaseExperiment, pl.LightningModule):
             'scores': batch['scores'],
             'machine_types': batch['machine_types'],
             'machine_ids': batch['machine_ids'],
-            'part_numbers': batch['part_numbers'],
             'file_ids': batch['file_ids']
         }
 
     def validation_end(self, outputs):
-        self.logger_.log_validation(outputs, self.step, self.epoch, all_ids=True)
+        self.logger_.log_validation(outputs, self.step, self.epoch)
         return {}
 
     def test_step(self, batch, batch_num):
         return self.validation_step(batch, batch_num)
 
     def test_end(self, outputs):
-        self.result = self.logger_.log_testing(outputs, all_ids=True)
+        self.result = self.logger_.log_test(outputs)
         self.logger_.close()
         return self.result
 
@@ -95,25 +90,16 @@ class BaselineDCASEExperiment(BaseExperiment, pl.LightningModule):
             self.objects['data_set'].get_machine_validation_data_set(self.machine_type),
             batch_size=self.objects['batch_size'],
             shuffle=False,
-            num_workers=self.objects['num_workers']
+            num_workers=self.objects['num_workers'],
+            drop_last=False
         )
         return dl
-
-    def test_dataloader(self):
-        dl = torch.utils.data.DataLoader(
-            self.objects['data_set'].get_whole_validation_data_set(),
-            batch_size=self.objects['batch_size'],
-            shuffle=False,
-            num_workers=self.objects['num_workers']
-        )
-        return dl
-
 
 def configuration():
     seed = 1220
     deterministic = False
     id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S:%f")
-    log_path = os.path.join('..', 'experiment_logs', id)
+    log_path = os.path.join('experiment_logs', id)
 
     #####################
     # quick configuration, uses default parameters of more detailed configuration
@@ -179,7 +165,7 @@ def configuration():
     }
 
     reconstruction = {
-        'class': 'dcase2020_task2.losses.MSE',
+        'class': 'dcase2020_task2.losses.MSEReconstruction',
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@data_set.observation_shape'

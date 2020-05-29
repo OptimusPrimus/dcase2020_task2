@@ -42,12 +42,7 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-            reconstruction_loss = self.reconstruction.loss(batch_normal)
-            prior_loss = self.prior.loss(batch_normal)
-
-            batch_normal['reconstruction_loss'] = reconstruction_loss
-            batch_normal['prior_loss'] = prior_loss
-            batch_normal['loss'] = reconstruction_loss + prior_loss
+            batch_normal['loss'] = batch_normal['reconstruction_loss'] + batch_normal['prior_loss']
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
@@ -66,7 +61,6 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
             'scores': batch['scores'],
             'machine_types': batch['machine_types'],
             'machine_ids': batch['machine_ids'],
-            'part_numbers': batch['part_numbers'],
             'file_ids': batch['file_ids']
         }
 
@@ -78,7 +72,7 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
         return self.validation_step(batch, batch_num)
 
     def test_end(self, outputs):
-        self.result = self.logger_.log_testing(outputs)
+        self.result = self.logger_.log_test(outputs)
         self.logger_.close()
         return self.result
 
@@ -153,7 +147,7 @@ def configuration():
     }
 
     reconstruction = {
-        'class': 'dcase2020_task2.losses.MSE',
+        'class': 'dcase2020_task2.losses.MSEReconstruction',
         'kwargs': {
             'weight': 1.0,
             'input_shape': '@data_set.observation_shape'

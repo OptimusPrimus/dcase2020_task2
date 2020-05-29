@@ -15,18 +15,15 @@ class MSEReconstruction(BaseReconstruction):
         batch['visualizations'] = batch['pre_reconstructions']
 
         # prepare observations and prediction based on loss type:
-        # use linear outputs
+        # use linear outputs & normalized observations as is
         batch['predictions'] = batch['pre_reconstructions']
-        # use normalized observations as is
-        batch['targets'] = batch['observations']
 
         # scores
         batch['scores'] = F.mse_loss(
             batch['predictions'],
-            batch['targets'],
+            batch['observations'],
             reduction='none'
-        ).view(len(batch), -1).mean(1)
-        assert len(batch) == len(batch['targets'])
+        ).view(len(batch['predictions']), -1).mean(1)
 
         # loss
         batch['reconstruction_loss_raw'] = batch[f'scores'].mean() if self.size_average else batch[f'scores'].sum()

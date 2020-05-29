@@ -7,8 +7,9 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 import PIL
 from sklearn import metrics
-from dcase2020_task2.data_sets.mcm_dataset import TRAINING_ID_MAP
+from dcase2020_task2.data_sets.mcm_dataset import TRAINING_ID_MAP, INVERSE_CLASS_MAP, CLASS_MAP
 import matplotlib.pyplot as plt
+import pandas as pd
 
 PIL.PILLOW_VERSION = PIL.__version__
 import torchvision
@@ -28,7 +29,7 @@ class Logger:
         self.machine_id = self.objects['machine_id']
 
         # self.writer = SummaryWriter(log_dir=self.log_dir)
-        file = os.path.join(config['log_path'], 'conf.py')
+        file = os.path.join(config['log_path'], 'conf.pl')
         with open(file, 'wb') as config_dictionary_file:
             pickle.dump(config, config_dictionary_file)
 
@@ -46,37 +47,130 @@ class Logger:
                 elif type(batch[key]) == torch.Tensor and batch[key].ndim == 1 and batch[key].shape[0] == 1:
                     self.__log_metric__(key, batch[key].item(), step)
 
-    def log_reconstruction(self, batch, epoch):
-        for i, (observation, reconstructed) in enumerate(zip(batch['observations'], batch['predictions'])):
-            if i == 10:
-                break
-            self.__log_image__(observation, '{}_{}_image_x.png'.format(epoch, i))
-            self.__log_image__(reconstructed, '{}_{}_image_xhat.png'.format(epoch, i))
-
-
-    def log_validation(self, outputs, step, epoch, all_ids=False):
+    def log_validation(self, outputs, step, epoch):
 
         if epoch == -1:
-            return None
+            return dict()
 
-        scores_mean, _, _, _, _ = self.__batches_to_per_file_scores__(outputs, aggregation_fun=np.mean)
-        scores_max, ground_truth, file_id, machine_types, machine_ids = self.__batches_to_per_file_scores__(outputs,
-                                                                                                            aggregation_fun=np.max)
+        scores_mean, scores_max, _, ground_truth, file_ids, machine_types, machine_ids = self.__batches_to_per_file_scores__(
+            outputs,
+            aggregation_fun=None
+        )
+
+        result = self.__compute_metrics__(scores_mean, scores_max, ground_truth, machine_types, machine_ids)
+
+        # log validation results
+        for machine_type in result:
+            for machine_id in result[machine_type]:
+
+                self.__log_metric__(
+                    f'{machine_type}_{machine_id}_validation_auroc_mean',
+                    result[machine_type][machine_id][0],
+                    step
+                )
+                self.__log_metric__(
+                    f'{machine_type}_{machine_id}_validation_pauroc_mean',
+                    result[machine_type][machine_id][1],
+                    step
+                )
+                self.__log_metric__(
+                    f'{machine_type}_{machine_id}_validation_auroc_max',
+                    result[machine_type][machine_id][2],
+                    step
+                )
+                self.__log_metric__(
+                    f'{machine_type}_{machine_id}_validation_pauroc_max',
+                    result[machine_type][machine_id][3],
+                    step
+                )
+
+        return result
+
+    def log_test(self, outputs):
+
+        scores_mean, scores_max, _, ground_truth, file_ids, machine_types, machine_ids = self.__batches_to_per_file_scores__(
+            outputs,
+            aggregation_fun=None
+        )
+
+        result = self.__compute_metrics__(scores_mean, scores_max, ground_truth, machine_types, machine_ids)
+        file_ids = np.array([f.split(os.sep)[-1] for f in file_ids])
+
+        # save predictions to file predictions ...
+        for machine_type in result:
+            # type back to int ...
+            machine_type = CLASS_MAP[machine_type]
+
+            for machine_id in result[INVERSE_CLASS_MAP[machine_type]]:
+
+                # save predictions ...
+                indices = np.where(np.logical_and(machine_types == machine_type, machine_ids == machine_id))[0]
+
+                path_mean = os.path.join(
+                    self.log_dir,
+                    f'anomaly_score_{INVERSE_CLASS_MAP[machine_type]}_id_{machine_id}_mean.csv'
+                )
+
+                path_max = os.path.join(
+                    self.log_dir,
+                    f'anomaly_score_{INVERSE_CLASS_MAP[machine_type]}_id_{machine_id}_max.csv'
+                )
+
+                pd.DataFrame(
+                    list(zip(file_ids[indices], scores_mean[indices]))
+                ).to_csv(path_mean, index=False, header=False)
+
+                pd.DataFrame(
+                    list(zip(file_ids[indices], scores_max[indices]))
+                ).to_csv(path_max, index=False, header=False)
+
+        return result
+
+    def log_image_reconstruction(self, batch, epoch, num_images=10):
+
+        num_images = np.minimum(len(batch), num_images)
+
+        assert num_images > 0
+        assert batch.get('observations')
+        assert batch.get('visualizations')
+
+        grid_img = torchvision.utils.make_grid(
+            torch.cat(
+                batch['observations'][:num_images],
+                batch['visualizations'][:num_images]
+            ),
+            nrow=num_images
+        )
+
+        self.__log_image__(grid_img, f'{epoch}_reconstruction_x.png')
+
+    def __plot_score_distribution__(self, scores_mean, scores_max, ground_truth, machine_types, machine_ids):
 
         # select samples with matching machine_types and machine ids only
+        unique_machine_types = np.unique(machine_types)
+        unique_machine_ids = [np.unique(machine_ids[machine_types == r]) for r in unique_machine_types]
+
+        n_rows = len(unique_machine_types)
+        n_cols = np.max([len(c) for c in unique_machine_ids])
+
+        # print distribution
         plt.ioff()
-        plt.figure(figsize=(24, 20))
+        plt.figure(figsize=(5 * n_cols, 5 * n_rows))
 
         bins = np.linspace(scores_mean.min(), scores_mean.max(), 50)
 
-        for i, typ in enumerate(np.arange(6)):
-            for j, id in enumerate(TRAINING_ID_MAP[typ]):
-                plt.subplot(6, 4, ((i * 4) + j) + 1)
+        for i, typ in enumerate(unique_machine_types):
+            for j, id in enumerate(unique_machine_ids[i]):
+
+                plt.subplot(n_rows, n_cols, ((i * n_cols) + j) + 1)
 
                 x_normal = scores_mean[
-                    np.logical_and(ground_truth == 0, np.logical_and(machine_ids == id, machine_types == typ))]
+                    np.logical_and(ground_truth == 0, np.logical_and(machine_ids == id, machine_types == typ))
+                ]
+
                 x_abnormal = scores_mean[
-                    np.logical_and(ground_truth == 1, np.logical_and(machine_ids == id, machine_types == typ))]
+                    np.logical_and(ground_truth == 1, np.logical_and(machine_ids == id, machine_types == typ))
+                ]
 
                 plt.hist(x_normal, bins, alpha=0.5, label='normal')
                 plt.hist(x_abnormal, bins, alpha=0.5, label='abnormal')
@@ -84,80 +178,98 @@ class Logger:
                 if i == 0 and j == 0:
                     plt.legend(loc='upper right')
 
-        plt.savefig(os.path.join(self.log_dir, 'score_distribution_{}.png'.format(epoch)), bbox_inches='tight')
+        plt.savefig(os.path.join(self.log_dir, 'score_distribution.png'), bbox_inches='tight')
         plt.close()
 
-        auroc_mean = []
-        pauroc_mean = []
-        auroc_max = []
-        pauroc_max = []
+    def __compute_metrics__(
+            self,
+            scores_mean,
+            scores_max,
+            ground_truth,
+            machine_types,
+            machine_ids
+    ):
 
-        for id in (TRAINING_ID_MAP[self.machine_type] if all_ids else [self.machine_id]):
-            ground_truth_ = ground_truth[np.logical_and(machine_types == self.machine_type, machine_ids == id)]
-            scores_mean_ = scores_mean[np.logical_and(machine_types == self.machine_type, machine_ids == id)]
-            scores_max_ = scores_max[np.logical_and(machine_types == self.machine_type, machine_ids == id)]
+        # select samples with matching machine_types and machine ids only
+        unique_machine_types = np.unique(machine_types)
+        unique_machine_ids = [np.unique(machine_ids[machine_types == r]) for r in unique_machine_types]
 
-            auroc_mean.append(metrics.roc_auc_score(ground_truth_, scores_mean_))
-            pauroc_mean.append(metrics.roc_auc_score(ground_truth_, scores_mean_, max_fpr=0.1))
-            auroc_max.append(metrics.roc_auc_score(ground_truth_, scores_max_))
-            pauroc_max.append(metrics.roc_auc_score(ground_truth_, scores_max_, max_fpr=0.1))
+        # put results into dictionary
+        result = dict()
+        for i, machine_type in enumerate(unique_machine_types):
+            machine_type = INVERSE_CLASS_MAP[machine_type]
+            for machine_id in unique_machine_ids[i]:
+                result.setdefault(machine_type, dict())[machine_id] = self.__rauc_from_score__(
+                    scores_mean,
+                    scores_max,
+                    ground_truth,
+                    machine_types,
+                    machine_ids,
+                    CLASS_MAP[machine_type],
+                    machine_id
+                )
 
-            if epoch != -2:
-                self.__log_metric__('validation_auroc_mean_{}'.format(id if all_ids else ""), auroc_mean[-1], step)
-                self.__log_metric__('validation_pauroc_mean_{}'.format(id if all_ids else ""), pauroc_mean[-1], step)
-                self.__log_metric__('validation_auroc_max_{}'.format(id if all_ids else ""), auroc_max[-1], step)
-                self.__log_metric__('validation_pauroc_max_{}'.format(id if all_ids else ""), pauroc_max[-1], step)
+        return result
 
-        return {
-            'auroc_mean': float(np.mean(auroc_mean)),
-            'pauroc_mean': float(np.mean(pauroc_mean)),
-            'auroc_max': float(np.mean(auroc_max)),
-            'pauroc_max': float(np.mean(pauroc_max))
-        }
+    @staticmethod
+    def __rauc_from_score__(scores_mean, scores_max, ground_truth, machine_types, machine_ids, machine_type, id,
+                            max_fpr=0.1):
+        ground_truth_ = ground_truth[np.logical_and(machine_types == machine_type, machine_ids == id)]
+        scores_mean_ = scores_mean[np.logical_and(machine_types == machine_type, machine_ids == id)]
+        scores_max_ = scores_max[np.logical_and(machine_types == machine_type, machine_ids == id)]
 
-    def log_vae_validation(self, outputs, step, epoch):
+        return metrics.roc_auc_score(ground_truth_, scores_mean_), \
+               metrics.roc_auc_score(ground_truth_, scores_mean_, max_fpr=max_fpr), \
+               metrics.roc_auc_score(ground_truth_, scores_max_), \
+               metrics.roc_auc_score(ground_truth_, scores_max_, max_fpr=max_fpr)
 
-        if epoch == -1:
-            return None
-
-        errors = np.concatenate([o['scores'].detach().cpu().numpy() for o in outputs])
-        machine_types = np.concatenate([o['machine_types'].detach().cpu().numpy() for o in outputs])
-        machine_ids = np.concatenate([o['machine_ids'].detach().cpu().numpy() for o in outputs])
-
-        for ty in range(6):
-            for id in TRAINING_ID_MAP[ty]:
-                idxs = np.logical_and(machine_types == ty, machine_ids == id)
-                if np.any(idxs):
-                    self.__log_metric__(
-                        'validation_reconstruction_error_{}_{}'.format(id, ty),
-                        np.mean(errors[idxs]),
-                        step
-                    )
-
-        self.__log_metric__('validation_reconstruction_error', np.mean(errors), step)
-
-    def log_testing(self, outputs, all_ids=False):
-        return self.log_validation(outputs, 0, -2, all_ids=all_ids)
-
-
-    def __batches_to_per_file_scores__(self, outputs, aggregation_fun=np.mean):
+    @staticmethod
+    def __batches_to_per_file_scores__(outputs, aggregation_fun=None):
 
         # extract targets, scores and file_ids fom batches
-        targets = np.concatenate([o['targets'].detach().cpu().numpy() for o in outputs])
-        predictions = np.concatenate([o['scores'].detach().cpu().numpy() for o in outputs])
-        file_ids = np.concatenate([o['file_ids'].detach().cpu().numpy() for o in outputs])
-        machine_types = np.concatenate([o['machine_types'].detach().cpu().numpy() for o in outputs])
-        machine_ids = np.concatenate([o['machine_ids'].detach().cpu().numpy() for o in outputs])
+        targets_ = np.concatenate([o['targets'].detach().cpu().numpy() for o in outputs])
+        predictions_ = np.concatenate([o['scores'].detach().cpu().numpy() for o in outputs])
+        machine_types_ = np.concatenate([o['machine_types'].detach().cpu().numpy() for o in outputs])
+        machine_ids_ = np.concatenate([o['machine_ids'].detach().cpu().numpy() for o in outputs])
 
-        unique_files = np.unique(file_ids)
+        file_indices_map = {}
+        idx = 0
+        for o in outputs:
+            for file_name in o['file_ids']:
+                file_indices_map.setdefault(file_name, []).append(idx)
+                idx += 1
 
-        ground_truth = np.array([targets[file_ids == f][0] for f in unique_files])
-        scores = np.array([aggregation_fun(predictions[file_ids == f]) for f in unique_files])
-        machine_types = np.array([machine_types[file_ids == f] for f in unique_files])
-        machine_id = np.array([machine_ids[file_ids == f] for f in unique_files])
+        targets = []
+        scores_mean = []
+        scores_max = []
+        scores_custom = []
+        machine_types = []
+        machine_ids = []
+        unique_files = np.unique(list(file_indices_map.keys()))
 
-        return scores, ground_truth, unique_files, machine_types, machine_id
+        for f in unique_files:
+            indices = file_indices_map[f]
 
+            targets.append(targets_[indices[0]])
+            scores_mean.append(np.mean(predictions_[indices]))
+            scores_max.append(np.max(predictions_[indices]))
+            if aggregation_fun:
+                scores_custom.append(aggregation_fun(predictions_[indices]))
+            machine_types.append(machine_types_[indices[0]])
+            machine_ids.append(machine_ids_[indices[0]])
+
+            assert all(machine_types[-1] == machine_types_[indices])
+            assert all(machine_ids[-1] == machine_ids_[indices])
+            assert all(targets[-1] == targets_[indices])
+
+
+        return np.array(scores_mean), \
+        np.array(scores_max), \
+        np.array(scores_custom), \
+        np.array(targets), \
+        np.array(unique_files), \
+        np.array(machine_types), \
+        np.array(machine_ids)
 
     def __log_metric__(self, name, value, step):
 

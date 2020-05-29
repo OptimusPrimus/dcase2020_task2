@@ -16,6 +16,15 @@ CLASS_MAP = {
     'valve': 5
 }
 
+INVERSE_CLASS_MAP = {
+    0: 'fan',
+    1: 'pump',
+    2: 'slider',
+    3: 'ToyCar',
+    4: 'ToyConveyor',
+    5: 'valve'
+}
+
 TRAINING_ID_MAP = {
     0: [0, 2, 4, 6],
     1: [0, 2, 4, 6],
@@ -25,14 +34,7 @@ TRAINING_ID_MAP = {
     5: [0, 2, 4, 6]
 }
 
-INVERSE_CLASS_MAP = {
-    0: 'fan',
-    1: 'pump',
-    2: 'slider',
-    3: 'ToyCar',
-    4: 'ToyConveyor',
-    5: 'valve'
-}
+
 
 class MCMDataSet(BaseDataSet):
 
@@ -303,7 +305,6 @@ class MachineDataSet(torch.utils.data.Dataset):
         # create data object
         meta_data = self.meta_data[item].copy()
         meta_data['observations'] = observation[None]
-        meta_data['file_ids'] = item
 
         return meta_data
 
@@ -380,5 +381,5 @@ class MachineDataSet(torch.utils.data.Dataset):
             'targets': y,
             'machine_types': machine_type,
             'machine_ids': id,
-            'part_numbers': part
+            'file_ids': os.sep.join(os.path.normpath(file_path).split(os.sep)[-4:])
         }

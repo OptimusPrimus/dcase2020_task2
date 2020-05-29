@@ -2,7 +2,7 @@ from dcase2020_task2.priors import PriorBase
 import torch.nn
 
 
-class NoPrior(PriorBase):
+class CVPrior(PriorBase):
 
     def __init__(self, latent_size=256, **kwargs):
         super().__init__()
@@ -12,11 +12,13 @@ class NoPrior(PriorBase):
 
         """ No modification """
         batch['codes'] = batch['pre_codes']
-        batch['prior_loss'] = torch.tensor(0.0)
+
+        batch['prior_loss'] = torch.norm(batch['pre_codes'], p=2, dim=1) ** 2
 
         # log some stuff...
-        batch['mean_pre_codes'] = batch['prior_loss'].mean()
-        batch['std_pre_codes'] = batch['prior_loss'].std()
+        batch['std_prior_loss'] = batch['prior_loss'].std()
+
+        batch['prior_loss'] = batch['prior_loss'].mean()
 
         return batch
 

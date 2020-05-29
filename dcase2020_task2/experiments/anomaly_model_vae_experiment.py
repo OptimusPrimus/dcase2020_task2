@@ -51,7 +51,7 @@ class VAEExperiment(BaseExperiment, pl.LightningModule):
             batch['loss'] = reconstruction_loss + prior_loss
 
             if batch_num == 0:
-                self.logger_.log_reconstruction(batch, self.epoch)
+                self.logger_.log_image_reconstruction(batch, self.epoch)
 
             self.logger_.log_training_step(batch, self.step)
             self.step += 1
