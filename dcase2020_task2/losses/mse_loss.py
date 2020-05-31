@@ -23,7 +23,7 @@ class MSEReconstruction(BaseReconstruction):
             batch['predictions'],
             batch['observations'],
             reduction='none'
-        ).view(len(batch['predictions']), -1).mean(1)
+        ).reshape(len(batch['predictions']), -1).mean(1)
 
         # loss
         batch['reconstruction_loss_raw'] = batch[f'scores'].mean() if self.size_average else batch[f'scores'].sum()

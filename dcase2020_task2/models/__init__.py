@@ -7,3 +7,5 @@ from dcase2020_task2.models.fc_sampling import SamplingFCAE, SamplingFCGenerator
 from dcase2020_task2.models.cnn_baseline import BaselineCNN
 
 from dcase2020_task2.models.fc_reduced import ReducedFCAE
+
+from dcase2020_task2.models.made import MADE

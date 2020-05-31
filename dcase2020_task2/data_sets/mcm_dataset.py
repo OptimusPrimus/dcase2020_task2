@@ -5,7 +5,6 @@ from dcase2020_task2.data_sets import BaseDataSet
 import librosa
 import sys
 import numpy as np
-import random
 
 CLASS_MAP = {
     'fan': 0,

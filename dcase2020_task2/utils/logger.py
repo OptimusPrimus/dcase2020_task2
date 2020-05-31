@@ -96,6 +96,8 @@ class Logger:
         result = self.__compute_metrics__(scores_mean, scores_max, ground_truth, machine_types, machine_ids)
         file_ids = np.array([f.split(os.sep)[-1] for f in file_ids])
 
+        self.__plot_score_distribution__(scores_mean, scores_max, ground_truth, machine_types, machine_ids)
+
         # save predictions to file predictions ...
         for machine_type in result:
             # type back to int ...

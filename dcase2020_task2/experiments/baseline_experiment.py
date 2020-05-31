@@ -19,7 +19,6 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
         super().__init__(configuration_dict)
 
         self.network = self.objects['auto_encoder_model']
-        self.prior = self.objects['prior']
         self.reconstruction = self.objects['reconstruction']
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
 
@@ -42,7 +41,10 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
 
         if optimizer_idx == 0:
             batch_normal = self(batch_normal)
-            batch_normal['loss'] = batch_normal['reconstruction_loss'] + batch_normal['prior_loss']
+            batch_normal['loss'] = batch_normal['reconstruction_loss']
+
+            if batch_normal.get('prior_loss'):
+                batch_normal['loss'] = batch_normal['loss'] + batch_normal['prior_loss']
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
@@ -90,7 +92,6 @@ def configuration():
     machine_type = 0
     machine_id = 0
 
-    latent_size = 8
     batch_size = 512
 
     debug = False
@@ -102,14 +103,13 @@ def configuration():
         num_workers = 4
 
     learning_rate = 1e-3
-    weight_decay = 0
+    weight_decay = 0 # 1e-6
 
     normalize = 'all'
     normalize_raw = True
 
     context = 5
-    descriptor = "BaselineExperiment_{}_{}_{}_{}_{}_{}_{}".format(
-        latent_size,
+    descriptor = "BaselineExperiment_{}_{}_{}_{}_{}_{}".format(
         batch_size,
         learning_rate,
         weight_decay,
@@ -125,14 +125,6 @@ def configuration():
     num_mel = 128
     n_fft = 1024
     hop_size = 512
-
-    prior = {
-        'class': 'dcase2020_task2.priors.NoPrior',
-        'kwargs': {
-            'latent_size': latent_size,
-            'weight': 1.0
-        }
-    }
 
     data_set = {
         'class': 'dcase2020_task2.data_sets.MCMDataSet',
@@ -155,12 +147,17 @@ def configuration():
     }
 
     auto_encoder_model = {
-        'class': 'dcase2020_task2.models.BaselineFCAE',
+        'class': 'dcase2020_task2.models.MADE',
         'args': [
             '@data_set.observation_shape',
             '@reconstruction',
-            '@prior'
-        ]
+            # '@prior'
+        ],
+        'kwargs': {
+            # 'hidden_sizes': [2046, 2046, 2046, 2046],
+            'hidden_sizes': [4096, 4096, 4096, 4096],
+            'natural_ordering': True
+        }
     }
 
     lr_scheduler = {
@@ -169,7 +166,8 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': epochs
+            'step_size': epochs,
+            'gamma': 0.1
         }
     }
 
