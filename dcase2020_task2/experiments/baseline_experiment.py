@@ -90,22 +90,22 @@ def configuration():
     #####################
 
     machine_type = 0
-    machine_id = 0
+    machine_id = 2
 
     batch_size = 512
 
     debug = False
     if debug:
-        epochs = 1
+        epochs = 50
         num_workers = 0
     else:
         epochs = 100
         num_workers = 4
 
     learning_rate = 1e-3
-    weight_decay = 0 # 1e-6
+    weight_decay = 1e-5
 
-    normalize = 'all'
+    normalize = 'per_machine_id' #
     normalize_raw = True
 
     context = 5
@@ -122,9 +122,11 @@ def configuration():
     # detailed configuration
     ########################
 
-    num_mel = 128
+    num_mel = 256
     n_fft = 1024
     hop_size = 512
+    power = 1.0
+    fmin = 0
 
     data_set = {
         'class': 'dcase2020_task2.data_sets.MCMDataSet',
@@ -134,7 +136,9 @@ def configuration():
             'n_fft': n_fft,
             'hop_size': hop_size,
             'normalize': normalize,
-            'normalize_raw': normalize_raw
+            'normalize_raw': normalize_raw,
+            'power': power,
+            'fmin': fmin
         }
     }
 
@@ -166,7 +170,7 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': epochs,
+            'step_size': 25,
             'gamma': 0.1
         }
     }

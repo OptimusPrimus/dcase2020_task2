@@ -114,10 +114,12 @@ class MADE(nn.Module):
             l.set_mask(m)
 
     def forward(self, batch):
+        #input = batch['observations'].transpose(3, 2)
         input = torch.flip(batch['observations'].transpose(3, 2), [3])
         shape = input.shape
         input = input.reshape(len(input), -1)
         output = self.net(input).reshape(*shape)
+        #batch['pre_reconstructions'] = output.transpose(3, 2)
         batch['pre_reconstructions'] = torch.flip(output, [3]).transpose(3, 2)
 
         batch = self.reconstruction_loss(batch)

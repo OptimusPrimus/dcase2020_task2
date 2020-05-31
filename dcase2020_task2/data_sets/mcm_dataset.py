@@ -44,9 +44,10 @@ class MCMDataSet(BaseDataSet):
             num_mel=128,
             n_fft=1024,
             hop_size=512,
-            power=2.0,
+            power=1.0,
+            fmin=40,
             normalize='all',
-            normalize_raw=True,
+            normalize_raw=False,
             complement='all'
     ):
         self.data_root = data_root
@@ -56,6 +57,7 @@ class MCMDataSet(BaseDataSet):
         self.hop_size = hop_size
         self.power = power
         self.complement = complement
+        self.fmin = fmin
 
         self.data_sets = dict()
         for machine_type in range(6):
@@ -72,7 +74,8 @@ class MCMDataSet(BaseDataSet):
                         n_fft=self.n_fft,
                         hop_size=self.hop_size,
                         power=power,
-                        normalize=normalize_raw
+                        normalize=normalize_raw,
+                        fmin=fmin
                     ),
                     MachineDataSet(
                         machine_type,
@@ -102,21 +105,6 @@ class MCMDataSet(BaseDataSet):
                     train, val = self.data_sets[machine_type][machine_id]
                     train.data = (train.data - mean) / std
                     val.data = (val.data - mean) / std
-
-        elif normalize == 'per_machine_type':
-            for machine_type in range(6):
-                data = []
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, _ = self.data_sets[machine_type][machine_id]
-                    data.append(train.data)
-                data = np.concatenate(data, axis=1)
-                mean = data.mean(axis=1, keepdims=True)
-                std = data.std(axis=1, keepdims=True)
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, val = self.data_sets[machine_type][machine_id]
-                    train.data = (train.data - mean) / std
-                    val.data = (val.data - mean) / std
-
         elif normalize == 'per_machine_id':
             for machine_type in range(6):
                 for machine_id in TRAINING_ID_MAP[machine_type]:
@@ -124,34 +112,6 @@ class MCMDataSet(BaseDataSet):
                     data = train.data
                     mean = data.mean(axis=1, keepdims=True)
                     std = data.std(axis=1, keepdims=True)
-                    train.data = (train.data - mean) / std
-                    val.data = (val.data - mean) / std
-
-        elif normalize == 'per_mic':
-            data = []
-            for machine_type in [0, 1, 2, 5]:
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, _ = self.data_sets[machine_type][machine_id]
-                    data.append(train.data)
-            data = np.concatenate(data, axis=1)
-            mean = data.mean(axis=1, keepdims=True)
-            std = data.std(axis=1, keepdims=True)
-            for machine_type in [0, 1, 2, 5]:
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, val = self.data_sets[machine_type][machine_id]
-                    train.data = (train.data - mean) / std
-                    val.data = (val.data - mean) / std
-            data = []
-            for machine_type in [3, 4]:
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, _ = self.data_sets[machine_type][machine_id]
-                    data.append(train.data)
-            data = np.concatenate(data, axis=1)
-            mean = data.mean(axis=1, keepdims=True)
-            std = data.std(axis=1, keepdims=True)
-            for machine_type in [3, 4]:
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, val = self.data_sets[machine_type][machine_id]
                     train.data = (train.data - mean) / std
                     val.data = (val.data - mean) / std
         elif normalize == 'none':
@@ -252,7 +212,8 @@ class MachineDataSet(torch.utils.data.Dataset):
             n_fft=1024,
             hop_size=512,
             power=2.0,
-            normalize=True
+            normalize=True,
+            fmin=0
     ):
 
         assert mode in ['training', 'validation', 'testing']
@@ -267,6 +228,7 @@ class MachineDataSet(torch.utils.data.Dataset):
         self.context = context
         self.machine_type = INVERSE_CLASS_MAP[machine_type]
         self.machine_id = machine_id
+        self.fmin = fmin
 
         if mode == 'training':
             files = glob.glob(
@@ -324,10 +286,10 @@ class MachineDataSet(torch.utils.data.Dataset):
             self.hop_size,
             self.power,
             self.mode,
-            self.context,
             self.machine_type,
             self.machine_id,
-            self.normalize
+            self.normalize,
+            self.fmin
         )
         file_path = os.path.join(self.data_root, file_name)
 
@@ -354,10 +316,16 @@ class MachineDataSet(torch.utils.data.Dataset):
             n_fft=self.n_fft,
             hop_length=self.hop_size,
             n_mels=self.num_mel,
-            power=self.power
+            power=self.power,
+            fmin=self.fmin
         )
 
-        x = 20.0 / self.power * np.log10(x + sys.float_info.epsilon)
+        if self.power == 1:
+            x = librosa.core.amplitude_to_db(x)
+        elif self.power == 2:
+            x = librosa.core.power_to_db(x)
+        else:
+            raise AttributeError
 
         return x
 
