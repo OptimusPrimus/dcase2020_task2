@@ -18,7 +18,7 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
     def __init__(self, configuration_dict, _run):
         super().__init__(configuration_dict)
 
-        self.network = self.objects['auto_encoder_model']
+        self.network = self.objects['model']
         self.reconstruction = self.objects['reconstruction']
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
 
@@ -143,25 +143,24 @@ def configuration():
     }
 
     reconstruction = {
-        'class': 'dcase2020_task2.losses.MSEReconstruction',
+        'class': 'dcase2020_task2.losses.NLLReconstruction',
+        'args': [
+            '@data_set.observation_shape',
+        ],
         'kwargs': {
-            'weight': 1.0,
-            'input_shape': '@data_set.observation_shape'
+            'weight': 1.0
         }
     }
 
-    auto_encoder_model = {
+    model = {
         'class': 'dcase2020_task2.models.MADE',
         'args': [
             '@data_set.observation_shape',
-            '@reconstruction',
-            {
-
-            }
+            '@reconstruction'
         ],
         'kwargs': {
-            'hidden_sizes': [4096, 4096, 4096, 4096],
-            'natural_ordering': True
+            'hidden_size': 4096,
+            'num_hidden': 4
         }
     }
 
@@ -179,7 +178,7 @@ def configuration():
     optimizer = {
         'class': 'torch.optim.Adam',
         'args': [
-            '@auto_encoder_model.parameters()'
+            '@model.parameters()'
         ],
         'kwargs': {
             'lr': learning_rate,

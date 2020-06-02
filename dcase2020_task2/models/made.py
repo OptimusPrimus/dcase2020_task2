@@ -1,175 +1,79 @@
-"""
-Implements Masked AutoEncoder for Density Estimation, by Germain et al. 2015
-Re-implementation by Andrej Karpathy based on https://arxiv.org/abs/1502.03509
-"""
-
-import numpy as np
-
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import numpy as np
+from torch import nn as nn, distributions as D
 
-
-# ------------------------------------------------------------------------------
-
-class MaskedLinear(nn.Linear):
-    """ same as Linear except has a configurable mask on the weights """
-
-    def __init__(self, in_features, out_features, bias=True):
-        super().__init__(in_features, out_features, bias)
-        self.register_buffer('mask', torch.ones(out_features, in_features))
-
-    def set_mask(self, mask):
-        self.mask.data.copy_(torch.from_numpy(mask.astype(np.uint8).T))
-
-    def forward(self, input):
-        return F.linear(input, self.mask * self.weight, self.bias)
+from dcase2020_task2.models.custom import create_masks, MaskedLinear
 
 
 class MADE(nn.Module):
     def __init__(
             self,
             input_shape,
-            reconstruction_loss,
-            hidden_sizes=[512],
-            num_outputs_dims=1,
-            num_masks=1,
-            natural_ordering=False,
-            activation=torch.nn.ReLU,
-            *args,
-            **kwargs
+            reconstruction,
+            hidden_size=4096,
+            num_hidden=4,
+            activation='relu',
+            input_order='random',
+            cond_label_size=None
     ):
         """
-        nin: integer; number of inputs
-        hidden sizes: a list of integers; number of units in hidden layers
-        nout: integer; number of outputs, which usually collectively parameterize some kind of 1D distribution
-              note: if nout is e.g. 2x larger than nin (perhaps the mean and std), then the first nin
-              will be all the means and the second nin will be stds. i.e. output dimensions depend on the
-              same input dimensions in "chunks" and should be carefully decoded downstream appropriately.
-              the output of running the tests for this file makes this a bit more clear with examples.
-        num_masks: can be used to train ensemble over orderings/connections
-        natural_ordering: force natural ordering of dimensions, don't use random permutations
+        Args:
+            TODO
         """
-
         super().__init__()
 
         self.input_shape = input_shape
-        self.nin = np.prod(input_shape)
-        self.nout = np.prod(input_shape) * num_outputs_dims
-        self.reconstruction_loss = reconstruction_loss
-        self.hidden_sizes = hidden_sizes
+        self.reconstruction = reconstruction
 
-        assert self.nout % self.nin == 0, "nout must be integer multiple of nin"
-
-        # define a simple MLP neural net
-        self.net = []
-        hs = [self.nin] + hidden_sizes + [self.nout]
-        for h0, h1 in zip(hs, hs[1:]):
-            self.net.extend([
-                MaskedLinear(h0, h1),
-                activation()
-            ])
-        # pop the last ReLU for the output layer
-        self.net.pop()
-        self.net = nn.Sequential(
-            *self.net
+        # create masks
+        # use natural order as input order
+        masks, self.input_degrees = create_masks(
+            int(np.prod(input_shape)),
+            hidden_size,
+            num_hidden,
+            input_order=input_order,
+            input_degrees=torch.arange(int(np.prod(input_shape)))
         )
-        # seeds for orders/connectivities of the model ensemble
-        self.natural_ordering = natural_ordering
-        # for cycling through num_masks orderings
-        self.num_masks = num_masks
-        self.seed = 0
-        self.m = {}
-        # builds the initial self.m connectivity
-        self.update_masks()
 
-    def update_masks(self):
-        # only a single seed, skip for efficiency
-        if self.m and self.num_masks == 1:
-            return
-        # number of layers
-        L = len(self.hidden_sizes)
-        # fetch the next seed and construct a random stream
-        rng = np.random.RandomState(self.seed)
-        self.seed = (self.seed + 1) % self.num_masks
-        # sample the order of the inputs and the connectivity of all neurons
-        self.m[-1] = np.arange(self.nin) if self.natural_ordering else rng.permutation(self.nin)
-        for l in range(L):
-            self.m[l] = rng.randint(self.m[l - 1].min(), self.nin - 1, size=self.hidden_sizes[l])
+        # setup activation
+        if activation == 'relu':
+            activation_fn = nn.ReLU()
+        elif activation == 'tanh':
+            activation_fn = nn.Tanh()
+        else:
+            raise ValueError('Check activation function.')
 
-        # construct the mask matrices
-        masks = [self.m[l - 1][:, None] <= self.m[l][None, :] for l in range(L)]
-        masks.append(self.m[L - 1][:, None] < self.m[-1][None, :])
-
-        # handle the case where nout = nin * k, for integer k > 1
-        if self.nout > self.nin:
-            k = int(self.nout / self.nin)
-            # replicate the mask across the other outputs
-            masks[-1] = np.concatenate([masks[-1]] * k, axis=1)
-
-        # set the masks in all MaskedLinear layers
-        layers = [l for l in self.net.modules() if isinstance(l, MaskedLinear)]
-        for l, m in zip(layers, masks):
-            l.set_mask(m)
+        # construct model
+        self.input_layer = MaskedLinear(np.prod(input_shape), hidden_size, masks[0], cond_label_size)
+        self.net = []
+        for m in masks[1:-1]:
+            self.net += [activation_fn, MaskedLinear(hidden_size, hidden_size, m)]
+        self.net += [activation_fn, MaskedLinear(hidden_size, 2 * np.prod(input_shape), masks[-1].repeat(2, 1))]
+        self.net = nn.Sequential(*self.net)
 
     def forward(self, batch):
-        #input = batch['observations'].transpose(3, 2)
-        input = torch.flip(batch['observations'].transpose(3, 2), [3])
-        shape = input.shape
-        input = input.reshape(len(input), -1)
-        output = self.net(input).reshape(*shape)
-        #batch['pre_reconstructions'] = output.transpose(3, 2)
-        batch['pre_reconstructions'] = torch.flip(output, [3]).transpose(3, 2)
+        # MAF eq 4 -- return mean and log std
+        x = batch['observations']
+        x = x.view(x.shape[0], -1)
+        y = batch.get('y', None)
 
-        batch = self.reconstruction_loss(batch)
+        batch['pre_reconstructions'] = self.net(
+            self.input_layer(
+                x,
+                y
+            )
+        )
+
+        batch = self.reconstruction(batch)
 
         return batch
 
-
-
-
-# ------------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    from torch.autograd import Variable
-
-    # run a quick and dirty test for the autoregressive property
-    D = 10
-    rng = np.random.RandomState(14)
-    x = (rng.rand(1, D) > 0.5).astype(np.float32)
-
-    configs = [
-        (D, [], D, False),  # test various hidden sizes
-        (D, [200], D, False),
-        (D, [200, 220], D, False),
-        (D, [200, 220, 230], D, False),
-        (D, [200, 220], D, True),  # natural ordering test
-        (D, [200, 220], 2 * D, True),  # test nout > nin
-        (D, [200, 220], 3 * D, False),  # test nout > nin
-    ]
-
-    for nin, hiddens, nout, natural_ordering in configs:
-
-        print("checking nin %d, hiddens %s, nout %d, natural %s" %
-              (nin, hiddens, nout, natural_ordering))
-        model = MADE(nin, hiddens, nout, natural_ordering=natural_ordering)
-
-        # run backpropagation for each dimension to compute what other
-        # dimensions it depends on.
-        res = []
-        for k in range(nout):
-            xtr = Variable(torch.from_numpy(x), requires_grad=True)
-            xtrhat = model(xtr)
-            loss = xtrhat[0, k]
-            loss.backward()
-
-            depends = (xtr.grad[0].numpy() != 0).astype(np.uint8)
-            depends_ix = list(np.where(depends)[0])
-            isok = k % nin not in depends_ix
-
-            res.append((len(depends_ix), k, depends_ix, isok))
-
-        # pretty print the dependencies
-        res.sort()
-        for nl, k, ix, isok in res:
-            print("output %2d depends on inputs: %30s : %s" % (k, ix, "OK" if isok else "NOTOK"))
+    def inverse(self, u, y=None, sum_log_abs_det_jacobians=None):
+        # MAF eq 3
+        x = torch.zeros_like(u)
+        # run through reverse model
+        for i in self.input_degrees:
+            m, loga = self.net(x, y).chunk(chunks=2, dim=1)
+            x[:, i] = u[:, i] * torch.exp(loga[:, i]) + m[:, i]
+        log_abs_det_jacobian = loga
+        return x, log_abs_det_jacobian
