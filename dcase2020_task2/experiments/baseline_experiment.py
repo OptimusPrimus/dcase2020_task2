@@ -155,10 +155,11 @@ def configuration():
         'args': [
             '@data_set.observation_shape',
             '@reconstruction',
-            # '@prior'
+            {
+
+            }
         ],
         'kwargs': {
-            # 'hidden_sizes': [2046, 2046, 2046, 2046],
             'hidden_sizes': [4096, 4096, 4096, 4096],
             'natural_ordering': True
         }

@@ -32,8 +32,10 @@ class MADE(nn.Module):
             input_shape,
             reconstruction_loss,
             hidden_sizes=[512],
+            num_outputs_dims=1,
             num_masks=1,
             natural_ordering=False,
+            activation=torch.nn.ReLU,
             *args,
             **kwargs
     ):
@@ -51,48 +53,45 @@ class MADE(nn.Module):
 
         super().__init__()
 
-        nin = np.prod(input_shape)
-        nout = nin
-
         self.input_shape = input_shape
-
-        self.nin = nin
-        self.nout = nout
-
+        self.nin = np.prod(input_shape)
+        self.nout = np.prod(input_shape) * num_outputs_dims
         self.reconstruction_loss = reconstruction_loss
-
         self.hidden_sizes = hidden_sizes
+
         assert self.nout % self.nin == 0, "nout must be integer multiple of nin"
 
         # define a simple MLP neural net
         self.net = []
-        hs = [nin] + hidden_sizes + [nout]
+        hs = [self.nin] + hidden_sizes + [self.nout]
         for h0, h1 in zip(hs, hs[1:]):
             self.net.extend([
                 MaskedLinear(h0, h1),
-                nn.ReLU(),
+                activation()
             ])
-        self.net.pop()  # pop the last ReLU for the output layer
-        self.net = nn.Sequential(*self.net)
-
+        # pop the last ReLU for the output layer
+        self.net.pop()
+        self.net = nn.Sequential(
+            *self.net
+        )
         # seeds for orders/connectivities of the model ensemble
         self.natural_ordering = natural_ordering
+        # for cycling through num_masks orderings
         self.num_masks = num_masks
-        self.seed = 0  # for cycling through num_masks orderings
-
+        self.seed = 0
         self.m = {}
-        self.update_masks()  # builds the initial self.m connectivity
-        # note, we could also precompute the masks and cache them, but this
-        # could get memory expensive for large number of masks.
+        # builds the initial self.m connectivity
+        self.update_masks()
 
     def update_masks(self):
-        if self.m and self.num_masks == 1: return  # only a single seed, skip for efficiency
+        # only a single seed, skip for efficiency
+        if self.m and self.num_masks == 1:
+            return
+        # number of layers
         L = len(self.hidden_sizes)
-
         # fetch the next seed and construct a random stream
         rng = np.random.RandomState(self.seed)
         self.seed = (self.seed + 1) % self.num_masks
-
         # sample the order of the inputs and the connectivity of all neurons
         self.m[-1] = np.arange(self.nin) if self.natural_ordering else rng.permutation(self.nin)
         for l in range(L):
