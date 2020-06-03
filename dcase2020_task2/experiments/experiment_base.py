@@ -64,7 +64,7 @@ class BaseExperiment(ABC, torch.nn.Module):
 
     def train_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.objects['data_set'].training_data_set(self.machine_type, self.machine_id),
+            self.objects['data_set'].training_data_set(),
             batch_size=self.objects['batch_size'],
             shuffle=True,
             num_workers=self.objects['num_workers'],
@@ -74,7 +74,7 @@ class BaseExperiment(ABC, torch.nn.Module):
 
     def val_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.objects['data_set'].validation_data_set(self.machine_type, self.machine_id),
+            self.objects['data_set'].validation_data_set(),
             batch_size=self.objects['batch_size'],
             shuffle=False,
             num_workers=self.objects['num_workers']
@@ -83,7 +83,7 @@ class BaseExperiment(ABC, torch.nn.Module):
 
     def test_dataloader(self):
         dl = torch.utils.data.DataLoader(
-            self.objects['data_set'].get_whole_validation_data_set(),
+            self.objects['data_set'].validation_data_set(),
             batch_size=self.objects['batch_size'],
             shuffle=False,
             num_workers=self.objects['num_workers']

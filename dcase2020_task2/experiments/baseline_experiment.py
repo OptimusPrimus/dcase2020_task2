@@ -12,7 +12,7 @@ SETTINGS['CAPTURE_MODE'] = 'sys'
 class BaselineExperiment(BaseExperiment, pl.LightningModule):
 
     '''
-    DCASE Baseline with AE per machine ID.
+    DCASE Baseline with AE, MADMOG & MAF per machine ID.
     '''
 
     def __init__(self, configuration_dict, _run):
@@ -83,11 +83,13 @@ def configuration():
     seed = 1220
     deterministic = False
     id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S:%f")
-    log_path = os.path.join('..', 'experiment_logs', id)
+    log_path = os.path.join('experiment_logs', id)
 
     #####################
     # quick configuration, uses default parameters of more detailed configuration
     #####################
+
+    architecture = 'dcase2020_task2.models.MADE'
 
     machine_type = 0
     machine_id = 2
@@ -96,46 +98,49 @@ def configuration():
 
     debug = False
     if debug:
-        epochs = 50
+        epochs = 1
         num_workers = 0
     else:
-        epochs = 100
+        epochs = 50
         num_workers = 4
 
     learning_rate = 1e-3
     weight_decay = 1e-5
 
-    normalize = 'per_machine_id' #
     normalize_raw = True
 
     context = 5
-    descriptor = "BaselineExperiment_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "BaselineExperiment_{}_{}_{}_{}_{}_{}_{}".format(
+        architecture,
         batch_size,
         learning_rate,
         weight_decay,
-        normalize,
         normalize_raw,
-        context
+        context,
+        seed
     )
 
     ########################
     # detailed configuration
     ########################
 
-    num_mel = 256
+    num_mel = 128
     n_fft = 1024
     hop_size = 512
-    power = 1.0
+    power = 2.0
     fmin = 0
 
     data_set = {
         'class': 'dcase2020_task2.data_sets.MCMDataSet',
+        'args': [
+            machine_type,
+            machine_id
+        ],
         'kwargs': {
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
             'hop_size': hop_size,
-            'normalize': normalize,
             'normalize_raw': normalize_raw,
             'power': power,
             'fmin': fmin
@@ -153,13 +158,13 @@ def configuration():
     }
 
     model = {
-        'class': 'dcase2020_task2.models.MADE',
+        'class': architecture,
         'args': [
             '@data_set.observation_shape',
             '@reconstruction'
         ],
         'kwargs': {
-            'hidden_size': 4096,
+            'hidden_size': 1024,
             'num_hidden': 4
         }
     }

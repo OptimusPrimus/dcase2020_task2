@@ -1,18 +1,19 @@
 import torch.nn
-from dcase2020_task2.models import VAEBase
+from dcase2020_task2.models import VAEBase#
+from dcase2020_task2.priors import NoPrior
 import numpy as np
 import torch
 
 from dcase2020_task2.models.custom import activation_dict, init_weights
 
 
-class BaselineFCAE(torch.nn.Module, VAEBase):
+class AE(torch.nn.Module, VAEBase):
 
     def __init__(
             self,
             input_shape,
-            prior,
             reconstruction_loss,
+            prior=NoPrior(latent_size=8),
             hidden_size=128,
             num_hidden=3,
             activation='relu',

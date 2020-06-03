@@ -3,7 +3,6 @@ import torch.utils.data
 import glob
 from dcase2020_task2.data_sets import BaseDataSet
 import librosa
-import sys
 import numpy as np
 
 CLASS_MAP = {
@@ -34,11 +33,20 @@ TRAINING_ID_MAP = {
 }
 
 
+def enumerate_development_datasets():
+    typ_id = []
+    for i in range(6):
+        for j in TRAINING_ID_MAP[i]:
+            typ_id.append((i, j))
+    return typ_id
+
 
 class MCMDataSet(BaseDataSet):
 
     def __init__(
             self,
+            machine_type,
+            machine_id,
             data_root=os.path.join(os.path.expanduser('~'), 'shared', 'dcase2020_task2'),
             context=5,
             num_mel=128,
@@ -46,9 +54,8 @@ class MCMDataSet(BaseDataSet):
             hop_size=512,
             power=1.0,
             fmin=40,
-            normalize='all',
             normalize_raw=False,
-            complement='all'
+            normalize=None
     ):
         self.data_root = data_root
         self.context = context
@@ -56,147 +63,54 @@ class MCMDataSet(BaseDataSet):
         self.n_fft = n_fft
         self.hop_size = hop_size
         self.power = power
-        self.complement = complement
         self.fmin = fmin
+        self.normalize = normalize
 
-        self.data_sets = dict()
-        for machine_type in range(6):
-            self.data_sets[machine_type] = dict()
-            for machine_id in TRAINING_ID_MAP[machine_type]:
-                self.data_sets[machine_type][machine_id] = (
-                    MachineDataSet(
-                        machine_type,
-                        machine_id,
-                        data_root=self.data_root,
-                        mode='training',
-                        context=self.context,
-                        num_mel=self.num_mel,
-                        n_fft=self.n_fft,
-                        hop_size=self.hop_size,
-                        power=power,
-                        normalize=normalize_raw,
-                        fmin=fmin
-                    ),
-                    MachineDataSet(
-                        machine_type,
-                        machine_id,
-                        data_root=self.data_root,
-                        mode='validation',
-                        context=self.context,
-                        num_mel=self.num_mel,
-                        n_fft=self.n_fft,
-                        hop_size=self.hop_size,
-                        power=power,
-                        normalize=normalize_raw
-                    )
-                )
+        assert type(machine_type) == int and type(machine_id) == int
 
-        if normalize == 'all':
-            data = []
-            for machine_type in range(6):
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, _ = self.data_sets[machine_type][machine_id]
-                    data.append(train.data)
-            data = np.concatenate(data, axis=1)
-            mean = data.mean(axis=1, keepdims=True)
-            std = data.std(axis=1, keepdims=True)
-            for machine_type in range(6):
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, val = self.data_sets[machine_type][machine_id]
-                    train.data = (train.data - mean) / std
-                    val.data = (val.data - mean) / std
-        elif normalize == 'per_machine_id':
-            for machine_type in range(6):
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    train, val = self.data_sets[machine_type][machine_id]
-                    data = train.data
-                    mean = data.mean(axis=1, keepdims=True)
-                    std = data.std(axis=1, keepdims=True)
-                    train.data = (train.data - mean) / std
-                    val.data = (val.data - mean) / std
-        elif normalize == 'none':
-            pass
+        kwargs = {
+            'data_root': self.data_root,
+            'context': self.context,
+            'num_mel': self.num_mel,
+            'n_fft': self.n_fft,
+            'hop_size': self.hop_size,
+            'power': power,
+            'normalize': normalize_raw,
+            'fmin': fmin
+        }
+
+        training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
+        validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
+
+        if normalize is None:
+            mean = training_set.data.mean(axis=1, keepdims=True)
+            std = training_set.data.std(axis=1, keepdims=True)
+            training_set.data = (training_set.data - mean) / std
+            validation_set.data = (validation_set.data - mean) / std
         else:
-            raise AttributeError
+            assert type(normalize) == tuple
+            assert len(normalize) == 2
+            mean, std = normalize
+            training_set.data = (training_set.data - mean) / std
+            validation_set.data = (validation_set.data - mean) / std
+
+        self.training_set = training_set
+        self.validation_set = validation_set
+        self.mean = mean
+        self.std = std
 
     @property
     def observation_shape(self) -> tuple:
         return 1, self.num_mel, self.context
 
-    def training_data_set(self, type, id):
-        return self.data_sets[type][id][0]
+    def training_data_set(self):
+        return self.training_set
 
-    def validation_data_set(self, type, id):
-        return self.data_sets[type][id][1]
+    def validation_data_set(self):
+        return self.validation_set
 
-    def complement_data_set(self, type, id):
-        complement_sets = []
-        if self.complement == 'all':
-            for machine_type in range(6):
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    if machine_type != type or machine_id != id:
-                        complement_sets.append(self.data_sets[machine_type][machine_id][0])
-
-        elif self.complement == 'same_mic_diff_type':
-            if type in [3, 4]:
-                types = [3, 4]
-            else:
-                types = [0, 1, 2, 5]
-            for machine_type in types:
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    if machine_type != type:
-                        complement_sets.append(self.data_sets[machine_type][machine_id][0])
-
-        elif self.complement == 'same_mic':
-            if type in [3, 4]:
-                types = [3, 4]
-            else:
-                types = [0, 1, 2, 5]
-            for machine_type in types:
-                for machine_id in TRAINING_ID_MAP[machine_type]:
-                    if machine_type != type or machine_id != id:
-                        complement_sets.append(self.data_sets[machine_type][machine_id][0])
-        elif self.complement == 'same_type':
-            for machine_id in TRAINING_ID_MAP[type]:
-                if machine_id != id:
-                    complement_sets.append(self.data_sets[type][machine_id][0])
-        elif self.complement == 'different_type':
-            for machine_type in range(6):
-                if machine_type != type:
-                    for machine_id in TRAINING_ID_MAP[type]:
-                        complement_sets.append(self.data_sets[type][machine_id][0])
-
-        return torch.utils.data.ConcatDataset(complement_sets)
-
-    def get_whole_training_data_set(self):
-        complement_sets = []
-
-        for machine_type in range(6):
-            for machine_id in TRAINING_ID_MAP[machine_type]:
-                complement_sets.append(self.data_sets[machine_type][machine_id][0])
-
-        return torch.utils.data.ConcatDataset(complement_sets)
-
-    def get_whole_validation_data_set(self):
-        complement_sets = []
-
-        for machine_type in range(6):
-            for machine_id in TRAINING_ID_MAP[machine_type]:
-                complement_sets.append(self.data_sets[machine_type][machine_id][1])
-
-        return torch.utils.data.ConcatDataset(complement_sets)
-
-    def get_machine_training_data_set(self, machine_type):
-        complement_sets = []
-        for machine_id in TRAINING_ID_MAP[machine_type]:
-            complement_sets.append(self.data_sets[machine_type][machine_id][0])
-        return torch.utils.data.ConcatDataset(complement_sets)
-
-    def get_machine_validation_data_set(self, machine_type):
-        complement_sets = []
-        for machine_id in TRAINING_ID_MAP[machine_type]:
-            complement_sets.append(self.data_sets[machine_type][machine_id][1])
-        return torch.utils.data.ConcatDataset(complement_sets)
+    def mean_std(self):
+        return self.mean, self.std
 
 
 class MachineDataSet(torch.utils.data.Dataset):
@@ -222,7 +136,7 @@ class MachineDataSet(torch.utils.data.Dataset):
         self.n_fft = n_fft
         self.hop_size = hop_size
         self.power = power
-        self.normalize=normalize
+        self.normalize = normalize
         self.mode = mode
         self.data_root = data_root
         self.context = context
@@ -294,10 +208,12 @@ class MachineDataSet(torch.utils.data.Dataset):
         file_path = os.path.join(self.data_root, file_name)
 
         if os.path.exists(file_path):
-            print('Loading {} data set for machine type {} id {}...'.format(self.mode, self.machine_type, self.machine_id))
+            print('Loading {} data set for machine type {} id {}...'.format(self.mode, self.machine_type,
+                                                                            self.machine_id))
             data = np.load(file_path)
         else:
-            print('Loading & saving {} data set for machine type {} id {}...'.format(self.mode, self.machine_type, self.machine_id))
+            print('Loading & saving {} data set for machine type {} id {}...'.format(self.mode, self.machine_type,
+                                                                                     self.machine_id))
             data = np.empty((self.num_mel, self.file_length * len(files)), dtype=np.float32)
             for i, f in enumerate(files):
                 data[:, i * self.file_length:(i + 1) * self.file_length] = self.__load_preprocess_file__(f)

@@ -4,8 +4,9 @@ import torch.nn.functional as F
 
 class MSEReconstruction(BaseReconstruction):
 
-    def __init__(self, weight=1.0, size_average=True, **kwargs):
+    def __init__(self, input_shape, weight=1.0, size_average=True, **kwargs):
         super().__init__()
+        self.input_shape = input_shape
         self.weight = weight
         self.size_average = size_average
 

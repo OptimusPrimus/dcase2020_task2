@@ -76,6 +76,7 @@ class BaselineDCASEExperiment(BaseExperiment, pl.LightningModule):
         return self.result
 
     def train_dataloader(self):
+        assert False, 'Need to merge training sets frst!'
         dl = torch.utils.data.DataLoader(
             self.objects['data_set'].get_machine_training_data_set(self.machine_type),
             batch_size=self.objects['batch_size'],
@@ -86,6 +87,7 @@ class BaselineDCASEExperiment(BaseExperiment, pl.LightningModule):
         return dl
 
     def val_dataloader(self):
+        assert False, 'Need to merge training sets frst!'
         dl = torch.utils.data.DataLoader(
             self.objects['data_set'].get_machine_validation_data_set(self.machine_type),
             batch_size=self.objects['batch_size'],
@@ -154,6 +156,10 @@ def configuration():
 
     data_set = {
         'class': 'dcase2020_task2.data_sets.MCMDataSet',
+        'args': [
+            machine_type,
+            machine_id
+        ],
         'kwargs': {
             'context': context,
             'num_mel': num_mel,

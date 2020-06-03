@@ -11,15 +11,16 @@ class BaseDataSet(ABC):
 
     @property
     @abstractmethod
-    def training_data_set(self, type, id):
+    def training_data_set(self):
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def validation_data_set(self, type, id):
+    def validation_data_set(self):
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def complement_data_set(self, type, id):
+    def mean_std(self):
         raise NotImplementedError
+

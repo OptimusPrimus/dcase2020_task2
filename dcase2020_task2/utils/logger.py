@@ -201,7 +201,7 @@ class Logger:
         for i, machine_type in enumerate(unique_machine_types):
             machine_type = INVERSE_CLASS_MAP[machine_type]
             for machine_id in unique_machine_ids[i]:
-                result.setdefault(machine_type, dict())[machine_id] = self.__rauc_from_score__(
+                result.setdefault(machine_type, dict())[int(machine_id)] = self.__rauc_from_score__(
                     scores_mean,
                     scores_max,
                     ground_truth,
@@ -220,10 +220,10 @@ class Logger:
         scores_mean_ = scores_mean[np.logical_and(machine_types == machine_type, machine_ids == id)]
         scores_max_ = scores_max[np.logical_and(machine_types == machine_type, machine_ids == id)]
 
-        return metrics.roc_auc_score(ground_truth_, scores_mean_), \
-               metrics.roc_auc_score(ground_truth_, scores_mean_, max_fpr=max_fpr), \
-               metrics.roc_auc_score(ground_truth_, scores_max_), \
-               metrics.roc_auc_score(ground_truth_, scores_max_, max_fpr=max_fpr)
+        return float(metrics.roc_auc_score(ground_truth_, scores_mean_)), \
+               float(metrics.roc_auc_score(ground_truth_, scores_mean_, max_fpr=max_fpr)), \
+               float(metrics.roc_auc_score(ground_truth_, scores_max_)), \
+               float(metrics.roc_auc_score(ground_truth_, scores_max_, max_fpr=max_fpr))
 
     @staticmethod
     def __batches_to_per_file_scores__(outputs, aggregation_fun=None):
