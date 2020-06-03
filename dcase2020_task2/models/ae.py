@@ -13,7 +13,7 @@ class AE(torch.nn.Module, VAEBase):
             self,
             input_shape,
             reconstruction_loss,
-            prior=NoPrior(latent_size=8),
+            prior=None,
             hidden_size=128,
             num_hidden=3,
             activation='relu',
@@ -22,7 +22,8 @@ class AE(torch.nn.Module, VAEBase):
         super().__init__()
 
         activation_fn = activation_dict[activation]
-
+        if prior is None:
+            prior = NoPrior(latent_size=hidden_size)
         self.input_shape = input_shape
         self.prior = prior
         self.reconstruction = reconstruction_loss

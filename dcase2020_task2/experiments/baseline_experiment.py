@@ -58,6 +58,8 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
 
     def validation_step(self, batch, batch_num):
         self(batch)
+        if batch_num == 0:
+            self.logger_.log_image_reconstruction(batch, self.epoch)
         return {
             'targets': batch['targets'],
             'scores': batch['scores'],
@@ -78,7 +80,6 @@ class BaselineExperiment(BaseExperiment, pl.LightningModule):
         self.logger_.close()
         return self.result
 
-
 def configuration():
     seed = 1220
     deterministic = False
@@ -89,46 +90,58 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    architecture = 'dcase2020_task2.models.MADE'
-
     machine_type = 0
-    machine_id = 2
-
-    batch_size = 512
-
-    debug = False
-    if debug:
-        epochs = 1
-        num_workers = 0
-    else:
-        epochs = 50
-        num_workers = 4
-
-    learning_rate = 1e-3
-    weight_decay = 1e-5
-
-    normalize_raw = True
-
-    context = 5
-    descriptor = "BaselineExperiment_{}_{}_{}_{}_{}_{}_{}".format(
-        architecture,
-        batch_size,
-        learning_rate,
-        weight_decay,
-        normalize_raw,
-        context,
-        seed
-    )
-
-    ########################
-    # detailed configuration
-    ########################
+    machine_id = 0
 
     num_mel = 128
     n_fft = 1024
     hop_size = 512
     power = 2.0
     fmin = 0
+    context = 5
+
+    model_class = 'dcase2020_task2.models.MADE'
+    hidden_size = 1024
+    num_hidden = 4
+    latent_size = 8 # only used for AEs
+
+    debug = False
+    if debug:
+        epochs = 1
+        num_workers = 0
+    else:
+        epochs = 100
+        num_workers = 4
+
+    reconstruction_class = 'dcase2020_task2.losses.NLLReconstruction'
+    batch_size = 512
+    learning_rate = 1e-3
+    weight_decay = 0
+
+    normalize_raw = True
+
+
+    descriptor = "BaselineExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
+        model_class,
+        hidden_size,
+        num_hidden,
+        latent_size,
+        batch_size,
+        learning_rate,
+        weight_decay,
+        normalize_raw,
+        num_mel,
+        context,
+        n_fft,
+        hop_size,
+        power,
+        fmin,
+        seed
+    )
+
+    ########################
+    # detailed configuration
+    ########################
 
     data_set = {
         'class': 'dcase2020_task2.data_sets.MCMDataSet',
@@ -148,7 +161,7 @@ def configuration():
     }
 
     reconstruction = {
-        'class': 'dcase2020_task2.losses.NLLReconstruction',
+        'class': reconstruction_class,
         'args': [
             '@data_set.observation_shape',
         ],
@@ -158,14 +171,20 @@ def configuration():
     }
 
     model = {
-        'class': architecture,
+        'class': model_class,
         'args': [
             '@data_set.observation_shape',
             '@reconstruction'
         ],
         'kwargs': {
-            'hidden_size': 1024,
-            'num_hidden': 4
+            'hidden_size': hidden_size,
+            'num_hidden': num_hidden,
+            'prior': {
+                'class': 'dcase2020_task2.priors.NoPrior',
+                'kwargs': {
+                    'latent_size': latent_size
+                }
+            }
         }
     }
 
@@ -176,7 +195,7 @@ def configuration():
         ],
         'kwargs': {
             'step_size': 25,
-            'gamma': 0.1
+            'gamma': 0.3
         }
     }
 

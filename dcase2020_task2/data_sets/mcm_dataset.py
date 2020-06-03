@@ -53,7 +53,7 @@ class MCMDataSet(BaseDataSet):
             n_fft=1024,
             hop_size=512,
             power=1.0,
-            fmin=40,
+            fmin=0,
             normalize_raw=False,
             normalize=None
     ):

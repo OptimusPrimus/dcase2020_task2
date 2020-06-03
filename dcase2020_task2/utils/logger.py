@@ -62,7 +62,6 @@ class Logger:
         # log validation results
         for machine_type in result:
             for machine_id in result[machine_type]:
-
                 self.__log_metric__(
                     f'{machine_type}_{machine_id}_validation_auroc_mean',
                     result[machine_type][machine_id][0],
@@ -104,7 +103,6 @@ class Logger:
             machine_type = CLASS_MAP[machine_type]
 
             for machine_id in result[INVERSE_CLASS_MAP[machine_type]]:
-
                 # save predictions ...
                 indices = np.where(np.logical_and(machine_types == machine_type, machine_ids == machine_id))[0]
 
@@ -133,13 +131,16 @@ class Logger:
         num_images = np.minimum(len(batch), num_images)
 
         assert num_images > 0
-        assert batch.get('observations')
-        assert batch.get('visualizations')
-
+        assert batch.get('observations') is not None
+        assert batch.get('visualizations') is not None
+        rnd = np.random.RandomState(seed=1220)
+        perm = rnd.permutation(len(batch['visualizations']))
         grid_img = torchvision.utils.make_grid(
             torch.cat(
-                batch['observations'][:num_images],
-                batch['visualizations'][:num_images]
+                [
+                    batch['observations'][perm][:num_images],
+                    batch['visualizations'][perm][:num_images]
+                ]
             ),
             nrow=num_images
         )
@@ -264,14 +265,13 @@ class Logger:
             assert all(machine_ids[-1] == machine_ids_[indices])
             assert all(targets[-1] == targets_[indices])
 
-
         return np.array(scores_mean), \
-        np.array(scores_max), \
-        np.array(scores_custom), \
-        np.array(targets), \
-        np.array(unique_files), \
-        np.array(machine_types), \
-        np.array(machine_ids)
+               np.array(scores_max), \
+               np.array(scores_custom), \
+               np.array(targets), \
+               np.array(unique_files), \
+               np.array(machine_types), \
+               np.array(machine_ids)
 
     def __log_metric__(self, name, value, step):
 
