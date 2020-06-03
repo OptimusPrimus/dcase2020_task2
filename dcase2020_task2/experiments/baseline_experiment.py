@@ -111,7 +111,7 @@ def configuration():
         num_workers = 0
     else:
         epochs = 100
-        num_workers = 4
+        num_workers = 1
 
     reconstruction_class = 'dcase2020_task2.losses.NLLReconstruction'
     batch_size = 512
