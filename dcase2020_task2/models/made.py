@@ -13,8 +13,8 @@ class MADE(nn.Module):
             hidden_size=4096,
             num_hidden=4,
             activation='relu',
-            input_order='random',
-            cond_label_size=None
+            cond_label_size=None,
+            **kwargs
     ):
         """
         Args:
@@ -25,14 +25,17 @@ class MADE(nn.Module):
         self.input_shape = input_shape
         self.reconstruction = reconstruction
 
+        input_degree = torch.arange(int(np.prod(input_shape))).view(input_shape).transpose(2, 1).reshape(-1)
+        # input_degree = torch.arange(int(np.prod(input_shape)))
+
         # create masks
         # use natural order as input order
         masks, self.input_degrees = create_masks(
             int(np.prod(input_shape)),
             hidden_size,
             num_hidden,
-            input_order=input_order,
-            input_degrees=torch.arange(int(np.prod(input_shape)))
+            input_degrees=input_degree,
+            input_order='sequential'
         )
 
         # setup activation
@@ -53,19 +56,23 @@ class MADE(nn.Module):
 
     def forward(self, batch):
         # MAF eq 4 -- return mean and log std
-        x = batch['observations']
-        x = x.view(x.shape[0], -1)
+        batch_size = batch['observations'].shape[0]
+
+        x = batch['observations'].reshape(batch_size, -1)
         y = batch.get('y', None)
 
-        batch['pre_reconstructions'] = self.net(
-            self.input_layer(
-                x,
-                y
-            )
-        )
+        m, loga = self.net(self.input_layer(x, y)).chunk(chunks=2, dim=1)
+
+        # this guys should be normally distributed....
+        u = (x - m) * torch.exp(-loga)
+
+        # MAF eq 5
+        batch['u'] = u
+        batch['log_abs_det_jacobian'] = - loga
+
+        batch['reconstruction'] = m.reshape(batch_size, *self.input_shape)
 
         batch = self.reconstruction(batch)
-
         return batch
 
     def inverse(self, u, y=None, sum_log_abs_det_jacobians=None):

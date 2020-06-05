@@ -26,21 +26,15 @@ class NLLReconstruction(BaseReconstruction):
         # prepare observations and prediction based on loss type:
         # use linear outputs & normalized observations as is
         # MAF eq 4 -- return mean and log std
-        batch['m'], batch['loga'] = batch['pre_reconstructions'].chunk(chunks=2, dim=1)
 
-        # this guys should be normally distributed....
-        batch['u'] = (batch['observations'].view(len(batch['observations']), -1) - batch['m']) * torch.exp(-batch['loga'])
-
-        # MAF eq 5
-        batch['log_abs_det_jacobian'] = -batch['loga']
 
         # log probability
         batch['log_proba'] = torch.sum(self.base_dist.log_prob(batch['u']) + batch['log_abs_det_jacobian'], dim=1)
 
         # scores
-        batch['scores'] = -batch['log_proba']
+        batch['scores'] = - batch['log_proba']
 
-        batch['visualizations'] = batch['u'].view(-1, *self.input_shape)
+        batch['visualizations'] = batch['reconstruction']
 
         # loss
         batch['reconstruction_loss_raw'] = - batch['log_proba'].mean()

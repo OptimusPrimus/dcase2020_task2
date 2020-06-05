@@ -98,9 +98,9 @@ def configuration():
     hop_size = 512
     power = 2.0
     fmin = 0
-    context = 5
+    context = 8
 
-    model_class = 'dcase2020_task2.models.MADE'
+    model_class = 'dcase2020_task2.models.ConvAE' # 'dcase2020_task2.models.MADE'
     hidden_size = 1024
     num_hidden = 4
     latent_size = 8 # only used for AEs
@@ -113,8 +113,8 @@ def configuration():
         epochs = 100
         num_workers = 1
 
-    reconstruction_class = 'dcase2020_task2.losses.NLLReconstruction'
-    batch_size = 512
+    reconstruction_class = 'dcase2020_task2.losses.MSEReconstruction' # 'dcase2020_task2.losses.NLLReconstruction'
+    batch_size = 256
     learning_rate = 1e-3
     weight_decay = 0
 
