@@ -156,7 +156,8 @@ def configuration():
             'hop_size': hop_size,
             'normalize_raw': normalize_raw,
             'power': power,
-            'fmin': fmin
+            'fmin': fmin,
+            'hop_all': True
         }
     }
 
