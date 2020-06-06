@@ -7,7 +7,9 @@ from torch.nn import functional as F
 
 activation_dict = {
     'relu': torch.nn.ReLU,
-    'tanh': torch.nn.Tanh
+    'tanh': torch.nn.Tanh,
+    'elu': torch.nn.ELU,
+    'prelu': torch.nn.PReLU
 }
 
 def init_weights(m):

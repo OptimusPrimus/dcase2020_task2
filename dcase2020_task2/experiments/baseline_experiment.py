@@ -101,18 +101,17 @@ def configuration():
     context = 8
 
     model_class = 'dcase2020_task2.models.ConvAE' # 'dcase2020_task2.models.MADE'
-    hidden_size = 1024
-    num_hidden = 4
+    hidden_size = 256
+    num_hidden = 1
     latent_size = 8 # only used for AEs
 
     debug = False
     if debug:
-        epochs = 1
         num_workers = 0
     else:
-        epochs = 100
-        num_workers = 1
+        num_workers = 4
 
+    epochs = 100
     reconstruction_class = 'dcase2020_task2.losses.MSEReconstruction' # 'dcase2020_task2.losses.NLLReconstruction'
     batch_size = 256
     learning_rate = 1e-3
