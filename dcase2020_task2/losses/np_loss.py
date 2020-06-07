@@ -7,15 +7,14 @@ class NP(BaseLoss):
     def __init__(self, weight=1.0, rho=0.2, **kwargs):
         super().__init__()
         self.weight = weight
-        self.rho=0.2
+        self.rho = 0.2
 
-    def forward(self, batch_normal, batch_abnormal, *args, **kwargs):
+    def forward(self, batch_normal, *args, **kwargs):
 
-        assert batch_normal.get('scores'), "cannot compute loss without scores"
-        assert batch_abnormal.get('scores'), "cannot compute loss without scores"
+        assert batch_normal.get('scores') is not None, "cannot compute loss without scores"
 
-        normal_scores = batch_normal['scores']
-        abnormal_scores = batch_abnormal['scores']
+        normal_scores = batch_normal['scores'][batch_normal['abnormal'] == 0]
+        abnormal_scores = batch_normal['scores'][batch_normal['abnormal'] == 1]
 
         with torch.no_grad():
             phi = torch.kthvalue(normal_scores, int((1 - self.rho) * normal_scores.shape[0]))[0]
@@ -30,6 +29,6 @@ class NP(BaseLoss):
         batch_normal['normal_scores_mean'] = normal_scores.mean()
         batch_normal['normal_scores_std'] = normal_scores.std()
         batch_normal['abnormal_scores_mean'] = abnormal_scores.mean()
-        batch_normal['abnormal_scores_std'] = normal_scores.std()
+        batch_normal['abnormal_scores_std'] = abnormal_scores.std()
 
         return batch_normal

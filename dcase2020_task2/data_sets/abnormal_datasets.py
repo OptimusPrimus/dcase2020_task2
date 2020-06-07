@@ -23,7 +23,8 @@ class ComplementMCMDataSet(BaseDataSet):
             fmin=0,
             normalize_raw=False,
             normalize=None,
-            hop_all=False
+            hop_all=False,
+            same_type=False
     ):
         self.data_root = data_root
         self.context = context
@@ -66,22 +67,22 @@ class ComplementMCMDataSet(BaseDataSet):
             validation_set.data = (validation_set.data - mean) / std
 
         training_sets = []
-        validation_sets = []
+        # validation_sets = []
 
         for type_ in TRAINING_ID_MAP:
             for id_ in TRAINING_ID_MAP[type_]:
-                if type_ != machine_type:
+                if type_ != machine_type or (id_ != machine_id and same_type):
                     t = MachineDataSet(type_, id_, mode='training', **kwargs)
                     t.data = (t.data - mean) / std
 
-                    v = MachineDataSet(type_, id_, mode='validation', **kwargs)
-                    v.data = (v.data - mean) / std
+                    #v = MachineDataSet(type_, id_, mode='validation', **kwargs)
+                    #v.data = (v.data - mean) / std
 
                     training_sets.append(t)
-                    validation_sets.append(v)
+                    # validation_sets.append(v)
 
         self.training_set = torch.utils.data.ConcatDataset(training_sets)
-        self.validation_set = torch.utils.data.ConcatDataset(validation_sets)
+        # self.validation_set = torch.utils.data.ConcatDataset(validation_sets)
         self.mean = mean
         self.std = std
 
@@ -93,7 +94,7 @@ class ComplementMCMDataSet(BaseDataSet):
         return self.training_set
 
     def validation_data_set(self):
-        return self.validation_set
+        raise NotImplementedError
 
     def mean_std(self):
         return self.mean, self.std

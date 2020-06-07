@@ -9,13 +9,12 @@ class AUC(BaseLoss):
         super().__init__()
         self.weight = weight
 
-    def forward(self, batch_normal, batch_abnormal):
+    def forward(self, batch_normal):
 
-        assert batch_normal.get('scores'), "cannot compute loss without scores"
-        assert batch_abnormal.get('scores'), "cannot compute loss without scores"
+        assert batch_normal.get('scores') is not None, "cannot compute loss without scores"
 
-        normal_scores = batch_normal['scores']
-        abnormal_scores = batch_abnormal['scores']
+        normal_scores = batch_normal['scores'][batch_normal['abnormal'] == 0]
+        abnormal_scores = batch_normal['scores'][batch_normal['abnormal'] == 1]
 
         tprs = torch.sigmoid(abnormal_scores[:, None] - normal_scores[None, :]).mean(dim=0)
         batch_normal['tpr'] = tprs.mean()
@@ -28,6 +27,6 @@ class AUC(BaseLoss):
         batch_normal['normal_scores_mean'] = normal_scores.mean()
         batch_normal['normal_scores_std'] = normal_scores.std()
         batch_normal['abnormal_scores_mean'] = abnormal_scores.mean()
-        batch_normal['abnormal_scores_std'] = normal_scores.std()
+        batch_normal['abnormal_scores_std'] = abnormal_scores.std()
 
-        return batch_normal[f'{self.prefix}_loss']
+        return batch_normal

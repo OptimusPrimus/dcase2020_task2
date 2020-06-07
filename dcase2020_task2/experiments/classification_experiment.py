@@ -155,6 +155,9 @@ def configuration():
     num_hidden = 3
     dropout_probability = 0.0
 
+    # complement set
+    same_type = True
+
     debug = False
     if debug:
         num_workers = 0
@@ -170,7 +173,7 @@ def configuration():
     normalize_raw = True
 
     # TODO: change default descriptor
-    descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
+    descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_Complement:[{}]{}".format(
         model_class,
         hidden_size,
         num_hidden,
@@ -186,6 +189,7 @@ def configuration():
         hop_size,
         power,
         fmin,
+        same_type,
         seed
     )
 
@@ -226,7 +230,8 @@ def configuration():
             'normalize_raw': normalize_raw,
             'power': power,
             'fmin': fmin,
-            'hop_all': False
+            'hop_all': False,
+            'same_type': same_type
         }
     }
 
