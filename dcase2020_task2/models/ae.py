@@ -16,7 +16,7 @@ class AE(torch.nn.Module, VAEBase):
             prior=None,
             hidden_size=128,
             num_hidden=3,
-            activation='elu',
+            activation='relu',
             batch_norm=False
     ):
         super().__init__()
@@ -36,7 +36,6 @@ class AE(torch.nn.Module, VAEBase):
             if batch_norm:
                 encoder_layers.append(torch.nn.BatchNorm1d(o))
             encoder_layers.append(activation_fn())
-            encoder_layers.append(torch.nn.AvgPool2d(kernel_size=2))
 
         # symetric decoder sizes/ layers
         sizes = sizes[::-1]
@@ -48,7 +47,8 @@ class AE(torch.nn.Module, VAEBase):
             decoder_layers.append(activation_fn())
         # remove last relu
         _ = decoder_layers.pop()
-        _ = decoder_layers.pop()
+        if batch_norm:
+            _ = decoder_layers.pop()
 
         self.encoder = torch.nn.Sequential(*encoder_layers)
         self.decoder = torch.nn.Sequential(*decoder_layers)

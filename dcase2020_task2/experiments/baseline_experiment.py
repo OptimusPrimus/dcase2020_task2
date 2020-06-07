@@ -98,12 +98,12 @@ def configuration():
     hop_size = 512
     power = 2.0
     fmin = 0
-    context = 8
+    context = 5
 
-    model_class = 'dcase2020_task2.models.ConvAE' # 'dcase2020_task2.models.MADE'
-    hidden_size = 256
-    num_hidden = 1
-    latent_size = 8 # only used for AEs
+    model_class = 'dcase2020_task2.models.AE' # 'dcase2020_task2.models.MADE'
+    hidden_size = 512
+    num_hidden = 3
+    latent_size = 64 # only used for AEs
 
     debug = False
     if debug:
@@ -113,9 +113,9 @@ def configuration():
 
     epochs = 100
     reconstruction_class = 'dcase2020_task2.losses.MSEReconstruction' # 'dcase2020_task2.losses.NLLReconstruction'
-    batch_size = 256
+    batch_size = 512
     learning_rate = 1e-3
-    weight_decay = 0
+    weight_decay = 1e-5
 
     normalize_raw = True
 
@@ -156,7 +156,7 @@ def configuration():
             'normalize_raw': normalize_raw,
             'power': power,
             'fmin': fmin,
-            'hop_all': True
+            'hop_all': False
         }
     }
 

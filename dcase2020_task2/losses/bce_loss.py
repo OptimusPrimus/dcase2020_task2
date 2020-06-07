@@ -10,25 +10,19 @@ class BCE(BaseLoss):
         super().__init__()
         self.weight = weight
 
-    def forward(self, batch_normal, batch_abnormal):
+    def forward(self, batch_normal):
 
-        assert batch_normal.get('scores'), "cannot compute loss without scores"
-        assert batch_abnormal.get('scores'), "cannot compute loss without scores"
+        assert batch_normal.get('scores') is not None, "cannot compute loss without scores"
 
-        normal_scores = batch_normal['scores']
-        abnormal_scores = batch_abnormal['scores']
+        normal_scores = batch_normal['scores'][batch_normal['abnormal'] == 0]
+        abnormal_scores = batch_normal['scores'][batch_normal['abnormal'] == 1]
 
-        abnormal_loss = F.binary_cross_entropy_with_logits(
-            abnormal_scores,
-            torch.ones_like(abnormal_scores).to(abnormal_scores.device)
+        loss = F.binary_cross_entropy_with_logits(
+            batch_normal['scores'],
+            batch_normal['abnormal']
         )
 
-        normal_loss = F.binary_cross_entropy_with_logits(
-            normal_scores,
-            torch.zeros_like(normal_scores).to(normal_scores.device)
-        )
-
-        batch_normal['loss_raw'] = 0.5 * (abnormal_loss + normal_loss)
+        batch_normal['loss_raw'] = loss
         batch_normal['loss'] = self.weight * batch_normal['loss_raw']
 
         # log some stuff...

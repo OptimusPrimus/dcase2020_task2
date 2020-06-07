@@ -1,2 +1,3 @@
 from dcase2020_task2.data_sets.base_data_set import BaseDataSet
-from dcase2020_task2.data_sets.mcm_dataset import MCMDataSet
+from dcase2020_task2.data_sets.mcm_dataset import MCMDataSet, MachineDataSet, INVERSE_CLASS_MAP, CLASS_MAP, TRAINING_ID_MAP
+from dcase2020_task2.data_sets.abnormal_datasets import ComplementMCMDataSet

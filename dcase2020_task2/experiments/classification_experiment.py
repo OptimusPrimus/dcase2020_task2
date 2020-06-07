@@ -17,15 +17,23 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
     def __init__(self, configuration_dict, _run):
         super().__init__(configuration_dict)
 
+        # default stuff
         self.network = self.objects['model']
-        self.data_set = self.objects['data_set']
         self.loss = self.objects['loss']
         self.logger_ = Logger(_run, self, self.configuration_dict, self.objects)
 
+        # experiment state variables
+        self.epoch = -1
+        self.step = 0
+        self.result = None
+
         # will be set before each epoch
+        self.normal_data_set = self.objects['data_set']
+        self.abnormal_data_set = self.objects['abnormal_data_set']
+
         self.inf_data_loader = self.get_inf_data_loader(
             torch.utils.data.DataLoader(
-                self.data_set.complement_data_set(self.machine_type, self.machine_id),
+                self.abnormal_data_set.training_data_set(),
                 batch_size=self.objects['batch_size'],
                 shuffle=True,
                 num_workers=self.objects['num_workers'],
@@ -58,12 +66,26 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
             self.epoch += 1
 
         if optimizer_idx == 0:
+            abnormal_batch = next(self.inf_data_loader)
+
+            normal_batch_size = len(batch_normal['observations'])
+            abnormal_batch_size = len(abnormal_batch['observations'])
+
+            device = batch_normal['observations'].device
+
+            batch_normal['abnormal'] = torch.cat([
+                torch.zeros(normal_batch_size, 1).to(device),
+                torch.ones(abnormal_batch_size, 1).to(device)
+            ])
+
+            batch_normal['observations'] = torch.cat([
+                batch_normal['observations'],
+                abnormal_batch['observations']
+            ])
+
             batch_normal = self(batch_normal)
-            batch_abnormal = self(next(self.inf_data_loader))
 
-            loss = self.loss.loss(batch_normal, batch_abnormal)
-
-            batch_normal['loss'] = loss
+            batch_normal = self.loss(batch_normal)
 
             self.logger_.log_training_step(batch_normal, self.step)
             self.step += 1
@@ -82,7 +104,6 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
             'scores': batch['scores'],
             'machine_types': batch['machine_types'],
             'machine_ids': batch['machine_ids'],
-            'part_numbers': batch['part_numbers'],
             'file_ids': batch['file_ids']
         }
 
@@ -94,9 +115,19 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
         return self.validation_step(batch, batch_num)
 
     def test_end(self, outputs):
-        self.result = self.logger_.log_testing(outputs)
+        self.result = self.logger_.log_test(outputs)
         self.logger_.close()
         return self.result
+
+    def train_dataloader(self):
+        dl = torch.utils.data.DataLoader(
+            self.objects['data_set'].training_data_set(),
+            batch_size=self.objects['batch_size'],
+            shuffle=True,
+            num_workers=self.objects['num_workers'],
+            drop_last=False
+        )
+        return dl
 
 
 def configuration():
@@ -112,73 +143,89 @@ def configuration():
     machine_type = 0
     machine_id = 0
 
-    batch_size = 512
+    num_mel = 128
+    n_fft = 1024
+    hop_size = 512
+    power = 2.0
+    fmin = 0
+    context = 5
+
+    model_class = 'models.FCNN'
+    hidden_size = 512
+    num_hidden = 3
+    latent_size = 64
 
     debug = False
     if debug:
-        epochs = 1
         num_workers = 0
     else:
-        epochs = 100
         num_workers = 4
 
-    learning_rate = 1e-4
-    weight_decay = 1e-4
+    epochs = 100
+    loss_class = 'dcase2020_task2.losses.BCE'
+    batch_size = 512
+    learning_rate = 1e-3
+    weight_decay = 1e-5
 
-    rho = 0.1
-
-    feature_context = 'short'
-    loss_class = 'losses.BCE'
-    mse_weight = 0.0
-    model_class = 'models.BaselineFCNN'
-
-    normalize = 'all'
     normalize_raw = True
 
-    complement = 'all'
-
     # TODO: change default descriptor
-    descriptor = "ClassificationExperiment_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(
+    descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
         model_class,
-        loss_class,
+        hidden_size,
+        num_hidden,
+        latent_size,
         batch_size,
         learning_rate,
         weight_decay,
-        normalize,
         normalize_raw,
-        rho,
-        feature_context,
-        complement
+        num_mel,
+        context,
+        n_fft,
+        hop_size,
+        power,
+        fmin,
+        seed
     )
 
     ########################
-    # detailed configurationSamplingFCAE
+    # detailed configuration
     ########################
 
-    if feature_context == 'short':
-        context = 5
-        num_mel = 128
-        n_fft = 1024
-        hop_size = 512
-    elif feature_context == 'long':
-        context = 11
-        num_mel = 40
-        n_fft = 512
-        hop_size = 256
-
-    if model_class == 'models.SamplingCRNNAE':
-        context = 1
 
     data_set = {
-        'class': 'data_sets.MCMDataSet',
+        'class': 'dcase2020_task2.data_sets.MCMDataSet',
+        'args': [
+            machine_type,
+            machine_id
+        ],
         'kwargs': {
             'context': context,
             'num_mel': num_mel,
             'n_fft': n_fft,
             'hop_size': hop_size,
-            'normalize': normalize,
             'normalize_raw': normalize_raw,
-            'complement': complement
+            'power': power,
+            'fmin': fmin,
+            'hop_all': False
+        }
+    }
+
+    abnormal_data_set = {
+        'class': 'dcase2020_task2.data_sets.ComplementMCMDataSet',
+        'args': [
+            machine_type,
+            machine_id
+        ],
+        'kwargs': {
+            'context': context,
+            'num_mel': num_mel,
+            'n_fft': n_fft,
+            'hop_size': hop_size,
+            'normalize_raw': normalize_raw,
+            'power': power,
+            'fmin': fmin,
+            'hop_all': False
         }
     }
 
@@ -186,17 +233,14 @@ def configuration():
         'class': loss_class,
         'kwargs': {
             'weight': 1.0,
-            'input_shape': '@data_set.observation_shape',
-            'rho': rho,
-            'mse_weight': mse_weight
+            'input_shape': '@data_set.observation_shape'
         }
     }
 
     model = {
         'class': model_class,
         'args': [
-            '@data_set.observation_shape',
-            '@loss'
+            '@data_set.observation_shape'
         ]
     }
 
@@ -206,7 +250,8 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': 50
+            'step_size': 25,
+            'gamma': 0.3
         }
     }
 
