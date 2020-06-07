@@ -218,7 +218,7 @@ wait
 ./scripts/run_all.sh classification_experiment 0 "debug=False learning_rate=1e-3 num_hidden=4 hidden_size=512 batch_size=4096 weight_decay=1e-5 model_class=dcase2020_task2.models.FCNN loss_class=dcase2020_task2.losses.BCE -m student2.cp.jku.at:27017:dcase2020_task2_complement_classification_gridsearch" &
 ./scripts/run_all.sh classification_experiment 1 "debug=False learning_rate=1e-3 num_hidden=4 hidden_size=512 batch_size=4096 weight_decay=1e-5 model_class=dcase2020_task2.models.FCNN loss_class=dcase2020_task2.losses.BCE -m student2.cp.jku.at:27017:dcase2020_task2_complement_classification_gridsearch" &
 ./scripts/run_all.sh classification_experiment 2 "debug=False learning_rate=1e-3 num_hidden=4 hidden_size=512 batch_size=8192 weight_decay=1e-5 model_class=dcase2020_task2.models.FCNN loss_class=dcase2020_task2.losses.BCE -m student2.cp.jku.at:27017:dcase2020_task2_complement_classification_gridsearch" &
-./scripts/run_all.sh classification_experiment 3 "debug=False  learning_rate=1e-3num_hidden=4 hidden_size=512 batch_size=8192 weight_decay=1e-5 model_class=dcase2020_task2.models.FCNN loss_class=dcase2020_task2.losses.BCE -m student2.cp.jku.at:27017:dcase2020_task2_complement_classification_gridsearch" &
+./scripts/run_all.sh classification_experiment 3 "debug=False learning_rate=1e-3 num_hidden=4 hidden_size=512 batch_size=8192 weight_decay=1e-5 model_class=dcase2020_task2.models.FCNN loss_class=dcase2020_task2.losses.BCE -m student2.cp.jku.at:27017:dcase2020_task2_complement_classification_gridsearch" &
 
 wait
 
