@@ -159,7 +159,7 @@ def configuration():
     if debug:
         num_workers = 0
     else:
-        num_workers = 4
+        num_workers = 3
 
     epochs = 100
     loss_class = 'dcase2020_task2.losses.BCE'
