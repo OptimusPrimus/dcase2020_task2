@@ -170,11 +170,12 @@ def configuration():
     normalize_raw = True
 
     # TODO: change default descriptor
-    descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
+    descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
         model_class,
         hidden_size,
         num_hidden,
         dropout_probability,
+        loss_class,
         batch_size,
         learning_rate,
         weight_decay,
