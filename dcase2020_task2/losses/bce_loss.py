@@ -29,6 +29,6 @@ class BCE(BaseLoss):
         batch_normal['normal_scores_mean'] = normal_scores.mean()
         batch_normal['normal_scores_std'] = normal_scores.std()
         batch_normal['abnormal_scores_mean'] = abnormal_scores.mean()
-        batch_normal['abnormal_scores_std'] = normal_scores.std()
+        batch_normal['abnormal_scores_std'] = abnormal_scores.std()
 
         return batch_normal

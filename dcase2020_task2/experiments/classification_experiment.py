@@ -134,14 +134,14 @@ def configuration():
     seed = 1220
     deterministic = False
     id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-    log_path = os.path.join('..', 'experiment_logs', id)
+    log_path = os.path.join('experiment_logs', id)
 
     #####################
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
     machine_type = 0
-    machine_id = 0
+    machine_id = 2
 
     num_mel = 128
     n_fft = 1024
@@ -150,10 +150,10 @@ def configuration():
     fmin = 0
     context = 5
 
-    model_class = 'models.FCNN'
-    hidden_size = 512
+    model_class = 'dcase2020_task2.models.FCNN'
+    hidden_size = 256
     num_hidden = 3
-    latent_size = 64
+    dropout_probability = 0.0
 
     debug = False
     if debug:
@@ -163,9 +163,9 @@ def configuration():
 
     epochs = 100
     loss_class = 'dcase2020_task2.losses.BCE'
-    batch_size = 512
-    learning_rate = 1e-3
-    weight_decay = 1e-5
+    batch_size = 8192
+    learning_rate = 1e-4
+    weight_decay = 0
 
     normalize_raw = True
 
@@ -174,7 +174,7 @@ def configuration():
         model_class,
         hidden_size,
         num_hidden,
-        latent_size,
+        dropout_probability,
         batch_size,
         learning_rate,
         weight_decay,
@@ -241,7 +241,12 @@ def configuration():
         'class': model_class,
         'args': [
             '@data_set.observation_shape'
-        ]
+        ],
+        'kwargs': {
+            'hidden_size': hidden_size,
+            'num_hidden': num_hidden,
+            'dropout_probability': dropout_probability
+        }
     }
 
     lr_scheduler = {
@@ -250,8 +255,8 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': 25,
-            'gamma': 0.3
+            'step_size': 50,
+            'gamma': 0.1
         }
     }
 
@@ -269,7 +274,7 @@ def configuration():
     }
 
     trainer = {
-        'class': 'trainers.PTLTrainer',
+        'class': 'dcase2020_task2.trainers.PTLTrainer',
         'kwargs': {
             'max_epochs': epochs,
             'checkpoint_callback': False,

@@ -16,22 +16,26 @@ class FCNN(torch.nn.Module):
             num_hidden=3,
             num_outputs=1,
             activation='relu',
-            batch_norm=False
+            batch_norm=False,
+            dropout_probability=0.1
     ):
         super().__init__()
 
         activation_fn = activation_dict[activation]
         self.input_shape = input_shape
 
-        sizes = [np.prod(input_shape)] + [hidden_size // (2**l) for l in range(num_hidden)] + [num_outputs]
+        sizes = [np.prod(input_shape)] + [hidden_size for _ in range(num_hidden)] + [num_outputs]
         layers = []
         for i, o in zip(sizes[:-1], sizes[1:]):
             layers.append(torch.nn.Linear(i, o))
             if batch_norm:
                 layers.append(torch.nn.BatchNorm1d(o))
+            layers.append(torch.nn.Dropout(p=dropout_probability))
             layers.append(activation_fn())
 
         _ = layers.pop()
+        _ = layers.pop()
+
         if batch_norm:
             _ = layers.pop()
 

@@ -52,6 +52,7 @@ class ComplementMCMDataSet(BaseDataSet):
         training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
         validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
 
+
         if normalize is None:
             mean = training_set.data.mean(axis=1, keepdims=True)
             std = training_set.data.std(axis=1, keepdims=True)
@@ -69,7 +70,7 @@ class ComplementMCMDataSet(BaseDataSet):
 
         for type_ in TRAINING_ID_MAP:
             for id_ in TRAINING_ID_MAP[type_]:
-                if type_ != machine_type or id_ != machine_id:
+                if type_ != machine_type:
                     t = MachineDataSet(type_, id_, mode='training', **kwargs)
                     t.data = (t.data - mean) / std
 
