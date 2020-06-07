@@ -133,7 +133,7 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
 def configuration():
     seed = 1220
     deterministic = False
-    id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    id = datetime.now().strftime("%Y-%m-%d_%H:%M:%S:%f")
     log_path = os.path.join('experiment_logs', id)
 
     #####################
