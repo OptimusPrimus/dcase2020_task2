@@ -29,7 +29,7 @@ class Logger:
         self.machine_id = self.objects['machine_id']
 
         # self.writer = SummaryWriter(log_dir=self.log_dir)
-        file = os.path.join(config['log_path'], 'conf.pl')
+        file = os.path.join(config['log_path'], f'conf_{self.machine_type}_{self.machine_id}.pl')
         with open(file, 'wb') as config_dictionary_file:
             pickle.dump(config, config_dictionary_file)
 
