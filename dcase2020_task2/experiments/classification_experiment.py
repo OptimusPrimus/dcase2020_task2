@@ -148,7 +148,7 @@ def configuration():
     hop_size = 512
     power = 2.0
     fmin = 0
-    context = 128
+    context = 32
 
     model_class = 'dcase2020_task2.models.CNN'
     hidden_size = 128
