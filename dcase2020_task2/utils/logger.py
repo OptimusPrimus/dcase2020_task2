@@ -29,7 +29,7 @@ class Logger:
         self.machine_id = self.objects['machine_id']
 
         # self.writer = SummaryWriter(log_dir=self.log_dir)
-        file = os.path.join(config['log_path'], f'conf_{self.machine_type}_{self.machine_id}.pl')
+        file = os.path.join(config['log_path'], f'conf_{self.machine_type}_id_{self.machine_id}.pl')
         with open(file, 'wb') as config_dictionary_file:
             pickle.dump(config, config_dictionary_file)
 
@@ -145,7 +145,7 @@ class Logger:
             nrow=num_images
         )
 
-        self.__log_image__(grid_img, f'{epoch}_reconstruction_x.png')
+        self.__log_image__(grid_img, f'{epoch}__{self.machine_type}_id_{self.machine_id}_reconstruction_x.png')
 
     def __plot_score_distribution__(self, scores_mean, scores_max, ground_truth, machine_types, machine_ids):
 
@@ -181,7 +181,7 @@ class Logger:
                 if i == 0 and j == 0:
                     plt.legend(loc='upper right')
 
-        plt.savefig(os.path.join(self.log_dir, 'score_distribution.png'), bbox_inches='tight')
+        plt.savefig(os.path.join(self.log_dir, f'score_distribution_{self.machine_type}_id_{self.machine_id}.png'), bbox_inches='tight')
         plt.close()
 
     def __compute_metrics__(
