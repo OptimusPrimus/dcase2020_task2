@@ -4,7 +4,7 @@ from dcase2020_task2.priors import NoPrior
 import numpy as np
 import torch
 
-from dcase2020_task2.models.custom import activation_dict, init_weights
+from dcase2020_task2.models.custom import ACTIVATION_DICT, init_weights
 
 
 class AE(torch.nn.Module, VAEBase):
@@ -21,7 +21,7 @@ class AE(torch.nn.Module, VAEBase):
     ):
         super().__init__()
 
-        activation_fn = activation_dict[activation]
+        activation_fn = ACTIVATION_DICT[activation]
         if prior is None:
             prior = NoPrior(latent_size=hidden_size)
         self.input_shape = input_shape
@@ -101,7 +101,7 @@ class ConvlBlock(torch.nn.Module):
                     )
                 )
             modules.append(
-                activation_dict[activation]()
+                ACTIVATION_DICT[activation]()
             )
 
         self.last_activation = modules.pop()
@@ -129,7 +129,7 @@ class ConvAE(torch.nn.Module, VAEBase):
     ):
         super().__init__()
 
-        activation_fn = activation_dict[activation]
+        activation_fn = ACTIVATION_DICT[activation]
         if prior is None:
             prior = NoPrior(latent_size=hidden_size)
         self.input_shape = input_shape

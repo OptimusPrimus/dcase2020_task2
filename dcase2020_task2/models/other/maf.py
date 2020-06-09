@@ -12,7 +12,7 @@ import matplotlib
 from dcase2020_task2.models import MADE
 from dcase2020_task2.models.custom import BatchNorm, \
     FlowSequential
-from dcase2020_task2.models.made import MADEMOG
+from dcase2020_task2.models.other.made import MADEMOG
 
 matplotlib.use('Agg')
 

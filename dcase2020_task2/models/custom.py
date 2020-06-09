@@ -5,7 +5,7 @@ import torch
 from torch import nn as nn
 from torch.nn import functional as F
 
-activation_dict = {
+ACTIVATION_DICT = {
     'relu': torch.nn.ReLU,
     'tanh': torch.nn.Tanh,
     'elu': torch.nn.ELU,

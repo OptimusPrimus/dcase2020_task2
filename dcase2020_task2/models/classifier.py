@@ -4,7 +4,7 @@ from dcase2020_task2.priors import NoPrior
 import numpy as np
 import torch
 
-from dcase2020_task2.models.custom import activation_dict, init_weights
+from dcase2020_task2.models.custom import ACTIVATION_DICT, init_weights
 
 
 class FCNN(torch.nn.Module):
@@ -21,7 +21,7 @@ class FCNN(torch.nn.Module):
     ):
         super().__init__()
 
-        activation_fn = activation_dict[activation]
+        activation_fn = ACTIVATION_DICT[activation]
         self.input_shape = input_shape
 
         sizes = [np.prod(input_shape)] + [hidden_size for i in range(num_hidden)] + [num_outputs]
@@ -63,20 +63,22 @@ class CNN(torch.nn.Module):
     ):
         super().__init__()
 
-        activation_fn = activation_dict[activation]
+        activation_fn = ACTIVATION_DICT[activation]
         self.input_shape = input_shape
 
         sizes = [input_shape[0]] + [hidden_size for i in range(num_hidden)] + [num_outputs]
         layers = []
         for i, o in zip(sizes[:-1], sizes[1:]):
             layers.append(torch.nn.Conv2d(i, o, kernel_size=(3, 3), stride=2, padding=(1, 1)))
-            # layers.append(torch.nn.Dropout(p=dropout_probability))
+            if batch_norm:
+                layers.append(torch.nn.BatchNorm2d(o))
+            if dropout_probability > 0:
+                layers.append(torch.nn.Dropout2d(dropout_probability))
             layers.append(activation_fn())
 
         _ = layers.pop()
         layers.append(torch.nn.AdaptiveMaxPool2d(1))
         # _ = layers.pop()
-
 
         if batch_norm:
             _ = layers.pop()

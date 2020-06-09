@@ -1,11 +1,7 @@
 import os
 import torch.utils.data
-import glob
-from dcase2020_task2.data_sets import BaseDataSet
-import librosa
-import numpy as np
-
-from dcase2020_task2.data_sets import MachineDataSet, CLASS_MAP, TRAINING_ID_MAP, INVERSE_CLASS_MAP
+from dcase2020_task2.data_sets import BaseDataSet, CLASS_MAP, INVERSE_CLASS_MAP, TRAINING_ID_MAP, ALL_ID_MAP
+from dcase2020_task2.data_sets import MachineDataSet
 
 
 class ComplementMCMDataSet(BaseDataSet):
@@ -53,7 +49,6 @@ class ComplementMCMDataSet(BaseDataSet):
         training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
         validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
 
-
         if normalize is None:
             mean = training_set.data.mean(axis=1, keepdims=True)
             std = training_set.data.std(axis=1, keepdims=True)
@@ -69,16 +64,16 @@ class ComplementMCMDataSet(BaseDataSet):
         training_sets = []
         # validation_sets = []
 
-        for type_ in TRAINING_ID_MAP:
-            for id_ in TRAINING_ID_MAP[type_]:
+        for type_ in ALL_ID_MAP:
+            for id_ in ALL_ID_MAP[type_]:
                 if type_ != machine_type or (id_ != machine_id and same_type):
                     t = MachineDataSet(type_, id_, mode='training', **kwargs)
                     t.data = (t.data - mean) / std
-
-                    #v = MachineDataSet(type_, id_, mode='validation', **kwargs)
-                    #v.data = (v.data - mean) / std
-
                     training_sets.append(t)
+
+                    # don't load validation set ...
+                    # v = MachineDataSet(type_, id_, mode='validation', **kwargs)
+                    # v.data = (v.data - mean) / std
                     # validation_sets.append(v)
 
         self.training_set = torch.utils.data.ConcatDataset(training_sets)

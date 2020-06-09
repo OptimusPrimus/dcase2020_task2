@@ -140,7 +140,7 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    machine_type = 0
+    machine_type = 1
     machine_id = 0
 
     num_mel = 128
@@ -148,15 +148,12 @@ def configuration():
     hop_size = 512
     power = 2.0
     fmin = 0
-    context = 32
+    context = 128
 
     model_class = 'dcase2020_task2.models.CNN'
-    hidden_size = 512
-    num_hidden = 4
+    hidden_size = 128
+    num_hidden = 3
     dropout_probability = 0.0
-
-    # complement set
-    same_type = True
 
     debug = False
     if debug:
@@ -165,12 +162,14 @@ def configuration():
         num_workers = 4
 
     epochs = 100
-    loss_class = 'dcase2020_task2.losses.BCE'
+    loss_class = 'dcase2020_task2.losses.AUC'
     batch_size = 512
     learning_rate = 1e-4
     weight_decay = 0
 
+    same_type = True
     normalize_raw = True
+    hop_all = False
 
     # TODO: change default descriptor
     descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_Complement:[{}]{}".format(
@@ -197,7 +196,6 @@ def configuration():
     # detailed configuration
     ########################
 
-
     data_set = {
         'class': 'dcase2020_task2.data_sets.MCMDataSet',
         'args': [
@@ -212,7 +210,7 @@ def configuration():
             'normalize_raw': normalize_raw,
             'power': power,
             'fmin': fmin,
-            'hop_all': False
+            'hop_all': hop_all
         }
     }
 
@@ -230,7 +228,7 @@ def configuration():
             'normalize_raw': normalize_raw,
             'power': power,
             'fmin': fmin,
-            'hop_all': False,
+            'hop_all': hop_all,
             'same_type': same_type
         }
     }
@@ -251,7 +249,8 @@ def configuration():
         'kwargs': {
             'hidden_size': hidden_size,
             'num_hidden': num_hidden,
-            'dropout_probability': dropout_probability
+            'dropout_probability': dropout_probability,
+            'batch_norm': False
         }
     }
 

@@ -7,7 +7,7 @@ import matplotlib
 from matplotlib.animation import FuncAnimation
 import PIL
 from sklearn import metrics
-from dcase2020_task2.data_sets.mcm_dataset import TRAINING_ID_MAP, INVERSE_CLASS_MAP, CLASS_MAP
+from dcase2020_task2.data_sets import CLASS_MAP, INVERSE_CLASS_MAP, TRAINING_ID_MAP
 import matplotlib.pyplot as plt
 import pandas as pd
 
