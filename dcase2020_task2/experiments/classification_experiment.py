@@ -141,18 +141,18 @@ def configuration():
     #####################
 
     machine_type = 0
-    machine_id = 2
+    machine_id = 0
 
     num_mel = 128
     n_fft = 1024
     hop_size = 512
     power = 2.0
     fmin = 0
-    context = 5
+    context = 32
 
-    model_class = 'dcase2020_task2.models.FCNN'
-    hidden_size = 256
-    num_hidden = 3
+    model_class = 'dcase2020_task2.models.CNN'
+    hidden_size = 512
+    num_hidden = 4
     dropout_probability = 0.0
 
     # complement set
@@ -162,11 +162,11 @@ def configuration():
     if debug:
         num_workers = 0
     else:
-        num_workers = 3
+        num_workers = 4
 
     epochs = 100
     loss_class = 'dcase2020_task2.losses.BCE'
-    batch_size = 8192
+    batch_size = 512
     learning_rate = 1e-4
     weight_decay = 0
 
