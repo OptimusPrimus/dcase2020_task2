@@ -217,9 +217,13 @@ class Logger:
     @staticmethod
     def __rauc_from_score__(scores_mean, scores_max, ground_truth, machine_types, machine_ids, machine_type, id,
                             max_fpr=0.1):
+
         ground_truth_ = ground_truth[np.logical_and(machine_types == machine_type, machine_ids == id)]
         scores_mean_ = scores_mean[np.logical_and(machine_types == machine_type, machine_ids == id)]
         scores_max_ = scores_max[np.logical_and(machine_types == machine_type, machine_ids == id)]
+
+        if all(ground_truth[0] == np.array(ground_truth)):
+            return 0, 0, 0, 0
 
         return float(metrics.roc_auc_score(ground_truth_, scores_mean_)), \
                float(metrics.roc_auc_score(ground_truth_, scores_mean_, max_fpr=max_fpr)), \
