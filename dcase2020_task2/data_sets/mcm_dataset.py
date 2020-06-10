@@ -1,7 +1,7 @@
 import os
 import torch.utils.data
 import glob
-from dcase2020_task2.data_sets import BaseDataSet, CLASS_MAP, INVERSE_CLASS_MAP, TRAINING_ID_MAP, EVALUATION_ID_MAP, \
+from dcase2020_task2.data_sets import BaseDataSet, CLASS_MAP, INVERSE_CLASS_MAP, TRAINING_ID_MAP, EVALUATION_ID_MAP, ALL_ID_MAP,\
     enumerate_development_datasets, enumerate_evaluation_datasets
 import librosa
 import numpy as np
@@ -48,20 +48,45 @@ class MCMDataSet(BaseDataSet):
             'hop_all': hop_all
         }
 
-        training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
-        validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
+        if machine_id == -1:
+            training_sets = []
+            validation_sets = []
+            data = []
+            for id_ in ALL_ID_MAP[machine_type]:
+                training_sets.append(MachineDataSet(machine_type, id_, mode='training', **kwargs))
+                validation_sets.append(MachineDataSet(machine_type, id_, mode='validation', **kwargs))
+                data.append(training_sets[-1].data)
 
-        if normalize is None:
-            mean = training_set.data.mean(axis=1, keepdims=True)
-            std = training_set.data.std(axis=1, keepdims=True)
-            training_set.data = (training_set.data - mean) / std
-            validation_set.data = (validation_set.data - mean) / std
+            if normalize is None:
+                data = np.concatenate(data, axis=-1)
+                mean = data.mean(axis=1, keepdims=True)
+                std = data.std(axis=1, keepdims=True)
+            else:
+                assert type(normalize) == tuple
+                assert len(normalize) == 2
+                mean, std = normalize
+
+            for training_set, validation_set in zip(training_sets, validation_sets):
+                training_set.data = (training_set.data - mean) / std
+                validation_set.data = (validation_set.data - mean) / std
+
+            del data
+            training_set = torch.utils.data.ConcatDataset(training_sets)
+            validation_set = torch.utils.data.ConcatDataset(validation_sets)
         else:
-            assert type(normalize) == tuple
-            assert len(normalize) == 2
-            mean, std = normalize
-            training_set.data = (training_set.data - mean) / std
-            validation_set.data = (validation_set.data - mean) / std
+            training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
+            validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
+            if normalize is None:
+                mean = training_set.data.mean(axis=1, keepdims=True)
+                std = training_set.data.std(axis=1, keepdims=True)
+                training_set.data = (training_set.data - mean) / std
+                validation_set.data = (validation_set.data - mean) / std
+            else:
+                assert type(normalize) == tuple
+                assert len(normalize) == 2
+                mean, std = normalize
+                training_set.data = (training_set.data - mean) / std
+                validation_set.data = (validation_set.data - mean) / std
 
         self.training_set = training_set
         self.validation_set = validation_set

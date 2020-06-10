@@ -222,7 +222,7 @@ class Logger:
         scores_mean_ = scores_mean[np.logical_and(machine_types == machine_type, machine_ids == id)]
         scores_max_ = scores_max[np.logical_and(machine_types == machine_type, machine_ids == id)]
 
-        if all(ground_truth[0] == np.array(ground_truth)):
+        if all(ground_truth_[0] == np.array(ground_truth_)):
             return 0, 0, 0, 0
 
         return float(metrics.roc_auc_score(ground_truth_, scores_mean_)), \

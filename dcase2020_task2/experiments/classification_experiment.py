@@ -140,8 +140,8 @@ def configuration():
     # quick configuration, uses default parameters of more detailed configuration
     #####################
 
-    machine_type = 1
-    machine_id = 0
+    machine_type = 0
+    machine_id = -1
 
     num_mel = 128
     n_fft = 1024
@@ -155,24 +155,24 @@ def configuration():
     num_hidden = 3
     dropout_probability = 0.0
 
+    epochs = 100
     debug = False
     if debug:
         num_workers = 0
+        epochs = 1
     else:
         num_workers = 4
 
-    epochs = 100
     loss_class = 'dcase2020_task2.losses.AUC'
     batch_size = 512
     learning_rate = 1e-4
     weight_decay = 0
 
-    same_type = True
     normalize_raw = True
     hop_all = False
 
     # TODO: change default descriptor
-    descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_Complement:[{}]{}".format(
+    descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
         model_class,
         hidden_size,
         num_hidden,
@@ -188,7 +188,6 @@ def configuration():
         hop_size,
         power,
         fmin,
-        same_type,
         seed
     )
 
@@ -228,8 +227,7 @@ def configuration():
             'normalize_raw': normalize_raw,
             'power': power,
             'fmin': fmin,
-            'hop_all': hop_all,
-            'same_type': same_type
+            'hop_all': hop_all
         }
     }
 

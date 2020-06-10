@@ -2,7 +2,7 @@ import os
 import torch.utils.data
 from dcase2020_task2.data_sets import BaseDataSet, CLASS_MAP, INVERSE_CLASS_MAP, TRAINING_ID_MAP, ALL_ID_MAP
 from dcase2020_task2.data_sets import MachineDataSet
-
+import numpy as np
 
 class ComplementMCMDataSet(BaseDataSet):
 
@@ -19,8 +19,7 @@ class ComplementMCMDataSet(BaseDataSet):
             fmin=0,
             normalize_raw=False,
             normalize=None,
-            hop_all=False,
-            same_type=False
+            hop_all=False
     ):
         self.data_root = data_root
         self.context = context
@@ -46,27 +45,50 @@ class ComplementMCMDataSet(BaseDataSet):
             'hop_all': hop_all
         }
 
-        training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
-        validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
+        if machine_id == -1:
+            training_sets = []
+            validation_sets = []
+            data = []
+            for id_ in ALL_ID_MAP[machine_type]:
+                training_sets.append(MachineDataSet(machine_type, id_, mode='training', **kwargs))
+                validation_sets.append(MachineDataSet(machine_type, id_, mode='validation', **kwargs))
+                data.append(training_sets[-1].data)
 
-        if normalize is None:
-            mean = training_set.data.mean(axis=1, keepdims=True)
-            std = training_set.data.std(axis=1, keepdims=True)
-            training_set.data = (training_set.data - mean) / std
-            validation_set.data = (validation_set.data - mean) / std
+            if normalize is None:
+                data = np.concatenate(data, axis=-1)
+                mean = data.mean(axis=1, keepdims=True)
+                std = data.std(axis=1, keepdims=True)
+            else:
+                assert type(normalize) == tuple
+                assert len(normalize) == 2
+                mean, std = normalize
+
+            for training_set, validation_set in zip(training_sets, validation_sets):
+                training_set.data = (training_set.data - mean) / std
+                validation_set.data = (validation_set.data - mean) / std
+
+            del data
         else:
-            assert type(normalize) == tuple
-            assert len(normalize) == 2
-            mean, std = normalize
-            training_set.data = (training_set.data - mean) / std
-            validation_set.data = (validation_set.data - mean) / std
+            training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
+            validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
+            if normalize is None:
+                mean = training_set.data.mean(axis=1, keepdims=True)
+                std = training_set.data.std(axis=1, keepdims=True)
+                training_set.data = (training_set.data - mean) / std
+                validation_set.data = (validation_set.data - mean) / std
+            else:
+                assert type(normalize) == tuple
+                assert len(normalize) == 2
+                mean, std = normalize
+                training_set.data = (training_set.data - mean) / std
+                validation_set.data = (validation_set.data - mean) / std
 
         training_sets = []
         # validation_sets = []
 
         for type_ in ALL_ID_MAP:
             for id_ in ALL_ID_MAP[type_]:
-                if type_ != machine_type or (id_ != machine_id and same_type):
+                if type_ != machine_type or (id_ != machine_id and machine_id != -1):
                     t = MachineDataSet(type_, id_, mode='training', **kwargs)
                     t.data = (t.data - mean) / std
                     training_sets.append(t)
