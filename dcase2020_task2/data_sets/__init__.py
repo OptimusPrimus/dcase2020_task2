@@ -60,3 +60,4 @@ def enumerate_evaluation_datasets():
 from dcase2020_task2.data_sets.base_data_set import BaseDataSet
 from dcase2020_task2.data_sets.mcm_dataset import MCMDataSet, MachineDataSet
 from dcase2020_task2.data_sets.complement_dataset import ComplementMCMDataSet
+from dcase2020_task2.data_sets.audio_set import AudioSet

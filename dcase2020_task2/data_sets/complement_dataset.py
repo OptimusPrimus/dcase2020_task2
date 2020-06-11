@@ -85,10 +85,18 @@ class ComplementMCMDataSet(BaseDataSet):
 
         training_sets = []
         # validation_sets = []
-
+        valid_types = {
+            0: [1, 2, 5],
+            1: [0, 2, 5],
+            2: [0, 1, 5],
+            5: [0, 1, 2],
+            3: [4],
+            4: [3],
+        }
         for type_ in ALL_ID_MAP:
-            for id_ in ALL_ID_MAP[type_]:
-                if type_ != machine_type or (id_ != machine_id and machine_id != -1):
+            if type_ in valid_types[machine_type]:
+                for id_ in ALL_ID_MAP[type_]:
+                    #if type_ != machine_type: #or (id_ != machine_id and machine_id != -1):
                     t = MachineDataSet(type_, id_, mode='training', **kwargs)
                     t.data = (t.data - mean) / std
                     training_sets.append(t)

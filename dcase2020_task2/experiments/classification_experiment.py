@@ -11,6 +11,7 @@ from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 from datetime import datetime
 
+from dcase2020_task2.data_sets import AudioSet
 
 class ClassificationExperiment(BaseExperiment, pl.LightningModule):
 
@@ -29,7 +30,13 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
 
         # will be set before each epoch
         self.normal_data_set = self.objects['data_set']
-        self.abnormal_data_set = self.objects['abnormal_data_set']
+
+        self.abnormal_data_set = AudioSet(
+            **self.objects['fetaure_settings']
+        )
+
+        self.mean = torch.from_numpy((self.normal_data_set.mean + self.abnormal_data_set.mean) / 2)
+        self.std = torch.from_numpy((self.normal_data_set.std + self.abnormal_data_set.std) / 2)
 
         self.inf_data_loader = self.get_inf_data_loader(
             torch.utils.data.DataLoader(
@@ -60,6 +67,10 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
         batch = self.network(batch)
         return batch
 
+    def normalize_batch(self, batch):
+        device = batch['observations'].device
+        batch['observations'] = (batch['observations'] - self.mean.to(device)) / self.std.to(device)
+
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
 
         if batch_num == 0 and optimizer_idx == 0:
@@ -67,6 +78,9 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
 
         if optimizer_idx == 0:
             abnormal_batch = next(self.inf_data_loader)
+
+            self.normalize_batch(batch_normal)
+            self.normalize_batch(abnormal_batch)
 
             normal_batch_size = len(batch_normal['observations'])
             abnormal_batch_size = len(abnormal_batch['observations'])
@@ -141,7 +155,7 @@ def configuration():
     #####################
 
     machine_type = 0
-    machine_id = -1
+    machine_id = 0
 
     num_mel = 128
     n_fft = 1024
@@ -151,15 +165,18 @@ def configuration():
     context = 32
 
     model_class = 'dcase2020_task2.models.CNN'
-    hidden_size = 128
+    hidden_size = 64
     num_hidden = 3
     dropout_probability = 0.0
 
     epochs = 100
+    hop_all = False
+
     debug = False
     if debug:
         num_workers = 0
-        epochs = 1
+        epochs = 100
+        hop_all = True
     else:
         num_workers = 4
 
@@ -169,7 +186,6 @@ def configuration():
     weight_decay = 0
 
     normalize_raw = True
-    hop_all = False
 
     # TODO: change default descriptor
     descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
@@ -195,40 +211,24 @@ def configuration():
     # detailed configuration
     ########################
 
+    fetaure_settings = {
+        'context': context,
+        'num_mel': num_mel,
+        'n_fft': n_fft,
+        'hop_size': hop_size,
+        'normalize_raw': normalize_raw,
+        'power': power,
+        'fmin': fmin,
+        'hop_all': hop_all
+    }
+
     data_set = {
         'class': 'dcase2020_task2.data_sets.MCMDataSet',
         'args': [
             machine_type,
             machine_id
         ],
-        'kwargs': {
-            'context': context,
-            'num_mel': num_mel,
-            'n_fft': n_fft,
-            'hop_size': hop_size,
-            'normalize_raw': normalize_raw,
-            'power': power,
-            'fmin': fmin,
-            'hop_all': hop_all
-        }
-    }
-
-    abnormal_data_set = {
-        'class': 'dcase2020_task2.data_sets.ComplementMCMDataSet',
-        'args': [
-            machine_type,
-            machine_id
-        ],
-        'kwargs': {
-            'context': context,
-            'num_mel': num_mel,
-            'n_fft': n_fft,
-            'hop_size': hop_size,
-            'normalize_raw': normalize_raw,
-            'power': power,
-            'fmin': fmin,
-            'hop_all': hop_all
-        }
+        'kwargs': fetaure_settings
     }
 
     loss = {
