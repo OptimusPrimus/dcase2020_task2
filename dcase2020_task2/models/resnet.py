@@ -1,36 +1,7 @@
 import torch.nn
 import torch
 from dcase2020_task2.models.custom import ACTIVATION_DICT, init_weights
-
-
-class ResidualBlock(torch.nn.Module):
-
-    def __init__(self, input_size, layer_size, kernel_sizes=[3, 1], batch_norm=False, activation='relu'):
-        super().__init__()
-
-        net = []
-        for i, kernel_size in enumerate(kernel_sizes):
-            net.append(
-                torch.nn.Conv2d(input_size if i == 0 else layer_size, layer_size, kernel_size=kernel_size, padding=kernel_size // 2)
-            )
-            if batch_norm:
-                net.append(torch.nn.BatchNorm2d(layer_size))
-            net.append(ACTIVATION_DICT[activation]())
-
-        if input_size != layer_size:
-            self.linear_transform = torch.nn.Conv2d(input_size, layer_size, kernel_size=(1, 1), padding=(0, 0))
-        else:
-            self.linear_transform = None
-
-        self.last_activation = net.pop()
-        self.net = torch.nn.Sequential(*net)
-
-    def forward(self, x):
-        if self.linear_transform:
-            x_ = self.linear_transform(x)
-        else:
-            x_ = x
-        return self.last_activation(self.net(x) + x_)
+from dcase2020_task2.models.cp_resnet import Network
 
 
 class ResNet(torch.nn.Module):
@@ -39,8 +10,8 @@ class ResNet(torch.nn.Module):
             self,
             input_shape,
             num_outputs=1,
-            activation='relu',
-            batch_norm=False,
+            base_channels=128,
+            rf='very_small',
             **kwargs
 
     ):
@@ -48,29 +19,82 @@ class ResNet(torch.nn.Module):
 
         self.input_shape = input_shape
 
-        net = [torch.nn.Conv2d(self.input_shape[0], 64, kernel_size=(5, 5), padding=(2, 2))]
-        if batch_norm:
-            net.append(torch.nn.BatchNorm2d(64))
-        net.append(ACTIVATION_DICT[activation]())
+        configs = {
+            'normal': {
+                'arch': 'cp_resnet',
+                'base_channels': base_channels,
+                'block_type': 'basic',
+                'depth': 26,
+                'input_shape': (1, *input_shape),
+                'multi_label': False,
+                'n_blocks_per_stage': [4, 1, 2],
+                'n_classes': num_outputs,
+                'prediction_threshold': 0.4,
+                'stage1': {'k1s': [3, 3, 3, 3], 'k2s': [1, 3, 3, 1], 'maxpool': [1, 2, 4]},
+                'stage2': {'k1s': [1, 1, 1, 1], 'k2s': [1, 1, 1, 1], 'maxpool': []},
+                'stage3': {'k1s': [1, 1, 1, 1], 'k2s': [1, 1, 1, 1], 'maxpool': []},
+                'use_bn': True,
+                'weight_init': 'fixup',
+                'pooling_padding': None,
+                'use_raw_spectograms': None,
+                'apply_softmax': None,
+                'n_channels': None,
+                'grow_a_lot': None,
+                'attention_avg': None,
+                'stop_before_global_avg_pooling': None,
+                'use_check_point': None
+            },
+            'very_small': {
+                'arch': 'cp_resnet',
+                'base_channels': base_channels,
+                'block_type': 'basic',
+                'depth': 26,
+                'input_shape': (1, *input_shape),
+                'multi_label': False,
+                'n_blocks_per_stage': [4, 1, 2],
+                'n_classes': num_outputs,
+                'prediction_threshold': 0.4,
+                'stage1': {'k1s': [3, 3, 3, 1], 'k2s': [1, 1, 1, 1], 'maxpool': [1, 2, 4]},
+                'stage2': {'k1s': [1, 1, 1, 1], 'k2s': [1, 1, 1, 1], 'maxpool': []},
+                'stage3': {'k1s': [1, 1, 1, 1], 'k2s': [1, 1, 1, 1], 'maxpool': []},
+                'use_bn': True,
+                'weight_init': 'fixup',
+                'pooling_padding': None,
+                'use_raw_spectograms': None,
+                'apply_softmax': None,
+                'n_channels': None,
+                'grow_a_lot': None,
+                'attention_avg': None,
+                'stop_before_global_avg_pooling': None,
+                'use_check_point': None
+            },
+            'very_small_short': {
+                'arch': 'cp_resnet',
+                'base_channels': base_channels,
+                'block_type': 'basic',
+                'depth': 26,
+                'input_shape': (1, *input_shape),
+                'multi_label': False,
+                'n_blocks_per_stage': [3, 1, 1],
+                'n_classes': num_outputs,
+                'prediction_threshold': 0.4,
+                'stage1': {'k1s': [3, 3, 3, 1], 'k2s': [1, 1, 1, 1], 'maxpool': [1, 2, 4]},
+                'stage2': {'k1s': [1, 1, 1, 1], 'k2s': [1, 1, 1, 1], 'maxpool': []},
+                'stage3': {'k1s': [1, 1, 1, 1], 'k2s': [1, 1, 1, 1], 'maxpool': []},
+                'use_bn': True,
+                'weight_init': 'fixup',
+                'pooling_padding': None,
+                'use_raw_spectograms': None,
+                'apply_softmax': None,
+                'n_channels': None,
+                'grow_a_lot': None,
+                'attention_avg': None,
+                'stop_before_global_avg_pooling': None,
+                'use_check_point': None
+            }
+        }
 
-        net.append(ResidualBlock(64, 128, kernel_sizes=[3, 3], batch_norm=batch_norm))
-        net.append(torch.nn.MaxPool2d(2))
-
-        net.append(ResidualBlock(128, 256, kernel_sizes=[3, 3], batch_norm=batch_norm))
-        net.append(torch.nn.MaxPool2d(2))
-
-        net.append(ResidualBlock(256, 512, kernel_sizes=[3, 3], batch_norm=batch_norm))
-        net.append(torch.nn.MaxPool2d(2))
-
-        net.append(torch.nn.Conv2d(512, num_outputs, kernel_size=(3, 3)))
-        if batch_norm:
-            net.append(torch.nn.BatchNorm2d(num_outputs))
-
-        net.append(torch.nn.AdaptiveMaxPool2d(1))
-
-        self.net = torch.nn.Sequential(
-            *net
-        )
+        self.net = Network(configs[rf])
 
     def forward(self, batch):
         x = batch['observations']

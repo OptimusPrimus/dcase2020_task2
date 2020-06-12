@@ -6,7 +6,6 @@ from dcase2020_task2.data_sets import BaseDataSet, CLASS_MAP, INVERSE_CLASS_MAP,
 import librosa
 import numpy as np
 from dcase2020_task2.data_sets import MCMDataSet
-import pickle
 
 
 class AudioSet(BaseDataSet):
@@ -31,6 +30,7 @@ class AudioSet(BaseDataSet):
         self.power = power
         self.fmin = fmin
         self.hop_all = hop_all
+        self.normalize_raw = normalize_raw
 
         kwargs = {
             'data_root': self.data_root,
@@ -38,13 +38,13 @@ class AudioSet(BaseDataSet):
             'num_mel': self.num_mel,
             'n_fft': self.n_fft,
             'hop_size': self.hop_size,
-            'power': power,
-            'normalize': normalize_raw,
-            'fmin': fmin,
-            'hop_all': hop_all
+            'power': self.power,
+            'normalize': self.normalize_raw,
+            'fmin': self.fmin,
+            'hop_all': self.hop_all
         }
 
-        class_names = sorted([class_name for class_name in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, class_name))])[:30]
+        class_names = sorted([class_name for class_name in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, class_name))])
 
         training_sets = []
         data_arrays = []
@@ -88,6 +88,7 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
             normalize=True,
             fmin=0,
             hop_all=False,
+            max_file_per_class=2,
             max_file_length=350
     ):
 
@@ -101,13 +102,14 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
         self.fmin = fmin
         self.hop_all = hop_all
         self.class_name = class_name
+        self.max_file_per_class = max_file_per_class
         self.max_file_length = max_file_length
 
         files = glob.glob(os.path.join(data_root, class_name, '*.wav'))
 
         assert len(files) > 0
 
-        files = sorted(files)
+        files = sorted(files)[:max_file_per_class]
         self.files = files
 
         self.meta_data = self.__load_meta_data__(files)
@@ -171,6 +173,7 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
         x, sr = librosa.load(file, sr=16000, mono=True)
         if len(x) > (self.max_file_length + 1 * self.hop_size) + self.n_fft:
             x = x[:(self.max_file_length + 1) * self.hop_size + self.n_fft]
+
         if self.normalize:
             x = (x - x.mean()) / x.std()
 
@@ -200,6 +203,7 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
             'machine_ids': -1,
             'file_ids': os.sep.join(os.path.normpath(file_path).split(os.sep)[-4:])
         }
+
 
 if __name__ == '__main__':
     mcmc = MCMDataSet(0, 0)

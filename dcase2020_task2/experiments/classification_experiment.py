@@ -11,7 +11,8 @@ from sacred import SETTINGS
 SETTINGS['CAPTURE_MODE'] = 'sys'
 from datetime import datetime
 
-from dcase2020_task2.data_sets import AudioSet
+from dcase2020_task2.data_sets import AudioSet, ComplementMCMDataSet
+
 
 class ClassificationExperiment(BaseExperiment, pl.LightningModule):
 
@@ -31,12 +32,25 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
         # will be set before each epoch
         self.normal_data_set = self.objects['data_set']
 
-        self.abnormal_data_set = AudioSet(
+        self.abnormal_data_set = ComplementMCMDataSet(
+            self.objects['machine_type'],
+            self.objects['machine_id'],
             **self.objects['fetaure_settings']
         )
 
-        self.mean = torch.from_numpy((self.normal_data_set.mean + self.abnormal_data_set.mean) / 2)
-        self.std = torch.from_numpy((self.normal_data_set.std + self.abnormal_data_set.std) / 2)
+        if self.objects.get('normalize') == 'normal':
+            self.mean = torch.from_numpy(self.normal_data_set.mean)
+            self.std = torch.from_numpy(self.normal_data_set.std)
+        elif self.objects.get('normalize') == 'abnormal':
+            self.mean = torch.from_numpy(self.abnormal_data_set.mean)
+            self.std = torch.from_numpy(self.abnormal_data_set.std)
+        elif self.objects.get('normalize') == 'average':
+            self.mean = torch.from_numpy((self.normal_data_set.mean + self.abnormal_data_set.mean) / 2)
+            self.std = torch.from_numpy((self.normal_data_set.std + self.abnormal_data_set.std) / 2)
+        else:
+            print('No normalization.')
+            self.mean = torch.zeros(self.normal_data_set.mean.shape)
+            self.std = torch.ones(self.normal_data_set.std.shape)
 
         self.inf_data_loader = self.get_inf_data_loader(
             torch.utils.data.DataLoader(
@@ -165,8 +179,8 @@ def configuration():
     context = 32
 
     model_class = 'dcase2020_task2.models.CNN'
-    hidden_size = 64
-    num_hidden = 3
+    hidden_size = 256
+    num_hidden = 4
     dropout_probability = 0.0
 
     epochs = 100
@@ -176,7 +190,6 @@ def configuration():
     if debug:
         num_workers = 0
         epochs = 100
-        hop_all = True
     else:
         num_workers = 4
 
@@ -186,6 +199,7 @@ def configuration():
     weight_decay = 0
 
     normalize_raw = True
+    normalize = None
 
     # TODO: change default descriptor
     descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
@@ -247,6 +261,7 @@ def configuration():
         'kwargs': {
             'hidden_size': hidden_size,
             'num_hidden': num_hidden,
+            'base_channels': hidden_size,
             'dropout_probability': dropout_probability,
             'batch_norm': False
         }

@@ -31,6 +31,7 @@ class MCMDataSet(BaseDataSet):
         self.power = power
         self.fmin = fmin
         self.hop_all = hop_all
+        self.normalize_raw = normalize_raw
 
         assert type(machine_type) == int and type(machine_id) == int
 
@@ -40,10 +41,10 @@ class MCMDataSet(BaseDataSet):
             'num_mel': self.num_mel,
             'n_fft': self.n_fft,
             'hop_size': self.hop_size,
-            'power': power,
-            'normalize': normalize_raw,
-            'fmin': fmin,
-            'hop_all': hop_all
+            'power': self.power,
+            'normalize': self.normalize_raw,
+            'fmin': self.fmin,
+            'hop_all': self.hop_all
         }
 
         if machine_id == -1:

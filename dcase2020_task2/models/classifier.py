@@ -17,7 +17,7 @@ class FCNN(torch.nn.Module):
             num_outputs=1,
             activation='relu',
             batch_norm=False,
-            dropout_probability=0.1
+            **kwargs
     ):
         super().__init__()
 
@@ -30,10 +30,8 @@ class FCNN(torch.nn.Module):
             layers.append(torch.nn.Linear(i, o))
             if batch_norm:
                 layers.append(torch.nn.BatchNorm1d(o))
-            layers.append(torch.nn.Dropout(p=dropout_probability))
             layers.append(activation_fn())
 
-        _ = layers.pop()
         _ = layers.pop()
 
         if batch_norm:
@@ -59,7 +57,7 @@ class CNN(torch.nn.Module):
             num_outputs=1,
             activation='relu',
             batch_norm=False,
-            dropout_probability=0.1
+            **kwargs
     ):
         super().__init__()
 
@@ -72,8 +70,6 @@ class CNN(torch.nn.Module):
             layers.append(torch.nn.Conv2d(i, o, kernel_size=(3, 3), stride=2, padding=(1, 1)))
             if batch_norm:
                 layers.append(torch.nn.BatchNorm2d(o))
-            if dropout_probability > 0:
-                layers.append(torch.nn.Dropout2d(dropout_probability))
             layers.append(activation_fn())
 
         _ = layers.pop()
