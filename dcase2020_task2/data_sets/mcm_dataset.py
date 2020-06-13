@@ -287,11 +287,11 @@ class MachineDataSet(torch.utils.data.Dataset):
 if __name__ == '__main__':
 
     for type_, id_ in enumerate_development_datasets():
-        _ = MachineDataSet(type_, id_, mode='training', n_fft=256)
-        _ = MachineDataSet(type_, id_, mode='validation', n_fft=256)
+        _ = MachineDataSet(type_, id_, mode='training')
+        _ = MachineDataSet(type_, id_, mode='validation')
 
     for type_, id_ in enumerate_evaluation_datasets():
-        _ = MachineDataSet(type_, id_, mode='training', n_fft=256)
-        _ = MachineDataSet(type_, id_, mode='validation', n_fft=256)
+        _ = MachineDataSet(type_, id_, mode='training')
+        _ = MachineDataSet(type_, id_, mode='validation')
 
 

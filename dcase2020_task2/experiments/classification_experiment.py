@@ -279,13 +279,12 @@ def configuration():
     }
 
     lr_scheduler = {
-        'class': 'torch.optim.lr_scheduler.StepLR',
+        'class': 'torch.optim.lr_scheduler.ExponentialLR',
         'args': [
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': 100,
-            'gamma': 0.1
+            'gamma': 0.99
         }
     }
 
