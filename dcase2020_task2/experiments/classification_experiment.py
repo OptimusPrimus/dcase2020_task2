@@ -10,7 +10,6 @@ from sacred import SETTINGS
 
 SETTINGS['CAPTURE_MODE'] = 'sys'
 from datetime import datetime
-
 from dcase2020_task2.data_sets import AudioSet, ComplementMCMDataSet
 
 
@@ -35,22 +34,30 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
         self.abnormal_data_set = ComplementMCMDataSet(
             self.objects['machine_type'],
             self.objects['machine_id'],
+            valid_types=self.objects['valid_types'],
             **self.objects['fetaure_settings']
         )
 
-        if self.objects.get('normalize') == 'normal':
+        # self.abnormal_data_set = AudioSet(
+        #     **self.objects['fetaure_settings']
+        # )
+
+        if self.objects.get('normalize_dataset') == 'normal':
             self.mean = torch.from_numpy(self.normal_data_set.mean)
             self.std = torch.from_numpy(self.normal_data_set.std)
-        elif self.objects.get('normalize') == 'abnormal':
+        elif self.objects.get('normalize_dataset') == 'abnormal':
             self.mean = torch.from_numpy(self.abnormal_data_set.mean)
             self.std = torch.from_numpy(self.abnormal_data_set.std)
-        elif self.objects.get('normalize') == 'average':
+        elif self.objects.get('normalize_dataset') == 'average':
             self.mean = torch.from_numpy((self.normal_data_set.mean + self.abnormal_data_set.mean) / 2)
+            # TODO: this is not correct (?)
             self.std = torch.from_numpy((self.normal_data_set.std + self.abnormal_data_set.std) / 2)
-        else:
+        elif self.objects.get('normalize_dataset') is None:
             print('No normalization.')
             self.mean = torch.zeros(self.normal_data_set.mean.shape)
             self.std = torch.ones(self.normal_data_set.std.shape)
+        else:
+            raise AttributeError
 
         self.inf_data_loader = self.get_inf_data_loader(
             torch.utils.data.DataLoader(
@@ -167,39 +174,40 @@ def configuration():
     #####################
     # quick configuration, uses default parameters of more detailed configuration
     #####################
-
-    machine_type = 0
-    machine_id = 0
+    machine_type = 3
+    machine_id = 1
 
     num_mel = 128
     n_fft = 1024
     hop_size = 512
     power = 2.0
     fmin = 0
-    context = 32
+    context = 256
+    valid_types = 'very_loose'
 
-    model_class = 'dcase2020_task2.models.CNN'
-    hidden_size = 256
+    model_class = 'dcase2020_task2.models.ResNet'
+    rf = 'normal'
+    hidden_size = 64
     num_hidden = 4
     dropout_probability = 0.0
 
     epochs = 100
-    hop_all = False
+    hop_all = True
 
     debug = False
     if debug:
         num_workers = 0
-        epochs = 100
     else:
         num_workers = 4
 
     loss_class = 'dcase2020_task2.losses.AUC'
-    batch_size = 512
+    batch_size = 32
     learning_rate = 1e-4
     weight_decay = 0
 
     normalize_raw = True
-    normalize = None
+    normalize_spec = False
+    normalize_dataset = None
 
     # TODO: change default descriptor
     descriptor = "ClassificationExperiment_Model:[{}_{}_{}_{}]_Training:[{}_{}_{}_{}]_Features:[{}_{}_{}_{}_{}_{}_{}]_{}".format(
@@ -233,7 +241,8 @@ def configuration():
         'normalize_raw': normalize_raw,
         'power': power,
         'fmin': fmin,
-        'hop_all': hop_all
+        'hop_all': hop_all,
+        'normalize_spec': normalize_spec
     }
 
     data_set = {
@@ -262,6 +271,8 @@ def configuration():
             'hidden_size': hidden_size,
             'num_hidden': num_hidden,
             'base_channels': hidden_size,
+            'num_outputs': 1,
+            'rf': rf,
             'dropout_probability': dropout_probability,
             'batch_norm': False
         }
@@ -273,7 +284,7 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'step_size': 50,
+            'step_size': 100,
             'gamma': 0.1
         }
     }

@@ -4,13 +4,33 @@ from dcase2020_task2.data_sets import BaseDataSet, CLASS_MAP, INVERSE_CLASS_MAP,
 from dcase2020_task2.data_sets import MachineDataSet
 import numpy as np
 
-valid_types = {
-    0: [1, 2, 5],
-    1: [0, 2, 5],
-    2: [0, 1, 5],
-    5: [0, 1, 2],
-    3: [4],
-    4: [3],
+VALID_TYPES = {
+
+    'strict': {
+        0: [1, 2, 5],
+        1: [0, 2, 5],
+        2: [0, 1, 5],
+        5: [0, 1, 2],
+        3: [4],
+        4: [3],
+    },
+    'loose': {
+        0: [0, 1, 2, 5],
+        1: [1, 0, 2, 5],
+        2: [2, 0, 1, 5],
+        5: [5, 0, 1, 2],
+        3: [3, 4],
+        4: [4, 3],
+    },
+    'very_loose': {
+        0: [0, 1, 2, 3, 4, 5],
+        1: [0, 1, 2, 3, 4, 5],
+        2: [0, 1, 2, 3, 4, 5],
+        5: [0, 1, 2, 3, 4, 5],
+        3: [0, 1, 2, 3, 4, 5],
+        4: [0, 1, 2, 3, 4, 5],
+    },
+
 }
 
 
@@ -27,11 +47,15 @@ class ComplementMCMDataSet(BaseDataSet):
             hop_size=512,
             power=1.0,
             fmin=0,
-            normalize_raw=False,
-            hop_all=False
+            normalize_raw=True,
+            normalize_spec=False,
+            hop_all=False,
+            valid_types='strict'
     ):
 
         assert type(machine_type) == int and type(machine_id) == int
+        assert machine_id >= 0
+        assert machine_type >= 0
 
         self.data_root = data_root
         self.context = context
@@ -42,6 +66,8 @@ class ComplementMCMDataSet(BaseDataSet):
         self.fmin = fmin
         self.hop_all = hop_all
         self.normalize_raw = normalize_raw
+        self.normalize_spec = normalize_spec
+        self.valid_types = valid_types
 
         kwargs = {
             'data_root': self.data_root,
@@ -52,15 +78,16 @@ class ComplementMCMDataSet(BaseDataSet):
             'power': self.power,
             'normalize': self.normalize_raw,
             'fmin': self.fmin,
-            'hop_all': self.hop_all
+            'hop_all': self.hop_all,
+            'normalize_spec': self.normalize_spec
         }
 
         training_sets = []
 
         data = []
-        for type_ in ALL_ID_MAP:
+        for type_ in VALID_TYPES[self.valid_types][machine_type]:
             for id_ in ALL_ID_MAP[type_]:
-                if type_ != machine_type or (id_ != machine_id and machine_id != -1):
+                if type_ != machine_type or id_ != machine_id:
                     t = MachineDataSet(type_, id_, mode='training', **kwargs)
                     data.append(t.data)
                     training_sets.append(t)

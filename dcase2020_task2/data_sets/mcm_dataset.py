@@ -20,7 +20,8 @@ class MCMDataSet(BaseDataSet):
             hop_size=512,
             power=1.0,
             fmin=0,
-            normalize_raw=False,
+            normalize_raw=True,
+            normalize_spec=False,
             hop_all=False
     ):
         self.data_root = data_root
@@ -32,8 +33,7 @@ class MCMDataSet(BaseDataSet):
         self.fmin = fmin
         self.hop_all = hop_all
         self.normalize_raw = normalize_raw
-
-        assert type(machine_type) == int and type(machine_id) == int
+        self.normalize_spec = normalize_spec
 
         kwargs = {
             'data_root': self.data_root,
@@ -44,7 +44,8 @@ class MCMDataSet(BaseDataSet):
             'power': self.power,
             'normalize': self.normalize_raw,
             'fmin': self.fmin,
-            'hop_all': self.hop_all
+            'hop_all': self.hop_all,
+            'normalize_spec': self.normalize_spec
         }
 
         if machine_id == -1:
@@ -104,6 +105,7 @@ class MachineDataSet(torch.utils.data.Dataset):
             hop_size=512,
             power=2.0,
             normalize=True,
+            normalize_spec=False,
             fmin=0,
             hop_all=False
     ):
@@ -124,6 +126,7 @@ class MachineDataSet(torch.utils.data.Dataset):
         self.machine_id = machine_id
         self.fmin = fmin
         self.hop_all = hop_all
+        self.normalize_spec = normalize_spec
 
         if machine_id in TRAINING_ID_MAP[machine_type]:
             root_folder = 'dev_data'
@@ -162,7 +165,10 @@ class MachineDataSet(torch.utils.data.Dataset):
         # get audio file index
         item = item // self.num_samples_per_file
         # load audio file and extract audio junk
-        offset = item * self.file_length + ((offset * self.context) if self.hop_all else offset)
+
+        residual = (self.file_length % self.context) + 1
+
+        offset = item * self.file_length + ((offset * self.context + np.random.randint(0, residual)) if self.hop_all else offset)
         observation = self.data[:, offset:offset + self.context]
         # create data object
         meta_data = self.meta_data[item].copy()
@@ -181,7 +187,7 @@ class MachineDataSet(torch.utils.data.Dataset):
         return data
 
     def __load_data__(self, files):
-        file_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}.npy".format(
+        file_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.npy".format(
             self.num_mel,
             self.n_fft,
             self.hop_size,
@@ -190,7 +196,8 @@ class MachineDataSet(torch.utils.data.Dataset):
             self.machine_type,
             self.machine_id,
             self.normalize,
-            self.fmin
+            self.fmin,
+            self.normalize_spec
         )
         file_path = os.path.join(self.data_root, file_name)
 
@@ -244,6 +251,9 @@ class MachineDataSet(torch.utils.data.Dataset):
         else:
             raise AttributeError
 
+        if self.normalize_spec:
+            x = (x - x.mean(axis=-1, keepdims=True)) / x.std(axis=-1, keepdims=True)
+
         return x
 
     def __get_meta_data__(self, file_path):
@@ -271,6 +281,8 @@ class MachineDataSet(torch.utils.data.Dataset):
             'machine_ids': self.machine_id,
             'file_ids': os.sep.join(os.path.normpath(file_path).split(os.sep)[-4:])
         }
+
+
 
 if __name__ == '__main__':
 

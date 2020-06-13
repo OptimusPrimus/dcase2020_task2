@@ -20,6 +20,7 @@ class AudioSet(BaseDataSet):
             power=2.0,
             fmin=0,
             normalize_raw=True,
+            normalize_spec=False,
             hop_all=False
     ):
         self.data_root = data_root
@@ -31,6 +32,7 @@ class AudioSet(BaseDataSet):
         self.fmin = fmin
         self.hop_all = hop_all
         self.normalize_raw = normalize_raw
+        self.normalize_spec = normalize_spec
 
         kwargs = {
             'data_root': self.data_root,
@@ -41,7 +43,8 @@ class AudioSet(BaseDataSet):
             'power': self.power,
             'normalize': self.normalize_raw,
             'fmin': self.fmin,
-            'hop_all': self.hop_all
+            'hop_all': self.hop_all,
+            'normalize_spec': self.normalize_spec
         }
 
         class_names = sorted([class_name for class_name in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, class_name))])
@@ -59,6 +62,7 @@ class AudioSet(BaseDataSet):
         self.validation_set = None
         self.mean = data_arrays.mean(axis=1, keepdims=True)
         self.std = data_arrays.std(axis=1, keepdims=True)
+        del data_arrays
 
     @property
     def observation_shape(self) -> tuple:
@@ -86,6 +90,7 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
             hop_size=512,
             power=2.0,
             normalize=True,
+            normalize_spec=False,
             fmin=0,
             hop_all=False,
             max_file_per_class=2,
@@ -104,6 +109,7 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
         self.class_name = class_name
         self.max_file_per_class = max_file_per_class
         self.max_file_length = max_file_length
+        self.normalize_spec = normalize_spec
 
         files = glob.glob(os.path.join(data_root, class_name, '*.wav'))
 
@@ -142,14 +148,15 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
         return data
 
     def __load_data__(self, files):
-        file_name = "{}_{}_{}_{}_{}_{}_{}.npz".format(
+        file_name = "{}_{}_{}_{}_{}_{}_{}_{}.npz".format(
             self.num_mel,
             self.n_fft,
             self.hop_size,
             self.power,
             self.normalize,
             self.fmin,
-            self.class_name
+            self.class_name,
+            self.normalize_spec
         )
         file_path = os.path.join(self.data_root, file_name)
 
@@ -194,6 +201,9 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
         else:
             raise AttributeError
 
+        if self.normalize_spec:
+            x = (x - x.mean(axis=-1, keepdims=True)) / x.std(axis=-1, keepdims=True)
+
         return x
 
     def __get_meta_data__(self, file_path):
@@ -206,10 +216,7 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
 
 
 if __name__ == '__main__':
-    mcmc = MCMDataSet(0, 0)
-    a = audio_set = AudioSet(
-        normalize=(mcmc.mean, mcmc.std)
-    ).training_data_set()[0]
+    a = audio_set = AudioSet().training_data_set()[0]
 
     print(a)
 
