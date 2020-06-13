@@ -4,7 +4,7 @@ import torch
 from dcase2020_task2.experiments.parser import create_objects_from_config
 import copy
 import os
-
+from pathlib import Path
 
 class BaseExperiment(ABC, torch.nn.Module):
 
@@ -16,8 +16,7 @@ class BaseExperiment(ABC, torch.nn.Module):
         for k in ['machine_type', 'machine_id', 'trainer', 'data_set', 'log_path', 'batch_size', 'num_workers']:
             assert k in self.objects
 
-        if not os.path.exists(self.configuration_dict['log_path']):
-            os.mkdir(self.configuration_dict['log_path'])
+        Path(self.configuration_dict['log_path']).mkdir(parents=True, exist_ok=True)
 
         if self.objects.get('deterministic'):
             torch.backends.cudnn.deterministic = True
