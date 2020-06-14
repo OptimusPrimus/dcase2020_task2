@@ -204,6 +204,7 @@ def configuration():
     batch_size = 32
     learning_rate = 1e-4
     weight_decay = 0
+    learning_rate_decay = 0.99
 
     normalize_raw = True
     normalize_spec = False
@@ -284,7 +285,7 @@ def configuration():
             '@optimizer',
         ],
         'kwargs': {
-            'gamma': 0.99
+            'gamma': learning_rate_decay
         }
     }
 
