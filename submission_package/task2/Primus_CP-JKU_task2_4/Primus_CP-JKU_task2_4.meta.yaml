@@ -5,18 +5,18 @@ submission:
   # Label is used to index submissions.
   # Generate your label following way to avoid overlapping codes among submissions:
   # [Last name of corresponding author]_[Abbreviation of institute of the corresponding author]_task[task number]_[index number of your submission (1-4)]
-  label: Primus_JKU_task2_1
+  label: Primus_JKU_task2_4
 
   # Submission name
   # This name will be used in the results tables when space permits.
-  name: Outlier Exposed Convolutional Classifier
+  name: Outlier Exposed Convolutional Classifier Large Ensemble
 
   # Submission name abbreviated
   # This abbreviated name will be used in the results table when space is tight.
   # Use a maximum of 10 characters.
-  abbreviation: OECC
+  abbreviation: OEC Ens.
 
-  # Authors of the submitted system. 
+  # Authors of the submitted system.
   # Mark authors in the order you want them to appear in submission lists.
   # One of the authors has to be marked as corresponding author, this will be listed next to the submission in the results tables.
   authors:
@@ -63,7 +63,7 @@ system:
     # Please specify all embedings used (comma-separated list).
     # one or multiple, e.g. VGGish, OpenL3, ...
     embeddings: !!null
-    
+
     # Machine learning
     # In case using ensemble methods, please specify all methods used (comma-separated list).
     # e.g. AE, VAE, GAN, GMM, k-means, OCSVM, normalizing flow, CNN, LSTM, random forest, ensemble, ...
@@ -77,11 +77,11 @@ system:
     # Ensemble method subsystem count
     # In case ensemble method is not used, mark !!null.
     # e.g. 2, 3, 4, 5, ...
-    ensemble_method_subsystem_count: !!null
+    ensemble_method_subsystem_count: 4
 
     # Decision making in ensemble
     # e.g. average, median, maximum, minimum, ...
-    decision_making: !!null
+    decision_making: average
 
     # External data usage method
     # Please specify all usages (comma-separated list).
@@ -102,7 +102,7 @@ system:
     # In case of ensemble approaches, add up parameters for all subsystems.
     # In case embeddings are used, add up parameter count of the embedding extraction networks and classification network.
     # Use numerical value.
-    total_parameters: 269992
+    total_parameters: 80000000
 
   # List of external datasets used in the submission.
   # Development dataset is used here only as an example, list only external datasets
@@ -116,7 +116,8 @@ system:
 
   # URL to the source code of the system [optional, highly recommended]
   # Reproducibility will be used to evaluate submitted systems.
-  source_code: https://github.com/y-kawagu/dcase2020_task2_baseline
+  # TODO
+  source_code: !!null
 
 # System results
 results:
