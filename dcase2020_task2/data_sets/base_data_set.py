@@ -18,9 +18,3 @@ class BaseDataSet(ABC):
     @abstractmethod
     def validation_data_set(self):
         raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def mean_std(self):
-        raise NotImplementedError
-

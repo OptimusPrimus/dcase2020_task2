@@ -50,19 +50,12 @@ class AudioSet(BaseDataSet):
         class_names = sorted([class_name for class_name in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, class_name))])
 
         training_sets = []
-        data_arrays = []
         for class_name in class_names:
             training_sets.append(AudioSetClassSubset(class_name, **kwargs))
-            data = training_sets[-1].data
-            for i, file in enumerate(data):
-                data_arrays.append(file)
-        data_arrays = np.concatenate(data_arrays, axis=-1)
 
         self.training_set = torch.utils.data.ConcatDataset(training_sets)
         self.validation_set = None
-        self.mean = data_arrays.mean(axis=1, keepdims=True)
-        self.std = data_arrays.std(axis=1, keepdims=True)
-        del data_arrays
+
 
     @property
     def observation_shape(self) -> tuple:
@@ -73,9 +66,6 @@ class AudioSet(BaseDataSet):
 
     def validation_data_set(self):
         return self.validation_set
-
-    def mean_std(self):
-        return self.mean, self.std
 
 
 class AudioSetClassSubset(torch.utils.data.Dataset):
@@ -93,7 +83,7 @@ class AudioSetClassSubset(torch.utils.data.Dataset):
             normalize_spec=False,
             fmin=0,
             hop_all=False,
-            max_file_per_class=2,
+            max_file_per_class=10,
             max_file_length=350
     ):
 

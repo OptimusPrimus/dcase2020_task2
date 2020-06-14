@@ -4,6 +4,7 @@ import torch
 from sacred import Experiment
 from dcase2020_task2.utils.logger import Logger
 import os
+import numpy as np
 import torch.utils.data
 # workaround...
 from sacred import SETTINGS
@@ -42,20 +43,16 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
         #     **self.objects['fetaure_settings']
         # )
 
-        if self.objects.get('normalize_dataset') == 'normal':
-            self.mean = torch.from_numpy(self.normal_data_set.mean)
-            self.std = torch.from_numpy(self.normal_data_set.std)
-        elif self.objects.get('normalize_dataset') == 'abnormal':
-            self.mean = torch.from_numpy(self.abnormal_data_set.mean)
-            self.std = torch.from_numpy(self.abnormal_data_set.std)
-        elif self.objects.get('normalize_dataset') == 'average':
-            self.mean = torch.from_numpy((self.normal_data_set.mean + self.abnormal_data_set.mean) / 2)
-            # TODO: this is not correct (?)
-            self.std = torch.from_numpy((self.normal_data_set.std + self.abnormal_data_set.std) / 2)
-        elif self.objects.get('normalize_dataset') is None:
+        if self.objects.get('normalize_dataset') is None:
             print('No normalization.')
-            self.mean = torch.zeros(self.normal_data_set.mean.shape)
-            self.std = torch.ones(self.normal_data_set.std.shape)
+        elif self.objects.get('normalize_dataset') is 'min_max':
+            print('Min/Max normalization.')
+            self.min, self.max = None, None
+            raise NotImplementedError
+        elif self.objects.get('normalize_dataset') is 'mean_std':
+            print('Mean/Std normalization.')
+            self.mean, self.std = None, None
+            raise NotImplementedError
         else:
             raise AttributeError
 
@@ -89,8 +86,12 @@ class ClassificationExperiment(BaseExperiment, pl.LightningModule):
         return batch
 
     def normalize_batch(self, batch):
-        device = batch['observations'].device
-        batch['observations'] = (batch['observations'] - self.mean.to(device)) / self.std.to(device)
+        if self.objects.get('normalize_dataset') is 'min_max':
+            assert self.mean is None
+            batch['observations'] = (((batch['observations'] - self.min) / (self.max - self.min)) - 0.5) * 2
+        elif self.objects.get('normalize_dataset') is 'mean_std':
+            assert self.min is None
+            batch['observations'] = (batch['observations'] - self.mean) / self.std
 
     def training_step(self, batch_normal, batch_num, optimizer_idx=0):
 
@@ -200,7 +201,7 @@ def configuration():
     else:
         num_workers = 4
 
-    loss_class = 'dcase2020_task2.losses.AUC'
+    loss_class = 'dcase2020_task2.losses.BCE'
     batch_size = 32
     learning_rate = 1e-4
     weight_decay = 0

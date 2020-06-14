@@ -51,17 +51,10 @@ class MCMDataSet(BaseDataSet):
         if machine_id == -1:
             training_sets = []
             validation_sets = []
-            data = []
             for id_ in ALL_ID_MAP[machine_type]:
                 training_sets.append(MachineDataSet(machine_type, id_, mode='training', **kwargs))
                 validation_sets.append(MachineDataSet(machine_type, id_, mode='validation', **kwargs))
-                data.append(training_sets[-1].data)
 
-            data = np.concatenate(data, axis=-1)
-            mean = data.mean(axis=1, keepdims=True)
-            std = data.std(axis=1, keepdims=True)
-
-            del data
             training_set = torch.utils.data.ConcatDataset(training_sets)
             validation_set = torch.utils.data.ConcatDataset(validation_sets)
 
@@ -69,13 +62,8 @@ class MCMDataSet(BaseDataSet):
             training_set = MachineDataSet(machine_type, machine_id, mode='training', **kwargs)
             validation_set = MachineDataSet(machine_type, machine_id, mode='validation', **kwargs)
 
-            mean = training_set.data.mean(axis=1, keepdims=True)
-            std = training_set.data.std(axis=1, keepdims=True)
-
         self.training_set = training_set
         self.validation_set = validation_set
-        self.mean = mean
-        self.std = std
 
     @property
     def observation_shape(self) -> tuple:
@@ -86,9 +74,6 @@ class MCMDataSet(BaseDataSet):
 
     def validation_data_set(self):
         return self.validation_set
-
-    def mean_std(self):
-        return self.mean, self.std
 
 
 class MachineDataSet(torch.utils.data.Dataset):
@@ -154,30 +139,35 @@ class MachineDataSet(torch.utils.data.Dataset):
 
         files = sorted(files)
         self.files = files
-        self.file_length = self.__load_preprocess_file__(files[0]).shape[-1]
-        self.num_samples_per_file = (self.file_length // self.context) if hop_all else (self.file_length - self.context + 1)
+
+        files = sorted(files)
+        self.files = files
         self.meta_data = self.__load_meta_data__(files)
         self.data = self.__load_data__(files)
+        self.index_map = {}
+        ctr = 0
+        for i, file in enumerate(self.data):
+            if hop_all:
+                residual = file.shape[-1] - context
+                self.index_map[ctr] = (i, residual)
+                ctr += 1
+            else:
+                for j in range(file.shape[-1] + 1 - context):
+                    self.index_map[ctr] = (i, j)
+                    ctr += 1
+        self.length = ctr
 
     def __getitem__(self, item):
-        # get offset in audio file
-        offset = item % self.num_samples_per_file
-        # get audio file index
-        item = item // self.num_samples_per_file
-        # load audio file and extract audio junk
-
-        residual = (self.file_length % self.context) + 1
-
-        offset = item * self.file_length + ((offset * self.context + np.random.randint(0, residual)) if self.hop_all else offset)
-        observation = self.data[:, offset:offset + self.context]
-        # create data object
-        meta_data = self.meta_data[item].copy()
+        file_idx, offset = self.index_map[item]
+        if self.hop_all:
+            offset = np.random.randint(0, offset)
+        observation = self.data[file_idx][:, offset:offset + self.context]
+        meta_data = self.meta_data[file_idx].copy()
         meta_data['observations'] = observation[None]
-
         return meta_data
 
     def __len__(self):
-        return len(self.files) * self.num_samples_per_file
+        return self.length
 
     def __load_meta_data__(self, files):
         data = []
@@ -187,7 +177,7 @@ class MachineDataSet(torch.utils.data.Dataset):
         return data
 
     def __load_data__(self, files):
-        file_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.npy".format(
+        file_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.npz".format(
             self.num_mel,
             self.n_fft,
             self.hop_size,
@@ -201,32 +191,19 @@ class MachineDataSet(torch.utils.data.Dataset):
         )
         file_path = os.path.join(self.data_root, file_name)
 
+        data = []
         if os.path.exists(file_path):
             print('Loading {} data set for machine type {} id {}...'.format(self.mode, self.machine_type,
                                                                             self.machine_id))
-            data = np.load(file_path)
+            container = np.load(file_path)
+            data = [container[key] for key in container]
         else:
-            print('Loading & saving {} data set for machine type {} id {}...'.format(self.mode, self.machine_type,
-                                                                                     self.machine_id))
-            data = np.empty((self.num_mel, self.file_length * len(files)), dtype=np.float32)
+            print('Loading & Saving {} data set for machine type {} id {}...'.format(self.mode, self.machine_type,
+                                                                            self.machine_id))
             for i, f in enumerate(files):
                 file = self.__load_preprocess_file__(f)
-                if file.shape[1] != self.file_length:
-
-                    if file.shape[1] < self.file_length:
-                        print(f'Too short: {f}')
-                        file = np.concatenate([
-                            file,
-                            file[:, :self.file_length - file.shape[1]]
-                        ], -1)
-                    elif file.shape[1] > self.file_length:
-                        print(f'Too long: {f}')
-                        file = file[:, :self.file_length]
-
-                data[:, i * self.file_length:(i + 1) * self.file_length] = file
-
-            np.save(file_path, data)
-
+                data.append(file)
+            np.savez(file_path, *data)
         return data
 
     def __load_preprocess_file__(self, file):
@@ -281,7 +258,6 @@ class MachineDataSet(torch.utils.data.Dataset):
             'machine_ids': self.machine_id,
             'file_ids': os.sep.join(os.path.normpath(file_path).split(os.sep)[-4:])
         }
-
 
 
 if __name__ == '__main__':

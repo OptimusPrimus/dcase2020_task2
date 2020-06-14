@@ -2,7 +2,6 @@ import os
 import torch.utils.data
 from dcase2020_task2.data_sets import BaseDataSet, CLASS_MAP, INVERSE_CLASS_MAP, TRAINING_ID_MAP, ALL_ID_MAP
 from dcase2020_task2.data_sets import MachineDataSet
-import numpy as np
 
 VALID_TYPES = {
 
@@ -84,18 +83,11 @@ class ComplementMCMDataSet(BaseDataSet):
 
         training_sets = []
 
-        data = []
         for type_ in VALID_TYPES[self.valid_types][machine_type]:
             for id_ in ALL_ID_MAP[type_]:
                 if type_ != machine_type or id_ != machine_id:
                     t = MachineDataSet(type_, id_, mode='training', **kwargs)
-                    data.append(t.data)
                     training_sets.append(t)
-        data = np.concatenate(data, axis=-1)
-
-        self.mean = data.mean(axis=1, keepdims=True)
-        self.std = data.std(axis=1, keepdims=True)
-        del data
 
         self.training_set = torch.utils.data.ConcatDataset(training_sets)
 
@@ -108,7 +100,4 @@ class ComplementMCMDataSet(BaseDataSet):
 
     def validation_data_set(self):
         raise NotImplementedError
-
-    def mean_std(self):
-        return self.mean, self.std
 
