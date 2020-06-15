@@ -81,7 +81,7 @@ system:
 
     # Decision making in ensemble
     # e.g. average, median, maximum, minimum, ...
-    decision_making: mean
+    decision_making: median
 
     # External data usage method
     # Please specify all usages (comma-separated list).
@@ -102,7 +102,7 @@ system:
     # In case of ensemble approaches, add up parameters for all subsystems.
     # In case embeddings are used, add up parameter count of the embedding extraction networks and classification network.
     # Use numerical value.
-    total_parameters: 124800000
+    total_parameters: 136000000
 
   # List of external datasets used in the submission.
   # Development dataset is used here only as an example, list only external datasets
@@ -129,22 +129,20 @@ results:
     # Average of AUCs over all Machine IDs [%]
     # No need to round numbers
 	fan:
-	  averaged_auc: 0.9250862155990746
-	  averaged_pauc: 0.8256360162889946
+	  averaged_auc: 0.9230309586203593
+	  averaged_pauc: 0.8285210664235381
 	pump:
-	  averaged_auc: 0.9109113160157278
-	  averaged_pauc: 0.8682161756465161
+	  averaged_auc: 0.9146627457465693
+	  averaged_pauc: 0.8678065821022478
 	slider:
-	  averaged_auc: 0.9786540262172283
-	  averaged_pauc: 0.8951434062684802
+	  averaged_auc: 0.9822893258426966
+	  averaged_pauc: 0.9108762073723635
 	ToyCar:
-	  averaged_auc: 0.9526391101037327
-	  averaged_pauc: 0.8904420678626239
+	  averaged_auc: 0.9504648370497427
+	  averaged_pauc: 0.8890240180210388
 	ToyConveyor:
-	  averaged_auc: 0.8460375767354439
-	  averaged_pauc: 0.7258267906077309
+	  averaged_auc: 0.8254031447576784
+	  averaged_pauc: 0.7026976317730064
 	valve:
-	  averaged_auc: 0.9449583333333333
-	  averaged_pauc: 0.8856359649122807
-
-
+	  averaged_auc: 0.93825
+	  averaged_pauc: 0.8792763157894736

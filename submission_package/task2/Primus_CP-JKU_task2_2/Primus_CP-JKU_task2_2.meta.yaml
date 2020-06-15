@@ -102,7 +102,7 @@ system:
     # In case of ensemble approaches, add up parameters for all subsystems.
     # In case embeddings are used, add up parameter count of the embedding extraction networks and classification network.
     # Use numerical value.
-    total_parameters: 9600000
+    total_parameters: 12000000
 
   # List of external datasets used in the submission.
   # Development dataset is used here only as an example, list only external datasets
@@ -146,6 +146,3 @@ results:
 	valve:
 	  averaged_auc: 0.9776656162464985
 	  averaged_pauc: 0.9357400855078873
-
-
-
