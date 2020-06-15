@@ -9,7 +9,7 @@ submission:
 
   # Submission name
   # This name will be used in the results tables when space permits.
-  name: Outlier Exposed Convolutional Classifier Large Ensemble
+  name: Mean Ensemble Outlier Exposed ResNet
 
   # Submission name abbreviated
   # This abbreviated name will be used in the results table when space is tight.
@@ -77,11 +77,11 @@ system:
     # Ensemble method subsystem count
     # In case ensemble method is not used, mark !!null.
     # e.g. 2, 3, 4, 5, ...
-    ensemble_method_subsystem_count: 4
+    ensemble_method_subsystem_count: 13
 
     # Decision making in ensemble
     # e.g. average, median, maximum, minimum, ...
-    decision_making: average
+    decision_making: mean
 
     # External data usage method
     # Please specify all usages (comma-separated list).
@@ -102,7 +102,7 @@ system:
     # In case of ensemble approaches, add up parameters for all subsystems.
     # In case embeddings are used, add up parameter count of the embedding extraction networks and classification network.
     # Use numerical value.
-    total_parameters: 1248000000
+    total_parameters: 124800000
 
   # List of external datasets used in the submission.
   # Development dataset is used here only as an example, list only external datasets
@@ -116,8 +116,7 @@ system:
 
   # URL to the source code of the system [optional, highly recommended]
   # Reproducibility will be used to evaluate submitted systems.
-  # TODO
-  source_code: !!null
+  source_code: https://gitlab.cp.jku.at/paulp/dcase2020_task2
 
 # System results
 results:

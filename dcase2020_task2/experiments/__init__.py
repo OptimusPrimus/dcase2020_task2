@@ -1,2 +1,1 @@
 from dcase2020_task2.experiments.experiment_base import BaseExperiment
-from dcase2020_task2.experiments.baseline_experiment import BaselineExperiment
