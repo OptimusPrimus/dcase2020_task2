@@ -140,6 +140,8 @@ class MachineDataSet(torch.utils.data.Dataset):
         files = sorted(files)
         self.files = files
 
+        self.file_length = self.__load_preprocess_file__(files[0]).shape[-1]
+
         files = sorted(files)
         self.files = files
         self.meta_data = self.__load_meta_data__(files)
@@ -177,7 +179,7 @@ class MachineDataSet(torch.utils.data.Dataset):
         return data
 
     def __load_data__(self, files):
-        file_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.npz".format(
+        file_name = "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_tmp.npz".format(
             self.num_mel,
             self.n_fft,
             self.hop_size,
@@ -202,8 +204,12 @@ class MachineDataSet(torch.utils.data.Dataset):
                                                                             self.machine_id))
             for i, f in enumerate(files):
                 file = self.__load_preprocess_file__(f)
+                if file.shape[-1] < self.file_length:
+                    print(f'Too short {f}')
+                elif file.shape[-1] > self.file_length:
+                    print(f'Too long {f}')
                 data.append(file)
-            np.savez(file_path, *data)
+            # np.savez(file_path, *data)
         return data
 
     def __load_preprocess_file__(self, file):
