@@ -102,8 +102,7 @@ system:
     # In case of ensemble approaches, add up parameters for all subsystems.
     # In case embeddings are used, add up parameter count of the embedding extraction networks and classification network.
     # Use numerical value.
-    # TODO
-    total_parameters: 20000000
+    total_parameters: 96000000
 
   # List of external datasets used in the submission.
   # Development dataset is used here only as an example, list only external datasets
@@ -130,29 +129,24 @@ results:
 
     # Average of AUCs over all Machine IDs [%]
     # No need to round numbers
-    # TODO:
-    ToyCar:
-      averaged_auc: 78.77
-      averaged_pauc: 67.58
+	fan:
+	  averaged_auc: 0.9226685446121019
+	  averaged_pauc: 0.8230212986543588
+	pump:
+	  averaged_auc: 0.9297781495399142
+	  averaged_pauc: 0.8722867745313565
+	slider:
+	  averaged_auc: 0.9894779962546816
+	  averaged_pauc: 0.9454464813719693
+	ToyCar:
+	  averaged_auc: 0.9489897900841298
+	  averaged_pauc: 0.8752479934828495
+	ToyConveyor:
+	  averaged_auc: 0.83764533636162
+	  averaged_pauc: 0.7279798253268154
+	valve:
+	  averaged_auc: 0.9424583333333334
+	  averaged_pauc: 0.8903508771929824
 
-    ToyConveyor:
-      averaged_auc: 72.53
-      averaged_pauc: 60.43
-
-    fan:
-      averaged_auc: 65.83
-      averaged_pauc: 52.45
-
-    pump:
-      averaged_auc: 72.89
-      averaged_pauc: 59.99
-
-    slider:
-      averaged_auc: 84.76
-      averaged_pauc: 66.53
-
-    valve:
-      averaged_auc: 66.28
-      averaged_pauc: 50.98
 
 
