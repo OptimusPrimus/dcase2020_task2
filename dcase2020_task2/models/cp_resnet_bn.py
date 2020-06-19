@@ -1,4 +1,10 @@
 # coding: utf-8
+# Author: Khaled Koutini
+# Institut of Computational Perception
+# LIT - Linz Institute of Technology,
+# Johannes Kepler Universität
+# https://github.com/kkoutini/cpjku_dcase19
+
 import math
 
 import torch
