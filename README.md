@@ -23,7 +23,7 @@ See ```Primus_CP-JKU.pdf```.
 
 If you use any parts of the implementation please cite:
 ```
-@techreport{Primus2019DCASE,
+@techreport{Primus2020DCASEChallenge,
     Author      =   {Primus, Paul},
     institution =   {{DCASE2020 Challenge}},
     title       =   {Reframing Unsupervised Machine Condition Monitoring as a Supervised Classification Task with Outlier-Exposed Classifiers},
