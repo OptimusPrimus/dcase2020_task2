@@ -37,7 +37,7 @@ If you use other parts of the implementation please cite:
     institution =   {{DCASE2020 Challenge}},
     title       =   {Reframing Unsupervised Machine Condition Monitoring as a Supervised Classification Task with Outlier-Exposed Classifiers},
     month       =   {June},
-    year        =   2019
+    year        =   2020
 }
 ```
 
