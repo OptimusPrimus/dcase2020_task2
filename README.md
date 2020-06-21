@@ -20,6 +20,18 @@ See ```Primus_CP-JKU.pdf```.
 
 ## Citation
 
+
+If you use any parts of the implementation please cite:
+```
+@techreport{Primus2019DCASE,
+    Author      =   {Primus, Paul},
+    institution =   {{DCASE2020 Challenge}},
+    title       =   {Reframing Unsupervised Machine Condition Monitoring as a Supervised Classification Task with Outlier-Exposed Classifiers},
+    month       =   {June},
+    year        =   2020
+}
+```
+
 If you use the model or the model implementation please cite the following paper:
 ```
 @inproceedings{Koutini2019Receptive,
@@ -28,16 +40,6 @@ If you use the model or the model implementation please cite the following paper
     booktitle   =   {Proceedings of the European Signal Processing Conference (EUSIPCO)},
     address     =   {A Coru\~{n}a, Spain},
     year        =   2019
-}
-```
-If you use other parts of the implementation please cite:
-```
-@techreport{Primus2019DCASE,
-    Author      =   {Primus, Paul},
-    institution =   {{DCASE2020 Challenge}},
-    title       =   {Reframing Unsupervised Machine Condition Monitoring as a Supervised Classification Task with Outlier-Exposed Classifiers},
-    month       =   {June},
-    year        =   2020
 }
 ```
 
